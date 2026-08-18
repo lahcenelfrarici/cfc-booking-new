@@ -1,0 +1,72 @@
+:root {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Times New Roman', serif;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+}
+
+h1, h2, h3, h4, .display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.font-serif-accent {
+  font-family: var(--font-serif);
+  font-style: italic;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+
+.btn-premium {
+  position: relative;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.18) inset,
+    0 0 0 1px rgba(8, 80, 65, 0.4),
+    0 8px 20px -8px rgba(15, 110, 86, 0.45);
+}
+
+.btn-premium:hover {
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.22) inset,
+    0 0 0 1px rgba(8, 80, 65, 0.5),
+    0 12px 28px -10px rgba(15, 110, 86, 0.55);
+  transform: translateY(-1px);
+}
+
+.card-premium {
+  border: 1px solid rgba(11, 15, 14, 0.07);
+  box-shadow:
+    0 1px 0 0 rgba(11, 15, 14, 0.02),
+    0 12px 32px -16px rgba(11, 15, 14, 0.08);
+}
+
+.hairline {
+  border-color: rgba(11, 15, 14, 0.08) !important;
+}
+
+.bg-paper {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(225, 245, 238, 0.6), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(205, 237, 227, 0.35), transparent 60%),
+    #FCFCFB;
+}
+
+.editorial-rule {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(11, 15, 14, 0.12), transparent);
+}
+
+p, li, span {
+  letter-spacing: -0.003em;
+}
+
+h1, h2 {
+  letter-spacing: -0.035em !important;
+}

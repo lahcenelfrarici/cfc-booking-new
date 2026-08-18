@@ -1,0 +1,71 @@
+<div class="border-b border-neutral-100 bg-white">
+  <div class="w-full max-w-[1440px] mx-auto px-12 h-20 flex items-center justify-between">
+    <a href="{{ home_url }}" class="flex items-center gap-2 text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">
+      {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-4 h-4' } only %}
+      Back
+    </a>
+    {% include 'cfc_media_hub:journey-steps' with { active: [4] } only %}
+    <a href="{{ home_url }}" class="text-[13px] text-neutral-400 hover:text-neutral-700 transition-colors">Cancel</a>
+  </div>
+</div>
+
+<section class="bg-[#FCFCFB] min-h-[70vh]">
+  <div class="max-w-[640px] mx-auto px-12 py-16">
+    <div class="mb-10">
+      <div class="text-[12px] uppercase tracking-[0.18em] text-[#0F6E56] font-semibold mb-3">Step 4 · Review your reservation</div>
+      <h1 class="tracking-tight" style="font-size: 48px; font-weight: 600; letter-spacing: -0.025em;">
+        Review &amp; confirm.
+      </h1>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-neutral-200 overflow-hidden mb-6">
+      <div class="px-8 py-5 bg-[#9F5434]/5 border-b border-neutral-100">
+        <div class="text-[12px] uppercase tracking-wide text-[#9F5434] font-semibold">Reservation summary</div>
+      </div>
+      <div class="divide-y divide-neutral-100">
+        <div class="px-8 py-4 flex items-center justify-between">
+          <div class="text-[13px] text-neutral-400 font-medium">Space</div>
+          <div class="text-[14px] text-neutral-900 font-medium">{{ space_label }}</div>
+        </div>
+        <div class="px-8 py-4 flex items-center justify-between">
+          <div class="text-[13px] text-neutral-400 font-medium">Date</div>
+          <div class="text-[14px] text-neutral-900 font-medium">{{ date }}</div>
+        </div>
+        <div class="px-8 py-4 flex items-center justify-between">
+          <div class="text-[13px] text-neutral-400 font-medium">Time</div>
+          <div class="text-[14px] text-neutral-900 font-medium">{{ time }} &middot; {{ duration }}</div>
+        </div>
+        <div class="px-8 py-4 flex items-center justify-between">
+          <div class="text-[13px] text-neutral-400 font-medium">Name</div>
+          <div class="text-[14px] text-neutral-900 font-medium">{{ user_name }}</div>
+        </div>
+        <div class="px-8 py-4 flex items-center justify-between">
+          <div class="text-[13px] text-neutral-400 font-medium">Account type</div>
+          <div class="text-[14px] text-neutral-900 font-medium">{{ account_type_label }}</div>
+        </div>
+        <div class="px-8 py-4 flex items-center justify-between">
+          <div class="text-[13px] text-neutral-400 font-medium">Reference</div>
+          <div class="text-[14px] text-neutral-900 font-medium">{{ reference }}</div>
+        </div>
+        <div class="px-8 py-4 flex items-center justify-between">
+          <div class="text-[13px] text-neutral-400 font-medium">Pricing</div>
+          <div class="text-[14px] text-[#9F5434] font-bold">{{ price_label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-neutral-200 p-8 mb-6">
+      {{ guests_form }}
+    </div>
+
+    <div class="flex items-center justify-between gap-4">
+      <a href="{{ edit_url }}" class="text-[13px] text-neutral-400 hover:text-red-500 underline underline-offset-2 transition-colors">
+        Edit reservation
+      </a>
+      <a href="{{ confirm_url }}" class="bg-[#9F5434] hover:bg-[#8A4A2E] text-white py-3.5 px-8 rounded-2xl flex items-center justify-center gap-2 transition-colors font-semibold text-[14px]">
+        {{ confirm_label }}
+        {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}
+      </a>
+    </div>
+  </div>
+</section>

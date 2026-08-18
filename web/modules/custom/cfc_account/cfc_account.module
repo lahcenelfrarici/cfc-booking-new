@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for CFC Account.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_login_form.
+ *
+ * The sign-in page (and CFC Member registration, which centers on a
+ * "Professional Email Address") invites people to log in with their
+ * "Username or email" — but Drupal core's login form only ever
+ * authenticates by username. This resolves a submitted value that looks
+ * like a registered email address back to its account username before
+ * core's own authentication validation runs, so email actually works.
+ */
+function cfc_account_form_user_login_form_alter(array &$form, FormStateInterface $form_state): void {
+  array_unshift($form['#validate'], 'cfc_account_user_login_resolve_email');
+}
+
+/**
+ * Form validate callback: resolves an email address to its username.
+ */
+function cfc_account_user_login_resolve_email(array &$form, FormStateInterface $form_state): void {
+  $name = trim((string) $form_state->getValue('name'));
+  if ($name === '' || !str_contains($name, '@')) {
+    return;
+  }
+  $account = user_load_by_mail($name);
+  if ($account) {
+    $form_state->setValue('name', $account->getAccountName());
+  }
+}

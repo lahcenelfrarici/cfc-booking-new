@@ -1,0 +1,41 @@
+{% set steps = [
+  { icon: 'search', title: 'Select your space', text: 'Choose between desk, meeting room or studio depending on your editorial need.' },
+  { icon: 'clock', title: 'Check availability in real time', text: 'See live availability across all spaces — updated continuously, no waiting.' },
+  { icon: 'calendar', title: 'Choose your time slot', text: 'Pick a date and a slot that fits your workflow — flexible from one hour to a full day.' },
+  { icon: 'check-circle-2', title: 'Confirm your booking', text: 'Confirm instantly — or proceed to secure payment for podcast studio sessions.' },
+] %}
+
+<section class="bg-white py-20">
+  <div class="max-w-[1440px] mx-auto px-12">
+    <div class="flex items-end justify-between mb-14">
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-5 h-[2px] bg-[#9F5434]"></div>
+          <div class="text-[12px] uppercase tracking-[0.18em] text-[#0F6E56] font-semibold">Booking flow</div>
+        </div>
+        <h2 class="tracking-tight text-neutral-900" style="font-size: 52px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
+          How it works.
+        </h2>
+      </div>
+      <p class="text-neutral-600 max-w-[420px] leading-relaxed pb-2 text-[15px]">
+        From selection to confirmation in under a minute. No back-and-forth, no email chains.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-4 gap-5 relative">
+      <div class="absolute top-[60px] left-[7%] right-[7%] h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent"></div>
+      {% for s in steps %}
+        <div class="relative bg-white">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="relative w-12 h-12 rounded-2xl bg-[#9F5434] text-white flex items-center justify-center shrink-0">
+              {% include 'cfc_media_hub:icon' with { name: s.icon, size: 'w-5 h-5' } only %}
+            </div>
+            <div class="text-[11px] uppercase tracking-[0.16em] text-neutral-400 font-bold">Step 0{{ loop.index }}</div>
+          </div>
+          <h3 class="tracking-tight mb-2.5" style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em;">{{ s.title }}</h3>
+          <p class="text-neutral-600 leading-relaxed text-[14px]">{{ s.text }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>

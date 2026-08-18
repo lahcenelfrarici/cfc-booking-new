@@ -1,0 +1,17 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Hero
+status: stable
+description: Homepage hero — headline, CTAs, location line and the booking widget.
+props:
+  type: object
+  properties:
+    spaces_url:
+      type: string
+    production_url:
+      type: string
+    booking_base_url:
+      type: string
+  required:
+    - spaces_url
+    - production_url
+    - booking_base_url

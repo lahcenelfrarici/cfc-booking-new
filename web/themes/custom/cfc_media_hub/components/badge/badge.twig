@@ -1,0 +1,8 @@
+{% set variant_classes = {
+  'light': 'bg-white/85 text-neutral-700',
+  'solid': 'bg-[#9F5434] text-white',
+  'translucent': 'bg-[#9F5434]/80 text-white',
+} %}
+<span{{ attributes.addClass('inline-block px-3 py-1.5 rounded-full text-[11px] font-semibold backdrop-blur ' ~ variant_classes[variant|default('light')]) }}>
+  {% block label %}{% endblock %}
+</span>

@@ -1,0 +1,11 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Hub location
+status: stable
+description: Hub page location/address section with district photo.
+props:
+  type: object
+  properties:
+    images_base:
+      type: string
+  required:
+    - images_base

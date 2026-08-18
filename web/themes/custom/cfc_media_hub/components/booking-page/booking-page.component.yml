@@ -1,0 +1,21 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Booking page
+status: experimental
+description: >
+  Space / date / time / review booking flow UI. Requires authentication
+  (enforced server-side). Selection UI is real; submission is a UI-only
+  placeholder until the cfc_booking entity, availability service and
+  Commerce payment integration land in later phases.
+props:
+  type: object
+  properties:
+    initial_space:
+      type: string
+    account_url:
+      type: string
+    spaces:
+      type: array
+      description: Array of {id,label,sub,price,meta,maxGuests,durations}, built from real Space nodes.
+  required:
+    - account_url
+    - spaces

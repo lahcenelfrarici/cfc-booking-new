@@ -1,0 +1,391 @@
+{% set space_icons = { studio: 'mic', meeting: 'users', desk: 'monitor' } %}
+{% set status_classes = { upcoming: 'bg-[#E1F5EE] text-[#0F6E56]', completed: 'bg-neutral-100 text-neutral-600', cancelled: 'bg-[#9F5434]/10 text-[#9F5434]' } %}
+{% set status_icons = { upcoming: 'clock', completed: 'check-check', cancelled: 'x' } %}
+{% set status_labels = { upcoming: 'Upcoming', completed: 'Completed', cancelled: 'Cancelled' } %}
+
+{% set upcoming_count = 0 %}
+{% set completed_count = 0 %}
+{% for r in reservations %}
+  {% if r.status == 'upcoming' %}{% set upcoming_count = upcoming_count + 1 %}{% endif %}
+  {% if r.status == 'completed' %}{% set completed_count = completed_count + 1 %}{% endif %}
+{% endfor %}
+
+<div>
+
+  {# ── Header ───────────────────────────────────────────────────────── #}
+  <section class="bg-white pt-16 pb-14 border-b border-neutral-100">
+    <div class="max-w-[1440px] mx-auto px-12">
+      <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-10">
+        <a href="{{ home_url }}" class="hover:text-neutral-900 transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-neutral-900">My Account</span>
+      </div>
+
+      <div class="flex items-start justify-between gap-12">
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-5 h-[2px] bg-[#9F5434]"></div>
+            <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">My Account</div>
+          </div>
+          <h1 class="tracking-tight text-neutral-900 mb-2" style="font-size: 52px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
+            Welcome back, {{ user_name }}.
+          </h1>
+          <div class="flex items-center gap-2 mb-5">
+            {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-4 h-4 text-[#0F6E56]' } only %}
+            <span class="text-[14px] text-[#0F6E56] font-medium">{{ user_email }}</span>
+          </div>
+          <p class="text-neutral-500 max-w-[480px] text-[15px]">
+            Manage your reservations, digital access card and account information.
+          </p>
+        </div>
+
+        <div class="shrink-0 flex flex-col items-center gap-3 pt-2">
+          <div class="w-20 h-20 rounded-full bg-[#9F5434]/10 border-2 border-[#9F5434]/20 flex items-center justify-center">
+            <span class="text-[#9F5434]" style="font-size: 24px; font-weight: 700;">{{ user_initials }}</span>
+          </div>
+          <div class="text-center">
+            <div class="text-[13px] text-neutral-900 font-semibold">{{ user_name }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── Summary ───────────────────────────────────────────────────────── #}
+  <section class="bg-[#FCFCFB] py-10 border-b border-neutral-100">
+    <div class="max-w-[1440px] mx-auto px-12">
+      <div class="grid grid-cols-3 gap-5">
+        <div class="bg-white border border-neutral-200/70 rounded-2xl p-6 flex items-start gap-4">
+          <div class="w-11 h-11 rounded-xl bg-[#E1F5EE]/60 flex items-center justify-center shrink-0 text-[#0F6E56]">
+            {% include 'cfc_media_hub:icon' with { name: 'calendar', size: 'w-5 h-5' } only %}
+          </div>
+          <div>
+            <div class="text-[12px] text-neutral-500 mb-1 uppercase tracking-wide font-semibold">Upcoming Reservations</div>
+            <div class="text-[15px] text-[#0F6E56] font-bold">{{ upcoming_count }} Upcoming</div>
+          </div>
+        </div>
+        <div class="bg-white border border-neutral-200/70 rounded-2xl p-6 flex items-start gap-4">
+          <div class="w-11 h-11 rounded-xl bg-neutral-50 flex items-center justify-center shrink-0 text-neutral-600">
+            {% include 'cfc_media_hub:icon' with { name: 'check-check', size: 'w-5 h-5' } only %}
+          </div>
+          <div>
+            <div class="text-[12px] text-neutral-500 mb-1 uppercase tracking-wide font-semibold">Reservation History</div>
+            <div class="text-[15px] text-neutral-600 font-bold">{{ completed_count }} Completed</div>
+          </div>
+        </div>
+        <div class="bg-white border border-neutral-200/70 rounded-2xl p-6 flex items-start gap-4">
+          <div class="w-11 h-11 rounded-xl bg-[#E1F5EE]/60 flex items-center justify-center shrink-0 text-[#0F6E56]">
+            {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-5 h-5 text-[#0F6E56]' } only %}
+          </div>
+          <div>
+            <div class="text-[12px] text-neutral-500 mb-1 uppercase tracking-wide font-semibold">Account Status</div>
+            <div class="text-[15px] text-[#0F6E56] font-bold">Registered user</div>
+            <div class="mt-1.5 inline-flex items-center gap-1 bg-[#9F5434] text-white px-2 py-0.5 rounded-full text-[10px] font-semibold">
+              {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-2.5 h-2.5' } only %} Verified
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── Reservations ──────────────────────────────────────────────────── #}
+  <section class="bg-white py-12">
+    <div class="max-w-[1440px] mx-auto px-12">
+      <div class="flex items-end justify-between mb-10">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-4 h-[2px] bg-[#9F5434]"></div>
+            <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Reservations</div>
+          </div>
+          <h2 class="tracking-tight text-neutral-900" style="font-size: 36px; font-weight: 600; letter-spacing: -0.02em;">My reservations</h2>
+        </div>
+        <a href="{{ booking_base_url }}" class="flex items-center gap-2 bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-6 py-3 rounded-xl text-[13px] transition-colors group font-semibold">
+          New reservation
+          {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4', class: 'group-hover:translate-x-0.5 transition-transform' } only %}
+        </a>
+      </div>
+
+      <div class="space-y-4">
+        {% for r in reservations %}
+          <div class="bg-white border rounded-2xl p-7 transition-all {{ r.status == 'upcoming' ? 'border-neutral-200/70 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.08)]' : 'border-neutral-200/50 opacity-85' }}">
+            <div class="flex items-start justify-between gap-6">
+              <div class="flex items-start gap-4">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 {{ r.space_key == 'studio' ? 'bg-[#9F5434]/10 text-[#9F5434]' : 'bg-neutral-100 text-neutral-600' }}">
+                  {% include 'cfc_media_hub:icon' with { name: space_icons[r.space_key] ?? 'monitor', size: 'w-4 h-4' } only %}
+                </div>
+                <div>
+                  <div class="flex items-center gap-3 mb-1">
+                    <h3 class="tracking-tight text-neutral-900" style="font-size: 18px; font-weight: 600;">{{ r.space }}</h3>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold {{ status_classes[r.status] }}">
+                      {{ status_labels[r.status] }}
+                    </span>
+                  </div>
+                  <div class="text-[13px] text-neutral-500 space-x-3">
+                    <span>{{ r.id }}</span>
+                    <span>&middot;</span>
+                    <span>{{ r.price }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                {% if r.status == 'upcoming' %}
+                  <a href="{{ r.cancel_url }}" class="px-4 py-2 border border-neutral-200 hover:border-[#9F5434]/40 hover:text-[#9F5434] text-neutral-600 rounded-xl text-[13px] transition-colors font-medium">Cancel</a>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mt-5 pt-5 border-t border-neutral-100 grid grid-cols-3 gap-6">
+              <div>
+                <div class="text-[11px] uppercase tracking-wide text-neutral-400 mb-1 font-semibold">Date</div>
+                <div class="text-[14px] text-neutral-800 font-medium">{{ r.date }}</div>
+              </div>
+              <div>
+                <div class="text-[11px] uppercase tracking-wide text-neutral-400 mb-1 font-semibold">Time</div>
+                <div class="text-[14px] text-neutral-800 font-medium">{{ r.time }}</div>
+              </div>
+              <div>
+                <div class="text-[11px] uppercase tracking-wide text-neutral-400 mb-1 font-semibold">Duration</div>
+                <div class="text-[14px] text-neutral-800 font-medium">{{ r.duration }}</div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <p class="mt-6 text-[12px] text-neutral-400 flex items-start gap-2">
+        {% include 'cfc_media_hub:icon' with { name: 'alert-circle', size: 'w-3.5 h-3.5 text-[#9F5434] shrink-0 mt-0.5' } only %}
+        Reservations may be cancelled according to the applicable booking policy.
+      </p>
+    </div>
+  </section>
+
+  {# ── Digital access card ──────────────────────────────────────────── #}
+  <section class="bg-[#FCFCFB] py-12 border-t border-b border-neutral-100">
+    <div class="max-w-[1440px] mx-auto px-12">
+      <div class="grid grid-cols-12 gap-12 items-start">
+        <div class="col-span-5">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-4 h-[2px] bg-[#9F5434]"></div>
+            <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Digital Access Card</div>
+          </div>
+          <h2 class="tracking-tight text-neutral-900 mb-4" style="font-size: 36px; font-weight: 600; letter-spacing: -0.02em;">Your access card.</h2>
+          <p class="text-neutral-500 leading-relaxed mb-8 text-[15px]">
+            Present this QR code at reception for a quick and seamless check-in. Your card is linked to your accreditation and active reservations.
+          </p>
+          <div class="space-y-3 text-[14px] text-neutral-600">
+            <div class="flex items-center gap-2">
+              {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-4 h-4 text-[#0F6E56] shrink-0' } only %}
+              Valid for all reserved spaces
+            </div>
+            <div class="flex items-center gap-2">
+              {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-4 h-4 text-[#0F6E56] shrink-0' } only %}
+              Linked to your press accreditation
+            </div>
+            <div class="flex items-center gap-2">
+              {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-4 h-4 text-[#0F6E56] shrink-0' } only %}
+              Refreshed automatically for each session
+            </div>
+          </div>
+        </div>
+
+        <div class="col-span-7">
+          <div class="relative">
+            <div class="absolute -inset-4 bg-[#9F5434]/10 rounded-[36px] blur-2xl"></div>
+            <div class="relative bg-neutral-950 rounded-3xl overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)]">
+              <div class="h-1 bg-gradient-to-r from-[#9F5434] via-[#C27048] to-[#9F5434]"></div>
+
+              <div class="p-8">
+                <div class="flex items-center justify-between mb-8">
+                  <div>
+                    <div class="text-[11px] uppercase tracking-[0.2em] text-[#9F5434] font-bold">CFC Media Hub</div>
+                    <div class="text-white/50 text-[11px] mt-0.5">Casablanca Finance City &middot; Morocco</div>
+                  </div>
+                  <div class="w-8 h-8 rounded-full border border-[#9F5434]/40 flex items-center justify-center">
+                    <div class="w-3 h-3 rounded-full bg-[#9F5434]"></div>
+                  </div>
+                </div>
+
+                <div class="flex items-start justify-between gap-8">
+                  <div class="flex-1">
+                    <div class="w-16 h-16 rounded-full bg-[#9F5434]/20 border border-[#9F5434]/30 flex items-center justify-center mb-5">
+                      <span class="text-[#9F5434]" style="font-size: 20px; font-weight: 700;">{{ user_initials }}</span>
+                    </div>
+
+                    <div class="text-white" style="font-size: 22px; font-weight: 600; letter-spacing: -0.02em;">{{ user_name }}</div>
+                    <div class="text-white/40 text-[12px] mt-0.5">{{ user_email }}</div>
+
+                    <div class="mt-6 pt-5 border-t border-white/10">
+                      <div class="text-[10px] uppercase tracking-[0.16em] text-white/40 mb-1.5 font-semibold">Valid Until</div>
+                      <div class="text-white/80 text-[13px] font-medium">31 December 2026</div>
+                    </div>
+                  </div>
+
+                  <div class="shrink-0 flex flex-col items-center gap-3">
+                    <div class="p-3 bg-white rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+                      {{ qr_svg|raw }}
+                    </div>
+                    <div class="text-[11px] text-white/40 text-center max-w-[160px] leading-relaxed">
+                      Present at reception for check-in
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-8 py-4 bg-[#9F5434]/8 border-t border-white/[0.06] flex items-center justify-between">
+                <div class="text-[11px] text-white/30">Verified &middot; CFC Media Hub Platform</div>
+                <div class="flex items-center gap-1.5">
+                  <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                  <span class="text-[11px] text-white/40">Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── Studio info ──────────────────────────────────────────────────── #}
+  <section class="bg-white py-12">
+    <div class="max-w-[1440px] mx-auto px-12">
+      <div class="grid grid-cols-2 gap-8">
+        <div class="bg-[#FCFCFB] border border-neutral-200/70 rounded-3xl p-8">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0">
+              {% include 'cfc_media_hub:icon' with { name: 'alert-circle', size: 'w-5 h-5' } only %}
+            </div>
+            <h3 class="tracking-tight text-neutral-900" style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em;">Studio booking information</h3>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-start gap-3 text-[14px] text-neutral-700 leading-relaxed">
+              <span class="shrink-0 mt-0.5">{% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-4 h-4 text-[#0F6E56]' } only %}</span>
+              Only the Podcast Studio is subject to a fee.
+            </div>
+            <div class="flex items-start gap-3 text-[14px] text-neutral-700 leading-relaxed">
+              <span class="shrink-0 mt-0.5">{% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-4 h-4 text-[#0F6E56]' } only %}</span>
+              Meeting Rooms and Desks are available free of charge for International Accredited Journalists.
+            </div>
+            <div class="mt-5 pt-5 border-t border-neutral-200 rounded-2xl bg-[#9F5434]/5 p-5 -mx-1">
+              <div class="text-[12px] uppercase tracking-[0.14em] text-[#9F5434] mb-3 font-bold">CFC Member Companies</div>
+              <div class="text-[14px] text-neutral-700 leading-relaxed">
+                CFC Member Companies have access exclusively to the Podcast Studio. Meeting Rooms and Desks are not available.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-[#FCFCFB] border border-neutral-200/70 rounded-3xl p-8">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0">
+              {% include 'cfc_media_hub:icon' with { name: 'file-text', size: 'w-5 h-5' } only %}
+            </div>
+            <h3 class="tracking-tight text-neutral-900" style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em;">Studio deliverables</h3>
+          </div>
+          <ul class="space-y-4">
+            {% for d in [
+              'Raw footage is delivered without editing.',
+              'Recordings between 1 and 2 hours are delivered the same day.',
+              'Half-day recordings are delivered within a maximum of 24 hours.',
+              "Files are delivered via WeTransfer or on the client's hard drive.",
+            ] %}
+              <li class="flex items-start gap-3 text-[14px] text-neutral-700 leading-relaxed">
+                <span class="w-5 h-5 rounded-full bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold">{{ loop.index }}</span>
+                {{ d }}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── History ───────────────────────────────────────────────────────── #}
+  <section class="bg-[#FCFCFB] py-12 border-t border-neutral-100">
+    <div class="max-w-[1440px] mx-auto px-12">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-4 h-[2px] bg-[#9F5434]"></div>
+        <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">History</div>
+      </div>
+      <h2 class="tracking-tight text-neutral-900 mb-8" style="font-size: 36px; font-weight: 600; letter-spacing: -0.02em;">Reservation history</h2>
+
+      <div class="bg-white border border-neutral-200/70 rounded-2xl overflow-hidden">
+        <div class="grid grid-cols-12 gap-4 px-7 py-4 border-b border-neutral-100 bg-neutral-50">
+          <div class="col-span-1 text-[11px] uppercase tracking-wide text-neutral-400 font-semibold">#</div>
+          <div class="col-span-4 text-[11px] uppercase tracking-wide text-neutral-400 font-semibold">Reservation</div>
+          <div class="col-span-3 text-[11px] uppercase tracking-wide text-neutral-400 font-semibold">Date</div>
+          <div class="col-span-2 text-[11px] uppercase tracking-wide text-neutral-400 font-semibold">Status</div>
+          <div class="col-span-2 text-[11px] uppercase tracking-wide text-neutral-400 text-right font-semibold">Action</div>
+        </div>
+
+        {% for r in reservations %}
+          <div class="grid grid-cols-12 gap-4 px-7 py-5 items-center hover:bg-neutral-50/60 transition-colors {{ not loop.last ? 'border-b border-neutral-100' : '' }}">
+            <div class="col-span-1 text-[12px] text-neutral-400 font-semibold">0{{ loop.index }}</div>
+            <div class="col-span-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ r.space_key == 'studio' ? 'bg-[#9F5434]/10 text-[#9F5434]' : 'bg-neutral-100 text-neutral-500' }}">
+                  {% include 'cfc_media_hub:icon' with { name: space_icons[r.space_key] ?? 'monitor', size: 'w-4 h-4' } only %}
+                </div>
+                <div>
+                  <div class="text-[14px] text-neutral-900 font-semibold">{{ r.space }}</div>
+                  <div class="text-[11px] text-neutral-400">{{ r.id }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-span-3 text-[13px] text-neutral-600">{{ r.date }}</div>
+            <div class="col-span-2">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold {{ status_classes[r.status] }}">
+                {{ status_labels[r.status] }}
+              </span>
+            </div>
+            <div class="col-span-2 text-right"></div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {# ── Settings ──────────────────────────────────────────────────────── #}
+  <section class="bg-white py-12 border-t border-neutral-100">
+    <div class="max-w-[1440px] mx-auto px-12">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-4 h-[2px] bg-[#9F5434]"></div>
+        <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Settings</div>
+      </div>
+      <h2 class="tracking-tight text-neutral-900 mb-8" style="font-size: 36px; font-weight: 600; letter-spacing: -0.02em;">Account settings</h2>
+
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        {% for s in [
+          { icon: 'edit-2', label: 'Edit profile', desc: 'Update your personal information and credentials.' },
+          { icon: 'lock', label: 'Change password', desc: 'Update your account password and security settings.' },
+          { icon: 'bell', label: 'Notification preferences', desc: 'Manage email and platform notification settings.' },
+          { icon: 'shield', label: 'Privacy & security', desc: 'Control your data, access and privacy options.' },
+        ] %}
+          <button type="button" class="flex items-center gap-4 bg-[#FCFCFB] border border-neutral-200/70 hover:border-[#9F5434]/30 hover:shadow-[0_8px_24px_-8px_rgba(159,84,52,0.1)] rounded-2xl p-6 text-left transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0 group-hover:bg-[#9F5434] group-hover:text-white transition-colors">
+              {% include 'cfc_media_hub:icon' with { name: s.icon, size: 'w-4 h-4' } only %}
+            </div>
+            <div class="flex-1">
+              <div class="text-[15px] text-neutral-900 mb-0.5 font-semibold">{{ s.label }}</div>
+              <div class="text-[13px] text-neutral-500 leading-relaxed">{{ s.desc }}</div>
+            </div>
+            {% include 'cfc_media_hub:icon' with { name: 'chevron-right', size: 'w-4 h-4 text-neutral-300 group-hover:text-[#9F5434] transition-colors shrink-0' } only %}
+          </button>
+        {% endfor %}
+      </div>
+
+      <a href="{{ logout_url }}" class="w-full flex items-center gap-4 border border-[#9F5434]/20 hover:border-[#9F5434]/50 hover:bg-[#9F5434]/5 rounded-2xl p-6 text-left transition-all group">
+        <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0">
+          {% include 'cfc_media_hub:icon' with { name: 'log-out', size: 'w-4 h-4' } only %}
+        </div>
+        <div class="flex-1">
+          <div class="text-[15px] text-[#9F5434] font-semibold">Log out</div>
+          <div class="text-[13px] text-neutral-400">Sign out of your CFC Media Hub account.</div>
+        </div>
+        {% include 'cfc_media_hub:icon' with { name: 'chevron-right', size: 'w-4 h-4 text-[#9F5434]/40 group-hover:text-[#9F5434] transition-colors shrink-0' } only %}
+      </a>
+    </div>
+  </section>
+
+</div>

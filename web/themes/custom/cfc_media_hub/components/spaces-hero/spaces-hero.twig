@@ -1,0 +1,47 @@
+<section class="bg-white pt-16 pb-20 border-b border-neutral-100">
+  <div class="max-w-[1440px] mx-auto px-12">
+    <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-10">
+      <a href="{{ home_url }}" class="hover:text-neutral-900 transition-colors">Home</a>
+      <span>/</span>
+      <span class="text-neutral-900">Spaces</span>
+    </div>
+
+    <div class="grid grid-cols-12 gap-12 items-end">
+      <div class="col-span-7">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-5 h-[2px] bg-[#9F5434]"></div>
+          <div class="text-[12px] uppercase tracking-[0.18em] text-[#0F6E56] font-semibold">Spaces &middot; 3 environments</div>
+        </div>
+        <h1 class="tracking-tight text-neutral-900" style="font-size: 78px; font-weight: 600; line-height: 1.04; letter-spacing: -0.03em;">
+          Choose your space.
+        </h1>
+        <p class="mt-7 text-neutral-700 leading-relaxed max-w-[560px] text-[20px]">
+          Three dedicated environments designed for journalists and media professionals.
+        </p>
+      </div>
+
+      <div class="col-span-5">
+        <div class="bg-[#9F5434]/5 border border-[#9F5434]/15 rounded-2xl p-6">
+          <div class="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-[#9F5434] mb-3 font-semibold">
+            {% include 'cfc_media_hub:icon' with { name: 'search', size: 'w-3.5 h-3.5' } only %}
+            Quick guide
+          </div>
+          <ul class="space-y-3 text-[14px]">
+            <li class="flex items-start gap-3">
+              <span class="w-5 h-5 rounded-full bg-[#9F5434]/10 text-[#9F5434] text-[11px] flex items-center justify-center mt-0.5 font-bold">1</span>
+              <span class="text-neutral-700">Quiet daily work? <span class="text-neutral-900 font-semibold">Desk</span></span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-5 h-5 rounded-full bg-[#9F5434]/10 text-[#9F5434] text-[11px] flex items-center justify-center mt-0.5 font-bold">2</span>
+              <span class="text-neutral-700">Interview or editorial meeting? <span class="text-neutral-900 font-semibold">Meeting Room</span></span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-5 h-5 rounded-full bg-[#9F5434]/10 text-[#9F5434] text-[11px] flex items-center justify-center mt-0.5 font-bold">3</span>
+              <span class="text-neutral-700">Recording or podcast? <span class="text-neutral-900 font-semibold">Studio</span></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

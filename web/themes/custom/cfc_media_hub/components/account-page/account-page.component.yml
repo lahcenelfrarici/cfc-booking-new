@@ -1,0 +1,35 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Account page
+status: stable
+description: >
+  My Account page — profile header, reservations, digital access card,
+  studio info, history and settings. Identity is real (current Drupal user);
+  reservations are placeholder data pending the Booking entity.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+    booking_base_url:
+      type: string
+    logout_url:
+      type: string
+    user_name:
+      type: string
+    user_email:
+      type: string
+    user_initials:
+      type: string
+    reservations:
+      type: array
+    qr_svg:
+      type: string
+  required:
+    - home_url
+    - booking_base_url
+    - logout_url
+    - user_name
+    - user_email
+    - user_initials
+    - reservations
+    - qr_svg

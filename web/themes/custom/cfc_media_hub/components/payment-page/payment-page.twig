@@ -1,0 +1,30 @@
+<div class="border-b border-neutral-100 bg-white">
+  <div class="w-full max-w-[1440px] mx-auto px-12 h-20 flex items-center justify-between">
+    <a href="{{ home_url }}" class="flex items-center gap-2 text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">
+      {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-4 h-4' } only %}
+      Back
+    </a>
+    {% include 'cfc_media_hub:journey-steps' with { active: [5] } only %}
+    <a href="{{ home_url }}" class="text-[13px] text-neutral-400 hover:text-neutral-700 transition-colors">Cancel</a>
+  </div>
+</div>
+
+<section class="bg-[#FCFCFB] min-h-[70vh]">
+  <div class="max-w-[640px] mx-auto px-12 py-16">
+    <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-8">
+      <a href="{{ home_url }}" class="hover:text-neutral-900 transition-colors">Home</a>
+      <span>/</span>
+      <span class="text-neutral-900">Payment</span>
+    </div>
+
+    <h1 class="tracking-tight text-neutral-900 mb-8" style="font-size: 40px; font-weight: 600; letter-spacing: -0.02em;">
+      Complete your payment.
+    </h1>
+
+    <div class="bg-white rounded-3xl border border-neutral-200 shadow-[0_24px_60px_-20px_rgba(15,110,86,0.08)] p-10">
+      <div class="cfc-form-shell">
+        {{ form }}
+      </div>
+    </div>
+  </div>
+</section>

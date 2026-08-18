@@ -1,0 +1,58 @@
+{#
+/**
+ * @file
+ * CFC Media Hub — single page layout.
+ *
+ * Regions:
+ * - page.header: full site header (logo, nav, auth, booking CTA) — see block "CFC Navbar".
+ * - page.breadcrumb, page.highlighted, page.help: contextual regions above content.
+ * - page.content: main page content. Sections are full-bleed and define their own
+ *   max-width container internally (matching the prototype's section pattern),
+ *   so this template intentionally does not constrain their width.
+ * - page.sidebar_first / page.sidebar_second: optional sidebars, boxed when present.
+ * - page.footer: full site footer — see block "CFC Footer".
+ */
+#}
+<div class="min-h-screen w-full flex flex-col">
+
+  {{ page.header }}
+
+  {% if page.breadcrumb %}
+    <div class="mx-auto w-full max-w-[1440px] px-12 pt-4 text-sm text-[color:var(--ink-500)]">
+      {{ page.breadcrumb }}
+    </div>
+  {% endif %}
+
+  {% if page.highlighted %}
+    <div class="mx-auto w-full max-w-[1440px] px-12 pt-4">
+      {{ page.highlighted }}
+    </div>
+  {% endif %}
+
+  {% if page.help %}
+    <div class="mx-auto w-full max-w-[1440px] px-12 pt-4">
+      {{ page.help }}
+    </div>
+  {% endif %}
+
+  <main class="flex-1">
+    <a id="main-content" tabindex="-1"></a>
+
+    {% if page.sidebar_first or page.sidebar_second %}
+      <div class="mx-auto flex w-full max-w-[1440px] gap-10 px-12 py-10">
+        {% if page.sidebar_first %}
+          <aside class="w-64 shrink-0">{{ page.sidebar_first }}</aside>
+        {% endif %}
+        <div class="min-w-0 flex-1">{{ page.content }}</div>
+        {% if page.sidebar_second %}
+          <aside class="w-64 shrink-0">{{ page.sidebar_second }}</aside>
+        {% endif %}
+      </div>
+    {% else %}
+      {{ page.content }}
+    {% endif %}
+  </main>
+
+  {{ page.footer }}
+
+</div>

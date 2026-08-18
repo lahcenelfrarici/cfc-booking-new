@@ -1,0 +1,11 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Connection request modal
+status: experimental
+description: >
+  Modal form for submitting a connection request. Expects an ancestor Alpine
+  scope exposing a boolean "open" variable that controls visibility.
+  Front-end only for now — submission handling lands with the Connection
+  Request entity in a later phase.
+props:
+  type: object
+  properties: {}

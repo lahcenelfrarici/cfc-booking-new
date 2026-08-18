@@ -1,0 +1,8 @@
+name: 'CFC Payment'
+type: module
+description: 'Real Stripe card payment for paid bookings (currently: Studio).'
+package: CFC Media Hub
+core_version_requirement: ^11
+dependencies:
+  - cfc_booking
+  - stripe

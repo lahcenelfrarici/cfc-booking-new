@@ -1,0 +1,15 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Hub spaces overview
+status: stable
+description: Hub page "Three complementary spaces" teaser grid. Data comes from real "Space" content type nodes.
+props:
+  type: object
+  properties:
+    spaces_url:
+      type: string
+    spaces:
+      type: array
+      description: Array of Space nodes mapped by Drupal\cfc_content\ContentRepository::getSpaces().
+  required:
+    - spaces_url
+    - spaces

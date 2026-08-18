@@ -1,0 +1,18 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Spaces teaser
+status: stable
+description: Homepage "Three spaces. One hub." section. Space data comes from real "Space" content type nodes.
+props:
+  type: object
+  properties:
+    spaces_url:
+      type: string
+    booking_base_url:
+      type: string
+    spaces:
+      type: array
+      description: Array of Space nodes mapped by Drupal\cfc_content\ContentRepository::getSpaces().
+  required:
+    - spaces_url
+    - booking_base_url
+    - spaces

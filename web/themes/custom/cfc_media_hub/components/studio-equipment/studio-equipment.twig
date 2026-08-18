@@ -1,0 +1,61 @@
+{% set groups = [
+  { category: 'Cameras & Video', icon: 'camera', items: ['3 Sony Cinema Line FX3A Full-Frame Cameras', '3 Sony FE 24-70mm F2.8 GM II Lenses', 'Blackmagic ATEM Mini Pro ISO Switcher'] },
+  { category: 'Lighting', icon: 'video', items: ['Godox FL150R Flexible LED Panels', 'Amaran 300c RGB LED Monolight', 'Aputure Light Dome III', 'Professional Softboxes'] },
+  { category: 'Audio', icon: 'mic', items: ['RØDECaster Pro II', '3 Shure SM7B Microphones', 'Audio-Technica ATH-M50x Headphones', 'Professional Boom Arms', 'RODE Wireless Pro'] },
+  { category: 'Studio Support', icon: 'headphones', items: ['Professional Tripods', 'C-Stands', 'Studio Rail System'] },
+] %}
+
+<section class="bg-[#FCFCFB] py-16 border-t border-neutral-100">
+  <div class="max-w-[1440px] mx-auto px-12">
+    <div class="grid grid-cols-12 gap-12 mb-14">
+      <div class="col-span-5">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-5 h-[2px] bg-[#9F5434]"></div>
+          <div class="text-[12px] uppercase tracking-[0.18em] text-[#0F6E56] font-semibold">Studio &middot; Equipment</div>
+        </div>
+        <h2 class="tracking-tight text-neutral-900" style="font-size: 48px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
+          Built for podcast production.
+        </h2>
+      </div>
+      <div class="col-span-7 flex items-end">
+        <p class="text-neutral-600 leading-relaxed max-w-[560px] text-[16px]">
+          Every detail of the studio has been engineered around editorial workflows — from acoustic treatment to podcast pipelines and dedicated on-site technical support.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-5">
+      <div class="col-span-5 rounded-2xl overflow-hidden h-[480px] relative group">
+        <img src="{{ images_base }}/studio-equipment.jpg" alt="Studio production environment" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div class="absolute bottom-7 left-7 right-7 text-white">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-white/80 mb-2">Studio &middot; CFC Media Hub</div>
+          <div class="tracking-tight max-w-[320px]" style="font-size: 22px; font-weight: 500; letter-spacing: -0.015em;">
+            A podcast studio engineered to production standards.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-span-7 grid grid-cols-2 gap-5">
+        {% for g in groups %}
+          <div class="bg-white border border-neutral-200/70 rounded-2xl p-7 hover:border-[#9F5434]/30 transition-colors">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0">
+                {% include 'cfc_media_hub:icon' with { name: g.icon, size: 'w-5 h-5' } only %}
+              </div>
+              <h3 class="tracking-tight" style="font-size: 16px; font-weight: 600; letter-spacing: -0.01em;">{{ g.category }}</h3>
+            </div>
+            <ul class="space-y-2.5">
+              {% for item in g.items %}
+                <li class="flex items-start gap-2 text-[13px] text-neutral-600">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#9F5434] shrink-0 mt-[6px]"></span>
+                  {{ item }}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>

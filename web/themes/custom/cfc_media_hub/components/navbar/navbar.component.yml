@@ -1,0 +1,35 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Navbar
+status: stable
+description: Site header — logo, primary navigation, auth state and booking CTA.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+    logo_url:
+      type: string
+    links:
+      type: array
+      items:
+        type: object
+        properties:
+          label:
+            type: string
+          url:
+            type: string
+          active:
+            type: boolean
+    is_authenticated:
+      type: boolean
+      default: false
+    account_url:
+      type: string
+    sign_in_url:
+      type: string
+    booking_url:
+      type: string
+  required:
+    - home_url
+    - logo_url
+    - links

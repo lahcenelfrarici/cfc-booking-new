@@ -1,0 +1,17 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Badge
+status: stable
+description: Small pill tag used on cards (space access tags, production type tags).
+props:
+  type: object
+  properties:
+    variant:
+      type: string
+      enum: [light, solid, translucent]
+      default: light
+    attributes:
+      type: Drupal\Core\Template\Attribute
+slots:
+  label:
+    type: string
+    description: Badge label.

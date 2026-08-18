@@ -1,0 +1,27 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Button
+status: stable
+description: Pill-shaped call-to-action button used across marketing sections.
+props:
+  type: object
+  properties:
+    variant:
+      type: string
+      enum: [terracotta, outline-dark, outline-white, white]
+      default: terracotta
+    size:
+      type: string
+      enum: [sm, md]
+      default: md
+    href:
+      type: string
+      description: If set, renders an <a>. Otherwise renders a <button>.
+    attributes:
+      type: Drupal\Core\Template\Attribute
+slots:
+  label:
+    type: string
+    description: Button label.
+  icon:
+    type: string
+    description: Optional trailing icon markup (inline SVG).

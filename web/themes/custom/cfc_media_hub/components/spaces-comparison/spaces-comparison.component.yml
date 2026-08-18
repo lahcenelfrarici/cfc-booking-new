@@ -1,0 +1,15 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Spaces comparison
+status: stable
+description: Full Desk / Meeting Room / Studio comparison blocks with anchors for deep-linking. Data comes from real "Space" content type nodes.
+props:
+  type: object
+  properties:
+    booking_base_url:
+      type: string
+    spaces:
+      type: array
+      description: Array of Space nodes mapped by Drupal\cfc_content\ContentRepository::getSpaces().
+  required:
+    - booking_base_url
+    - spaces

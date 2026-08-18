@@ -1,0 +1,81 @@
+{% set access_note_by_rule = { journalist: 'Verified credentials required', company: 'CFC Member verification required', both: 'No accreditation required' } %}
+{% set access_label_by_rule = { journalist: 'International accredited journalists only', company: 'CFC Member companies only', both: null } %}
+
+<section class="bg-[#FCFCFB] py-14">
+  <div class="max-w-[1440px] mx-auto px-12 space-y-7">
+    {% for s in spaces %}
+      {% set is_studio = s.highlight %}
+      <article id="space-{{ s.id }}" class="relative rounded-3xl overflow-hidden border {{ is_studio ? 'border-[#0F6E56] bg-[#0F6E56] text-white shadow-[0_30px_80px_-30px_rgba(15,110,86,0.5)]' : 'border-neutral-200/80 bg-white' }} scroll-mt-28">
+        {% if is_studio %}
+          <div class="absolute top-7 right-7 z-10 bg-[#9F5434] text-white px-3.5 py-1.5 rounded-full text-[11px] uppercase tracking-[0.14em] font-bold">
+            International Accredited Journalists &amp; CFC Members
+          </div>
+        {% endif %}
+
+        <div class="grid grid-cols-12 gap-0">
+          <div class="col-span-5 relative h-[460px] bg-neutral-100 {{ loop.index0 is odd ? 'order-2' : '' }}">
+            {% if s.image_url %}
+              <img src="{{ s.image_url }}" alt="{{ s.title }}" class="w-full h-full object-cover" />
+            {% endif %}
+            <div class="absolute inset-0 {{ is_studio ? 'bg-gradient-to-r from-transparent to-[#0F6E56]/40' : 'bg-gradient-to-r from-transparent to-white/10' }}"></div>
+            {% if access_label_by_rule[s.access_rule] %}
+              <div class="absolute top-6 left-6 flex items-center gap-2">
+                <div class="px-3 py-1.5 rounded-full text-[11px] backdrop-blur bg-white/90 text-neutral-700 font-semibold">{{ access_label_by_rule[s.access_rule] }}</div>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="col-span-7 p-12 flex flex-col justify-between {{ loop.index0 is odd ? 'order-1' : '' }}">
+            <div>
+              <div class="flex items-center justify-between mb-6">
+                <span class="text-[11px] uppercase tracking-[0.18em] font-bold {{ is_studio ? 'text-[#CDEDE3]' : 'text-[#9F5434]' }}">{{ s.subtitle }}</span>
+                <div class="flex items-center gap-1.5 text-[11px] {{ is_studio ? 'text-white/70' : 'text-neutral-500' }}">
+                  {% include 'cfc_media_hub:icon' with { name: 'lock', size: 'w-3 h-3' } only %}
+                  {{ access_note_by_rule[s.access_rule] }}
+                </div>
+              </div>
+
+              <h2 class="tracking-tight mb-5" style="font-size: 56px; font-weight: 600; line-height: 1; letter-spacing: -0.03em;">
+                {{ s.title }} <span class="{{ is_studio ? 'text-[#CDEDE3]' : 'text-neutral-400' }}">— {{ s.subtitle }}.</span>
+              </h2>
+
+              <p class="leading-relaxed max-w-[640px] text-[16px] {{ is_studio ? 'text-white/85' : 'text-neutral-600' }}">{{ s.description }}</p>
+
+              <div class="mt-9">
+                <div class="text-[11px] uppercase tracking-[0.16em] mb-4 font-semibold {{ is_studio ? 'text-[#CDEDE3]' : 'text-neutral-500' }}">Includes</div>
+                <div class="grid grid-cols-3 gap-4">
+                  {% for f in s.features %}
+                    <div class="rounded-xl p-4 border {{ is_studio ? 'border-white/15 bg-white/[0.06]' : 'border-neutral-200 bg-neutral-50/60' }}">
+                      <div class="w-9 h-9 rounded-lg mb-3 flex items-center justify-center {{ is_studio ? 'bg-white/10 text-white' : 'bg-[#9F5434]/10 text-[#9F5434]' }}">
+                        {% include 'cfc_media_hub:icon' with { name: 'check', size: 'w-4 h-4' } only %}
+                      </div>
+                      <div class="text-[13px] {{ is_studio ? 'text-white/90' : 'text-neutral-700' }}">{{ f }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-10 pt-8 border-t flex items-end justify-between gap-8 {{ is_studio ? 'border-white/15' : 'border-neutral-200' }}">
+              <div class="grid grid-cols-2 gap-10">
+                <div>
+                  <div class="text-[11px] uppercase tracking-wide mb-1 {{ is_studio ? 'text-white/60' : 'text-neutral-500' }}">Capacity &amp; slots</div>
+                  <div class="text-[15px] font-semibold">{{ s.capacity_meta }}</div>
+                </div>
+                <div>
+                  <div class="text-[11px] uppercase tracking-wide mb-1 {{ is_studio ? 'text-white/60' : 'text-neutral-500' }}">Pricing</div>
+                  <div class="text-[15px] font-semibold">{{ s.price_label }}</div>
+                </div>
+              </div>
+
+              <a href="{{ booking_base_url }}?space={{ s.id }}" class="shrink-0 px-8 py-4 rounded-full flex items-center gap-2 group {{ is_studio ? 'bg-white text-[#9F5434] hover:bg-[#9F5434]/10' : 'bg-[#9F5434] text-white hover:bg-[#8A4A2E]' }}">
+                <span class="font-semibold text-[14px]">{{ s.cta_label }}</span>
+                {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4', class: 'group-hover:translate-x-0.5 transition-transform' } only %}
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>

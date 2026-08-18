@@ -1,0 +1,23 @@
+cfc_booking.cancel:
+  path: '/booking/{node}/cancel'
+  defaults:
+    _controller: '\Drupal\cfc_booking\Controller\CancelBookingController::build'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_token: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+cfc_booking.review:
+  path: '/booking/{node}/review'
+  defaults:
+    _controller: '\Drupal\cfc_booking\Controller\ReviewController::build'
+    _title: 'Review your reservation'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: entity:node

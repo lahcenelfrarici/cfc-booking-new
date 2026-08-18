@@ -1,0 +1,219 @@
+<div
+  class="min-h-screen bg-[#FCFCFB]"
+  x-data="{
+    step: 'space',
+    spaces: {{ spaces|json_encode }},
+    selectedSpaceId: {{ initial_space ? ('\'' ~ initial_space ~ '\'') : 'null' }},
+    selectedDate: null,
+    selectedTime: null,
+    duration: null,
+    guests: [],
+    referenceId: null,
+    dates: [],
+    get selectedSpace() { return this.spaces.find(s => s.id === this.selectedSpaceId) || null; },
+    init() {
+      const days = [];
+      for (let i = 0; i < 14; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        days.push({ iso: d.toISOString().slice(0,10), weekday: d.toLocaleDateString('en-US', { weekday: 'short' }), day: d.getDate(), month: d.toLocaleDateString('en-US', { month: 'short' }) });
+      }
+      this.dates = days;
+      if (this.selectedSpaceId) { this.step = 'date'; }
+    },
+    chooseSpace(id) { this.selectedSpaceId = id; this.duration = null; this.step = 'date'; },
+    chooseDate(iso) { this.selectedDate = iso; this.step = 'time'; },
+    chooseTime(t) { this.selectedTime = t; this.step = 'review'; },
+    addGuest() { if (this.guests.length < this.selectedSpace.maxGuests) this.guests.push({ firstName: '', lastName: '' }); },
+    removeGuest(i) { this.guests.splice(i, 1); },
+    confirm() {
+      this.referenceId = 'RES-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+      this.step = 'done';
+    },
+  }"
+>
+
+  <section class="bg-white border-b border-neutral-100 py-10">
+    <div class="max-w-[900px] mx-auto px-12 flex items-center justify-center gap-3 text-[12px]">
+      <template x-for="(label, i) in ['Space', 'Date & Time', 'Review', 'Confirmation']" :key="label">
+        <div class="flex items-center gap-3">
+          <span
+            :class="(['space'].includes(step) && i === 0) || (['date','time'].includes(step) && i === 1) || (step === 'review' && i === 2) || (step === 'done' && i === 3) ? 'bg-[#9F5434] text-white' : 'bg-neutral-100 text-neutral-500'"
+            class="w-6 h-6 rounded-full flex items-center justify-center font-semibold"
+            x-text="i + 1"
+          ></span>
+          <span class="text-neutral-600" x-text="label"></span>
+          <template x-if="i < 3">
+            <span class="w-8 h-px bg-neutral-200"></span>
+          </template>
+        </div>
+      </template>
+    </div>
+  </section>
+
+  <div class="max-w-[900px] mx-auto px-12 py-16">
+
+    {# ── Step: space ─────────────────────────────────────────────────── #}
+    <div x-show="step === 'space'">
+      <h1 class="tracking-tight text-neutral-900 mb-8" style="font-size: 32px; font-weight: 600; letter-spacing: -0.02em;">Choose a space</h1>
+      <div class="grid grid-cols-3 gap-5">
+        <template x-for="s in spaces" :key="s.id">
+          <button
+            type="button"
+            x-on:click="chooseSpace(s.id)"
+            :class="selectedSpaceId === s.id ? 'border-[#0F6E56] shadow-[0_20px_50px_-20px_rgba(15,110,86,0.3)]' : 'border-neutral-200 hover:border-[#9F5434]/40'"
+            class="text-left bg-white border rounded-2xl p-6 transition-all"
+          >
+            <div class="text-[18px] font-semibold text-neutral-900" x-text="s.label"></div>
+            <div class="text-[13px] text-neutral-500 mt-0.5" x-text="s.sub"></div>
+            <div class="text-[13px] text-neutral-500 mt-3" x-text="s.meta"></div>
+            <div class="mt-4 text-[13px] font-semibold text-[#9F5434]" x-text="s.price"></div>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    {# ── Step: date ──────────────────────────────────────────────────── #}
+    <div x-show="step === 'date'" x-cloak>
+      <button type="button" x-on:click="step = 'space'" class="flex items-center gap-1.5 text-[13px] text-neutral-400 hover:text-neutral-700 mb-6">
+        {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-3.5 h-3.5' } only %}
+        Back
+      </button>
+      <h1 class="tracking-tight text-neutral-900 mb-8" style="font-size: 32px; font-weight: 600; letter-spacing: -0.02em;">Pick a date</h1>
+      <div class="grid grid-cols-7 gap-3">
+        <template x-for="d in dates" :key="d.iso">
+          <button
+            type="button"
+            x-on:click="chooseDate(d.iso)"
+            :class="selectedDate === d.iso ? 'border-[#0F6E56] bg-[#0F6E56] text-white' : 'border-neutral-200 hover:border-[#9F5434]/40 text-neutral-700'"
+            class="rounded-xl border py-4 text-center transition-all"
+          >
+            <div class="text-[11px] uppercase opacity-70" x-text="d.weekday"></div>
+            <div class="text-[18px] font-semibold mt-1" x-text="d.day"></div>
+            <div class="text-[11px] opacity-70" x-text="d.month"></div>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    {# ── Step: time ──────────────────────────────────────────────────── #}
+    <div x-show="step === 'time'" x-cloak>
+      <button type="button" x-on:click="step = 'date'" class="flex items-center gap-1.5 text-[13px] text-neutral-400 hover:text-neutral-700 mb-6">
+        {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-3.5 h-3.5' } only %}
+        Back
+      </button>
+      <h1 class="tracking-tight text-neutral-900 mb-8" style="font-size: 32px; font-weight: 600; letter-spacing: -0.02em;">Pick a time &amp; duration</h1>
+
+      <div class="mb-8">
+        <div class="text-[12px] uppercase tracking-wide text-neutral-500 font-semibold mb-3">Time slot</div>
+        <div class="grid grid-cols-4 gap-3">
+          <template x-for="t in ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']" :key="t">
+            <button
+              type="button"
+              x-on:click="selectedTime = t"
+              :class="selectedTime === t ? 'border-[#0F6E56] bg-[#0F6E56] text-white' : 'border-neutral-200 hover:border-[#9F5434]/40 text-neutral-700'"
+              class="rounded-xl border py-3 text-[14px] font-medium transition-all"
+              x-text="t"
+            ></button>
+          </template>
+        </div>
+      </div>
+
+      <div class="mb-8" x-show="selectedSpace">
+        <div class="text-[12px] uppercase tracking-wide text-neutral-500 font-semibold mb-3">Duration</div>
+        <div class="flex flex-wrap gap-3">
+          <template x-for="dur in (selectedSpace ? selectedSpace.durations : [])" :key="dur">
+            <button
+              type="button"
+              x-on:click="duration = dur"
+              :class="duration === dur ? 'border-[#0F6E56] bg-[#0F6E56] text-white' : 'border-neutral-200 hover:border-[#9F5434]/40 text-neutral-700'"
+              class="rounded-full border px-4 py-2 text-[13px] font-medium transition-all"
+              x-text="dur"
+            ></button>
+          </template>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        x-on:click="if (selectedTime && duration) step = 'review'"
+        :disabled="!selectedTime || !duration"
+        class="bg-[#9F5434] hover:bg-[#8A4A2E] disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-full font-semibold text-[14px] transition-colors"
+      >
+        Continue
+      </button>
+    </div>
+
+    {# ── Step: review ────────────────────────────────────────────────── #}
+    <div x-show="step === 'review'" x-cloak>
+      <button type="button" x-on:click="step = 'time'" class="flex items-center gap-1.5 text-[13px] text-neutral-400 hover:text-neutral-700 mb-6">
+        {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-3.5 h-3.5' } only %}
+        Back
+      </button>
+      <h1 class="tracking-tight text-neutral-900 mb-8" style="font-size: 32px; font-weight: 600; letter-spacing: -0.02em;">Review your reservation</h1>
+
+      <div class="bg-white border border-neutral-200 rounded-2xl p-7 space-y-4 mb-6" x-show="selectedSpace">
+        <div class="flex items-center justify-between py-2 border-b border-neutral-100">
+          <span class="text-[13px] text-neutral-500">Space</span>
+          <span class="text-[14px] font-semibold text-neutral-900" x-text="selectedSpace ? selectedSpace.label : ''"></span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-neutral-100">
+          <span class="text-[13px] text-neutral-500">Date</span>
+          <span class="text-[14px] font-semibold text-neutral-900" x-text="selectedDate"></span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-neutral-100">
+          <span class="text-[13px] text-neutral-500">Time &amp; duration</span>
+          <span class="text-[14px] font-semibold text-neutral-900" x-text="selectedTime + ' · ' + duration"></span>
+        </div>
+        <div class="flex items-center justify-between py-2">
+          <span class="text-[13px] text-neutral-500">Pricing</span>
+          <span class="text-[14px] font-semibold text-neutral-900" x-text="selectedSpace ? selectedSpace.price : ''"></span>
+        </div>
+      </div>
+
+      <div class="mb-8" x-show="selectedSpace && selectedSpace.maxGuests > 0">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-[12px] uppercase tracking-wide text-neutral-500 font-semibold">Guests (optional)</div>
+          <button type="button" x-on:click="addGuest()" class="text-[12px] text-[#0F6E56] font-semibold hover:underline">+ Add guest</button>
+        </div>
+        <div class="space-y-3">
+          <template x-for="(g, i) in guests" :key="i">
+            <div class="flex items-center gap-3">
+              <input type="text" x-model="g.firstName" placeholder="First name" class="flex-1 border border-neutral-200 rounded-xl px-4 py-2.5 text-[13px]" />
+              <input type="text" x-model="g.lastName" placeholder="Last name" class="flex-1 border border-neutral-200 rounded-xl px-4 py-2.5 text-[13px]" />
+              <button type="button" x-on:click="removeGuest(i)" class="text-neutral-400 hover:text-[#9F5434]">
+                {% include 'cfc_media_hub:icon' with { name: 'x', size: 'w-4 h-4' } only %}
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div x-show="selectedSpace && selectedSpace.id === 'studio'" x-cloak class="mb-6 bg-[#9F5434]/5 border border-[#9F5434]/15 rounded-xl p-5 text-[13px] text-neutral-600">
+        Studio bookings require payment (400 MAD/hr). Online payment via CMI is being integrated — for now, our team will contact you to confirm and collect payment.
+      </div>
+
+      <button type="button" x-on:click="confirm()" class="bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-8 py-3.5 rounded-full font-semibold text-[14px] transition-colors">
+        Make a reservation request
+      </button>
+    </div>
+
+    {# ── Step: done ──────────────────────────────────────────────────── #}
+    <div x-show="step === 'done'" x-cloak class="text-center py-10">
+      <div class="w-14 h-14 rounded-full bg-[#E1F5EE] flex items-center justify-center mx-auto mb-6">
+        {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-7 h-7 text-[#0F6E56]' } only %}
+      </div>
+      <h2 class="tracking-tight text-neutral-900 mb-2" style="font-size: 26px; font-weight: 600; letter-spacing: -0.015em;">Request received.</h2>
+      <p class="text-neutral-500 leading-relaxed mb-2 max-w-[440px] mx-auto text-[14px]">
+        Reference <span class="font-mono font-semibold text-neutral-800" x-text="referenceId"></span>
+      </p>
+      <p class="text-neutral-400 leading-relaxed mb-8 max-w-[440px] mx-auto text-[13px]">
+        This confirms your request was captured. Real-time availability, automatic confirmation and payment are being finalized on the platform — our team will follow up by email in the meantime.
+      </p>
+      <a href="{{ account_url }}" class="inline-flex items-center gap-2 bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-8 py-3.5 rounded-full font-semibold text-[14px] transition-colors">
+        Go to My Account
+      </a>
+    </div>
+
+  </div>
+</div>

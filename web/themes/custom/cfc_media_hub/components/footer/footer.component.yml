@@ -1,0 +1,31 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Footer
+status: stable
+description: Site footer — newsletter signup, link columns, legal bar.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+    logo_url:
+      type: string
+    columns:
+      type: array
+      items:
+        type: object
+        properties:
+          title:
+            type: string
+          links:
+            type: array
+            items:
+              type: object
+              properties:
+                label:
+                  type: string
+                url:
+                  type: string
+  required:
+    - home_url
+    - logo_url
+    - columns

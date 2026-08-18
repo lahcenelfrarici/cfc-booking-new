@@ -1,0 +1,35 @@
+<header class="sticky top-0 z-40 w-full bg-white/75 backdrop-blur-xl border-b border-neutral-900/[0.06]">
+  <div class="max-w-[1440px] mx-auto px-12 h-28 flex items-center justify-between">
+    <a href="{{ home_url }}" class="flex items-center -ml-2">
+      <img src="{{ logo_url }}" alt="CFC Media Hub" class="h-20 w-auto" />
+    </a>
+
+    <nav class="flex items-center gap-9">
+      {% for link in links %}
+        <a href="{{ link.url }}" class="relative flex flex-col items-center gap-1.5 text-[14px] font-{{ link.active ? 'semibold' : 'normal' }} transition-colors group">
+          <span class="{{ link.active ? 'text-[#0F6E56]' : 'text-neutral-700 group-hover:text-[#0F6E56]' }}">{{ link.label }}</span>
+          {% if link.active %}
+            <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#9F5434]"></span>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </nav>
+
+    <div class="flex items-center gap-4">
+      <button type="button" class="flex items-center gap-1.5 text-[13px] text-neutral-600 hover:text-neutral-900">
+        {% include 'cfc_media_hub:icon' with { name: 'globe', size: 'w-4 h-4' } only %}
+        EN
+      </button>
+
+      {% if is_authenticated %}
+        <a href="{{ account_url }}" class="text-[13px] font-medium text-[#0F6E56] hover:text-[#085041] transition-colors">My Account</a>
+      {% else %}
+        <a href="{{ sign_in_url }}" class="text-[13px] text-neutral-700 hover:text-neutral-900 transition-colors">Sign in</a>
+      {% endif %}
+
+      {% embed 'cfc_media_hub:button' with { variant: 'terracotta', size: 'sm', href: booking_url } %}
+        {% block label %}Book a space{% endblock %}
+      {% endembed %}
+    </div>
+  </div>
+</header>

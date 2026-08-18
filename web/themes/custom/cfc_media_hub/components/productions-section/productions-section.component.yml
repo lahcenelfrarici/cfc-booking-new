@@ -1,0 +1,15 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Productions section
+status: stable
+description: Homepage "Produced at the Hub" section. Data comes from real "Production" content type nodes.
+props:
+  type: object
+  properties:
+    production_url:
+      type: string
+    productions:
+      type: array
+      description: Array of Production nodes (first item is treated as featured), mapped by Drupal\cfc_content\ContentRepository::getProductions().
+  required:
+    - production_url
+    - productions

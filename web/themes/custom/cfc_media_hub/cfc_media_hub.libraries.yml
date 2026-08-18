@@ -1,0 +1,7 @@
+global:
+  version: VERSION
+  css:
+    theme:
+      dist/main.css: {}
+  js:
+    dist/main.js: {}

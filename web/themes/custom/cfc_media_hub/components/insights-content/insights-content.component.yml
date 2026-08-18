@@ -1,0 +1,14 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Insights content
+status: stable
+description: >
+  Authenticated Insights knowledge center — search, category filter and
+  document detail modal. Document data is static for now; will be replaced by
+  real Insight content entities in a later phase.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+  required:
+    - home_url

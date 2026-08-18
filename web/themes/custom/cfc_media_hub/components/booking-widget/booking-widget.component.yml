@@ -1,0 +1,11 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Booking widget
+status: stable
+description: Homepage "quick check" booking teaser — space tabs, capacity picker, links into the booking journey.
+props:
+  type: object
+  properties:
+    booking_base_url:
+      type: string
+  required:
+    - booking_base_url

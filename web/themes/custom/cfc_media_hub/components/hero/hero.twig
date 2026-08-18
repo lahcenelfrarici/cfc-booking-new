@@ -1,0 +1,48 @@
+<section class="relative bg-paper overflow-hidden">
+  <div class="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-bl from-[#9F5434]/5 via-white to-transparent pointer-events-none"></div>
+  <div class="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-[#9F5434]/8 blur-3xl pointer-events-none"></div>
+
+  <div class="relative max-w-[1440px] mx-auto px-12 pt-24 pb-32 grid grid-cols-12 gap-16 items-center">
+    <div class="col-span-7 pr-8">
+      <h1 class="tracking-tight text-neutral-900 leading-none" style="font-size: 92px; font-weight: 600; letter-spacing: -0.04em;">
+        The media hub<br />
+        <span class="font-serif-accent text-[#0F6E56]" style="font-weight: 400;">of Africa.</span>
+      </h1>
+
+      <p class="mt-8 text-neutral-700 leading-relaxed max-w-[560px]" style="font-size: 20px;">
+        A dedicated space in Casablanca for international journalists to create, collaborate and produce.
+      </p>
+
+      <p class="mt-4 text-neutral-500 leading-relaxed max-w-[560px]" style="font-size: 15px;">
+        Access fully equipped workspaces, meeting rooms and a podcast studio — all in one place.
+      </p>
+
+      <div class="mt-10 flex items-center gap-4">
+        {% embed 'cfc_media_hub:button' with { variant: 'terracotta', size: 'md', href: spaces_url } %}
+          {% block label %}Explore the Hub{% endblock %}
+          {% block icon %}{% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}{% endblock %}
+        {% endembed %}
+        {% embed 'cfc_media_hub:button' with { variant: 'outline-dark', size: 'md', href: production_url } %}
+          {% block label %}View productions{% endblock %}
+        {% endembed %}
+      </div>
+
+      <div class="mt-10 flex items-center gap-2 text-[13px] text-neutral-500">
+        {% include 'cfc_media_hub:icon' with { name: 'map-pin', size: 'w-4 h-4 text-[#9F5434]' } only %}
+        Located in Casablanca Finance City, Main Street – CFC Cube, 2nd Floor
+      </div>
+    </div>
+
+    <div class="col-span-5 relative">
+      {% include 'cfc_media_hub:booking-widget' with { booking_base_url: booking_base_url } only %}
+
+      <div class="absolute -bottom-8 -left-10 hidden xl:flex items-center gap-3 bg-white rounded-xl shadow-lg border border-neutral-200/70 p-3 pr-5">
+        <img src="https://images.unsplash.com/photo-1761543262131-9d464d0d7426?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200" alt="Studio in use" class="w-12 h-12 rounded-lg object-cover" />
+        <div class="leading-tight">
+          <div class="text-[12px] text-neutral-500">The Latest Podcast</div>
+          <div class="text-[13px] text-neutral-900 font-semibold">Reuters &middot; Africa Brief</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

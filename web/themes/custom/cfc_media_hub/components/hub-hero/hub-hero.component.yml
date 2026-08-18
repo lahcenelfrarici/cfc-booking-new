@@ -1,0 +1,17 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Hub hero
+status: stable
+description: Hub page hero — breadcrumb, headline, intro copy and lobby photo.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+    spaces_url:
+      type: string
+    images_base:
+      type: string
+  required:
+    - home_url
+    - spaces_url
+    - images_base

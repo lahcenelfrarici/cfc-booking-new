@@ -1,0 +1,4 @@
+services:
+  cfc_content.repository:
+    class: Drupal\cfc_content\ContentRepository
+    arguments: ['@entity_type.manager']

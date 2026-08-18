@@ -1,0 +1,17 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Journey steps
+status: stable
+description: >
+  Step indicator for the account → booking → review → payment journey
+  (Account · Space · Date & Time · Review · Payment). Ported from the
+  BookingJourney prototype's StepIndicator.
+props:
+  type: object
+  properties:
+    active:
+      type: array
+      description: 'Step numbers (1-5) currently active on this page, e.g. [1] or [2, 3].'
+      items:
+        type: integer
+  required:
+    - active

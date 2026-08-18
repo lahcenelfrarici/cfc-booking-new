@@ -1,0 +1,47 @@
+{% set icon_by_type = { Interview: 'mic', Report: 'file-text', Documentary: 'video', Podcast: 'mic', Production: 'video' } %}
+
+<section class="bg-white py-16">
+  <div class="max-w-[1440px] mx-auto px-12">
+    <div class="flex items-end justify-between mb-12">
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-4 h-[2px] bg-[#9F5434]"></div>
+          <div class="text-[12px] uppercase tracking-[0.18em] text-[#0F6E56] font-semibold">Recent content</div>
+        </div>
+        <h2 class="tracking-tight text-neutral-900" style="font-size: 48px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
+          Produced by the Hub.
+        </h2>
+      </div>
+      <p class="text-neutral-500 max-w-[380px] leading-relaxed pb-2 text-[14px]">
+        Recent productions, interviews and editorial content created through CFC Media Hub.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+      {% for p in productions %}
+        <a href="{{ insights_url }}" class="group bg-white border border-neutral-200/80 rounded-2xl overflow-hidden hover:border-[#9F5434]/30 hover:shadow-[0_20px_50px_-20px_rgba(159,84,52,0.12)] transition-all block">
+          <div class="h-[200px] overflow-hidden relative bg-neutral-100">
+            {% if p.image_url %}
+              <img src="{{ p.image_url }}" alt="{{ p.title }}" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+            {% endif %}
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+            <div class="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full {{ p.type == 'Interview' ? 'bg-[#9F5434] text-white' : 'bg-white/15 backdrop-blur-sm text-white' }}">
+              {% include 'cfc_media_hub:icon' with { name: icon_by_type[p.type] ?? 'file-text', size: 'w-4 h-4' } only %}
+              <span class="text-[11px] font-semibold">{{ p.type }}</span>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="text-[11px] text-neutral-400 mb-3">{{ p.date }}</div>
+            <h3 class="tracking-tight mb-4 group-hover:text-[#9F5434] transition-colors" style="font-size: 17px; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em;">
+              {{ p.title }}
+            </h3>
+            <div class="flex items-center gap-1.5 text-[12px] text-[#9F5434] font-semibold">
+              View content
+              {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-3.5 h-3.5', class: 'group-hover:translate-x-0.5 transition-transform' } only %}
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>

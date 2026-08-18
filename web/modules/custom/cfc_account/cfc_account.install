@@ -1,0 +1,184 @@
+<?php
+
+/**
+ * @file
+ * Install hooks for CFC Account: roles, user fields, member company taxonomy.
+ */
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\user\Entity\Role;
+
+/**
+ * Implements hook_install().
+ */
+function cfc_account_install(): void {
+  _cfc_account_create_roles();
+  _cfc_account_create_vocabulary();
+  _cfc_account_create_user_fields();
+  _cfc_account_seed_companies();
+}
+
+/**
+ * Creates the journalist / cfc_member roles.
+ */
+function _cfc_account_create_roles(): void {
+  foreach (['journalist' => 'Journalist', 'cfc_member' => 'CFC Member'] as $id => $label) {
+    if (!Role::load($id)) {
+      Role::create(['id' => $id, 'label' => $label])->save();
+    }
+  }
+}
+
+/**
+ * Creates the "CFC Member Companies" taxonomy vocabulary + domain field.
+ */
+function _cfc_account_create_vocabulary(): void {
+  if (!Vocabulary::load('cfc_member_companies')) {
+    Vocabulary::create([
+      'vid' => 'cfc_member_companies',
+      'name' => 'CFC Member Companies',
+      'description' => 'Directory of Casablanca Finance City member companies, used to validate professional email domains at registration.',
+    ])->save();
+  }
+
+  if (!FieldStorageConfig::loadByName('taxonomy_term', 'field_company_domain')) {
+    FieldStorageConfig::create([
+      'field_name' => 'field_company_domain',
+      'entity_type' => 'taxonomy_term',
+      'type' => 'string',
+      'settings' => ['max_length' => 128],
+      'cardinality' => 1,
+    ])->save();
+  }
+  if (!FieldConfig::loadByName('taxonomy_term', 'cfc_member_companies', 'field_company_domain')) {
+    FieldConfig::create([
+      'field_name' => 'field_company_domain',
+      'entity_type' => 'taxonomy_term',
+      'bundle' => 'cfc_member_companies',
+      'label' => 'Email domain',
+      'required' => TRUE,
+      'description' => 'Professional email domain expected for members of this company (e.g. "example.com").',
+    ])->save();
+  }
+}
+
+/**
+ * Adds the registration fields to the "user" entity.
+ */
+function _cfc_account_create_user_fields(): void {
+  $fields = [
+    'field_account_type' => [
+      'type' => 'list_string',
+      'label' => 'Account type',
+      'settings' => [
+        'allowed_values' => [
+          'journalist' => 'Journalist',
+          'cfc_member' => 'CFC Member Company',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_first_name' => [
+      'type' => 'string',
+      'label' => 'First name',
+      'settings' => ['max_length' => 64],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_last_name' => [
+      'type' => 'string',
+      'label' => 'Last name',
+      'settings' => ['max_length' => 64],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_organization' => [
+      'type' => 'string',
+      'label' => 'Organisation',
+      'settings' => ['max_length' => 128],
+      'cardinality' => 1,
+    ],
+    'field_accreditation_number' => [
+      'type' => 'string',
+      'label' => 'Press accreditation number',
+      'settings' => ['max_length' => 64],
+      'cardinality' => 1,
+      'description' => 'Journalist accounts only.',
+    ],
+    'field_cfc_company' => [
+      'type' => 'entity_reference',
+      'label' => 'CFC member company',
+      'settings' => ['target_type' => 'taxonomy_term'],
+      'cardinality' => 1,
+      'description' => 'CFC Member accounts only — left empty when the company was entered manually.',
+    ],
+  ];
+
+  foreach ($fields as $field_name => $spec) {
+    if (!FieldStorageConfig::loadByName('user', $field_name)) {
+      FieldStorageConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'user',
+        'type' => $spec['type'],
+        'settings' => $spec['settings'] ?? [],
+        'cardinality' => $spec['cardinality'] ?? 1,
+      ])->save();
+    }
+    if (!FieldConfig::loadByName('user', 'user', $field_name)) {
+      FieldConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'user',
+        'bundle' => 'user',
+        'label' => $spec['label'],
+        'required' => $spec['required'] ?? FALSE,
+        'description' => $spec['description'] ?? '',
+      ])->save();
+    }
+  }
+}
+
+/**
+ * Seeds the CFC member company directory (ported from the prototype's
+ * mocked `cfcCompanies` list in BookingJourney.tsx).
+ */
+function _cfc_account_seed_companies(): void {
+  $companies = [
+    ['Attijariwafa Bank', 'attijariwafa.com'],
+    ['Bank of Africa', 'bankofafrica.ma'],
+    ['CDG Capital', 'cdgcapital.ma'],
+    ['Casablanca Stock Exchange', 'casablanca-bourse.ma'],
+    ['BMCE Bank of Africa', 'bmcebank.ma'],
+    ['CIH Bank', 'cih.co.ma'],
+    ['Maroc Telecom', 'iam.ma'],
+    ['OCP Group', 'ocpgroup.ma'],
+    ['TotalEnergies Maroc', 'totalenergies.ma'],
+    ['Deloitte Maroc', 'deloitte.ma'],
+    ['PwC Maroc', 'pwc.com'],
+    ['Ernst & Young Maroc', 'ey.com'],
+    ['KPMG Maroc', 'kpmg.com'],
+    ['AXA Assurance Maroc', 'axa.ma'],
+    ['Allianz Maroc', 'allianz.ma'],
+    ['Société Générale Maroc', 'sgmaroc.com'],
+    ['Crédit du Maroc', 'creditdumaroc.ma'],
+    ['Africa Finance Corporation', 'africafc.org'],
+    ['Standard Chartered Maroc', 'sc.com'],
+    ['African Development Bank', 'afdb.org'],
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  foreach ($companies as [$name, $domain]) {
+    $existing = $storage->loadByProperties(['vid' => 'cfc_member_companies', 'name' => $name]);
+    if ($existing) {
+      continue;
+    }
+    Term::create([
+      'vid' => 'cfc_member_companies',
+      'name' => $name,
+      'field_company_domain' => $domain,
+    ])->save();
+  }
+}

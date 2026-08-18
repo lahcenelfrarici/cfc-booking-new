@@ -1,0 +1,11 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Insights gate
+status: stable
+description: Unauthenticated teaser for the Insights knowledge center.
+props:
+  type: object
+  properties:
+    sign_in_url:
+      type: string
+  required:
+    - sign_in_url

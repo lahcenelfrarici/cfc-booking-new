@@ -1,0 +1,31 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Sign-in page
+status: stable
+description: >
+  Sign-in / forgot-password page. Posts to Drupal core's real user.login and
+  user.pass routes (genuine authentication), styled to match the design.
+props:
+  type: object
+  properties:
+    login_action:
+      type: string
+    login_form_build_id:
+      type: string
+    password_action:
+      type: string
+    password_form_build_id:
+      type: string
+    create_account_url:
+      type: string
+    home_url:
+      type: string
+    logo_url:
+      type: string
+  required:
+    - login_action
+    - login_form_build_id
+    - password_action
+    - password_form_build_id
+    - create_account_url
+    - home_url
+    - logo_url

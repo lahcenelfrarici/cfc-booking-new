@@ -1,0 +1,11 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Final CTA
+status: stable
+description: Homepage closing CTA band with a "next available slots" mini widget.
+props:
+  type: object
+  properties:
+    booking_base_url:
+      type: string
+  required:
+    - booking_base_url

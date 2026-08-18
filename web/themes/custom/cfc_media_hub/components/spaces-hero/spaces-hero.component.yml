@@ -1,0 +1,11 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Spaces hero
+status: stable
+description: Spaces page hero — breadcrumb, headline and quick-pick guide.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+  required:
+    - home_url

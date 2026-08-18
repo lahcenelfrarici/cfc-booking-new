@@ -1,0 +1,69 @@
+{% set details = [
+  { icon: 'map-pin', title: 'Address', text: 'Main Street – CFC Cube, 2nd Floor, Casablanca Finance City, Casablanca.' },
+  { icon: 'earth', title: 'Connectivity', text: '20 minutes from Mohammed V International Airport, direct routes to 35+ African capitals.' },
+  { icon: 'train', title: 'Public Transport', text: 'Accessible by Tramway and Busway — direct stops at Casablanca Finance City.' },
+  { icon: 'building-2', title: 'Surroundings', text: 'Adjacent to financial institutions, regulators and corporate HQs operating across the continent.' },
+] %}
+
+<section class="bg-white py-20 border-t border-neutral-100">
+  <div class="max-w-[1440px] mx-auto px-12 grid grid-cols-12 gap-12 items-center">
+    <div class="col-span-5">
+      <div class="flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] mb-4">
+        <span class="text-[#9F5434] font-bold">04</span>
+        <span class="text-[#9F5434] font-semibold">&middot; Location</span>
+      </div>
+      <h2 class="tracking-tight text-neutral-900 mb-4" style="font-size: 52px; font-weight: 600; line-height: 1.04; letter-spacing: -0.025em;">
+        Located in Casablanca Finance City.
+      </h2>
+      <p class="text-neutral-600 leading-relaxed mb-10 max-w-[460px] text-[17px]">
+        Casablanca Finance City is Africa's leading international business district — a strategic hub connecting financial institutions, businesses and investors across the continent and beyond.
+      </p>
+
+      <div class="space-y-5">
+        {% for d in details %}
+          <div class="flex items-start gap-4">
+            <div class="w-9 h-9 rounded-lg bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0">
+              {% include 'cfc_media_hub:icon' with { name: d.icon, size: 'w-4 h-4' } only %}
+            </div>
+            <div>
+              <div class="text-[13px] text-neutral-900 mb-0.5 font-semibold">{{ d.title }}</div>
+              <div class="text-[13px] text-neutral-600 leading-relaxed">{{ d.text }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <a href="https://maps.google.com/?q=Casablanca+Finance+City+CFC+Cube+Casablanca+Morocco" target="_blank" rel="noopener" class="mt-10 inline-flex items-center gap-2 bg-[#9F5434] hover:bg-[#8A4A2E] transition-colors text-white px-6 py-3.5 rounded-xl group">
+        <span class="font-semibold text-[13px]">Get directions</span>
+        {% include 'cfc_media_hub:icon' with { name: 'arrow-up-right', size: 'w-4 h-4', class: 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform' } only %}
+      </a>
+    </div>
+
+    <div class="col-span-7">
+      <div class="rounded-2xl overflow-hidden h-[560px] relative">
+        <img src="{{ images_base }}/cfc-district.png" alt="Casablanca Finance City District" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+
+        <div class="absolute top-7 left-7 bg-white/95 backdrop-blur rounded-xl px-5 py-3.5">
+          <div class="text-[11px] uppercase tracking-wide text-neutral-500">Coordinates</div>
+          <div class="text-[14px] text-neutral-900 font-semibold">33.5731&deg; N &middot; 7.5898&deg; W</div>
+        </div>
+
+        <div class="absolute bottom-7 left-7 right-7 bg-white/95 backdrop-blur rounded-2xl p-6">
+          <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-1">
+            {% include 'cfc_media_hub:icon' with { name: 'map-pin', size: 'w-3.5 h-3.5 text-[#9F5434]' } only %}
+            <span class="font-medium">Casablanca Finance City</span>
+          </div>
+          <div class="text-[15px] text-neutral-900 font-semibold">Main Street – CFC Cube, 2nd Floor</div>
+          <div class="flex items-center gap-4 mt-2">
+            <div class="text-[12px] text-neutral-500">Casablanca &middot; Morocco</div>
+            <div class="flex items-center gap-3 text-[11px] text-neutral-400">
+              <span class="flex items-center gap-1">{% include 'cfc_media_hub:icon' with { name: 'train', size: 'w-3 h-3 text-[#9F5434]' } only %} Tramway</span>
+              <span class="flex items-center gap-1">{% include 'cfc_media_hub:icon' with { name: 'bus', size: 'w-3 h-3 text-[#9F5434]' } only %} Busway</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

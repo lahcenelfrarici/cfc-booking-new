@@ -1,0 +1,27 @@
+{% set labels = ['Account', 'Space', 'Date & Time', 'Review', 'Payment'] %}
+{% set first_active = active|first %}
+{% set last_active = active|last %}
+<div class="flex items-center gap-2">
+  {% for label in labels %}
+    {% set n = loop.index %}
+    {% set done = n < first_active %}
+    {% set is_active = n in active %}
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold transition-all {{ done ? 'bg-[#0F6E56] text-white' : (is_active ? 'bg-[#9F5434] text-white' : 'bg-neutral-100 text-neutral-400') }}">
+          {% if done %}
+            {% include 'cfc_media_hub:icon' with { name: 'check', size: 'w-3.5 h-3.5' } only %}
+          {% else %}
+            {{ n }}
+          {% endif %}
+        </div>
+        <span class="text-[12px] hidden md:block {{ is_active ? 'text-[#9F5434] font-semibold' : (done ? 'text-[#0F6E56]' : 'text-neutral-400') }}">
+          {{ label }}
+        </span>
+      </div>
+      {% if not loop.last %}
+        <div class="w-8 h-px mx-1 {{ done ? 'bg-[#0F6E56]' : (is_active and (n + 1) in active ? 'bg-[#9F5434]' : 'bg-neutral-200') }}"></div>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>

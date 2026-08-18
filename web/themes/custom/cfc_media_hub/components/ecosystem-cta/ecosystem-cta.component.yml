@@ -1,0 +1,7 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Ecosystem CTA
+status: stable
+description: Homepage "Connecting you to Africa's business ecosystem" section with the connection request modal.
+props:
+  type: object
+  properties: {}

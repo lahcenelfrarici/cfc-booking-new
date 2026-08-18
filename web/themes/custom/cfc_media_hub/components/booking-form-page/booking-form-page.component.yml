@@ -1,0 +1,17 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Booking form page
+status: stable
+description: >
+  Visual shell for the real BookingForm (space/date/time/duration/guests).
+  The form itself is a slot — rendered by Drupal Form API.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+  required:
+    - home_url
+slots:
+  form:
+    type: string
+    description: The rendered BookingForm.

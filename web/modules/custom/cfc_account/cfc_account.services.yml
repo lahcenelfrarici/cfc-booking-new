@@ -1,0 +1,3 @@
+services:
+  cfc_account.domain_matcher:
+    class: Drupal\cfc_account\CompanyDomainMatcher

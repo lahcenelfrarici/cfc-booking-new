@@ -1,0 +1,4 @@
+services:
+  cfc_booking.availability_checker:
+    class: Drupal\cfc_booking\AvailabilityChecker
+    arguments: ['@entity_type.manager']

@@ -1,0 +1,9 @@
+name: 'CFC Account'
+type: module
+description: 'Journalist / CFC Member account registration, roles and the CFC member company directory.'
+package: CFC Media Hub
+core_version_requirement: ^11
+dependencies:
+  - user
+  - taxonomy
+  - options

@@ -1,0 +1,10 @@
+name: 'CFC Booking'
+type: module
+description: 'Real space booking: content type, availability checking and the booking form.'
+package: CFC Media Hub
+core_version_requirement: ^11
+dependencies:
+  - cfc_content
+  - cfc_account
+  - datetime
+  - options

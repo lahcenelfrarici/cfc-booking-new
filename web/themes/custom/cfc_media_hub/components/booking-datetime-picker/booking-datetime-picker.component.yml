@@ -1,0 +1,63 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Booking datetime picker
+status: stable
+description: >
+  Calendar (next 14 days) + time slot grid + duration picker, ported from
+  the BookingJourney prototype's DateSelect/TimeSelect. Writes directly into
+  the hidden Drupal form fields identified by *_field_id; availability
+  comes from a real matrix computed server-side by AvailabilityChecker, not
+  mock data.
+props:
+  type: object
+  properties:
+    has_space:
+      type: boolean
+      description: Whether a space is currently selected — if false, shows a placeholder instead of the grids.
+    days:
+      type: array
+      items:
+        type: object
+        properties:
+          iso:
+            type: string
+          weekday:
+            type: string
+          day:
+            type: string
+          month:
+            type: string
+    time_slots:
+      type: array
+      items:
+        type: string
+      description: 'The 9 fixed time slots, for looping in Twig.'
+    durations:
+      type: array
+      items:
+        type: string
+      description: 'Duration labels valid for the current space, for looping in Twig.'
+    durations_json:
+      type: string
+      description: 'Same list, JSON-encoded for the Alpine x-data attribute.'
+    matrix:
+      type: string
+      description: 'JSON-encoded [date][timeSlot][duration] => bool, ready to embed into an Alpine x-data attribute.'
+    default_duration:
+      type: string
+    date_field_id:
+      type: string
+    time_field_id:
+      type: string
+    duration_field_id:
+      type: string
+  required:
+    - has_space
+    - days
+    - time_slots
+    - durations
+    - durations_json
+    - matrix
+    - default_duration
+    - date_field_id
+    - time_field_id
+    - duration_field_id

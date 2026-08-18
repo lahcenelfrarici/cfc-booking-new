@@ -1,0 +1,17 @@
+name: CFC Media Hub
+type: theme
+description: 'Custom theme for the CFC Media Hub, porting the Tailwind/shadcn design tokens from the Figma prototype.'
+core_version_requirement: ^11
+base theme: false
+libraries:
+  - cfc_media_hub/global
+regions:
+  header: 'Header'
+  primary_menu: 'Primary menu'
+  breadcrumb: 'Breadcrumb'
+  highlighted: 'Highlighted'
+  help: 'Help'
+  content: 'Content'
+  sidebar_first: 'Sidebar first'
+  sidebar_second: 'Sidebar second'
+  footer: 'Footer'

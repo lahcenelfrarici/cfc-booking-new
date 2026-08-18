@@ -1,0 +1,11 @@
+cfc_booking.pay:
+  path: '/booking/{node}/pay'
+  defaults:
+    _controller: '\Drupal\cfc_payment\Controller\PaymentController::build'
+    _title: 'Payment'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: entity:node

@@ -1,0 +1,19 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Icon
+status: stable
+description: Inline SVG icon (ported from the Lucide icon set used in the prototype).
+props:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Icon file name (without extension) in components/icon/icons.
+    size:
+      type: string
+      description: Tailwind size classes, e.g. "w-4 h-4".
+      default: w-4 h-4
+    class:
+      type: string
+      default: ''
+  required:
+    - name

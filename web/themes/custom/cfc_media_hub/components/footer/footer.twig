@@ -1,0 +1,82 @@
+<footer class="bg-neutral-950 text-white/80 pt-20 pb-10">
+  <div class="max-w-[1440px] mx-auto px-12">
+
+    {# Newsletter banner #}
+    <div class="mb-14 pb-14 border-b border-white/10" x-data="{ subscribed: false, email: '' }">
+      <div class="grid grid-cols-12 gap-12 items-center">
+        <div class="col-span-5">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-[#9F5434] font-bold mb-3">Newsletter</div>
+          <h2 class="tracking-tight text-white mb-3" style="font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">Stay informed.</h2>
+          <p class="text-white/55 leading-relaxed text-[14px]">Receive CFC Media Hub news, reports and editorial updates directly in your inbox.</p>
+        </div>
+        <div class="col-span-7 flex items-center justify-end">
+          <div x-show="subscribed" x-cloak class="flex items-center gap-3 bg-white/[0.06] border border-white/10 rounded-2xl px-6 py-4">
+            <span class="text-[#9F5434] text-lg">&#10003;</span>
+            <div>
+              <div class="text-white text-[14px] font-semibold">You're subscribed.</div>
+              <div class="text-white/50 text-[12px]">Expect updates and reports in your inbox.</div>
+            </div>
+          </div>
+          <form x-show="!subscribed" x-on:submit.prevent="subscribed = true" class="flex gap-3 w-full max-w-[500px]">
+            <label for="footer-newsletter-email" class="sr-only">Email address</label>
+            <input
+              id="footer-newsletter-email"
+              type="email"
+              name="email"
+              x-model="email"
+              required
+              placeholder="Enter your email address"
+              class="flex-1 bg-white/[0.06] border border-white/15 rounded-xl px-5 py-3.5 text-[14px] text-white placeholder:text-white/35 focus:outline-none focus:border-white/30 transition-colors"
+            />
+            <button type="submit" class="bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-6 py-3.5 rounded-xl text-[13px] font-semibold transition-colors shrink-0">
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-12 pb-14 border-b border-white/10">
+      <div class="col-span-4">
+        <a href="{{ home_url }}" class="mb-6 block">
+          <img src="{{ logo_url }}" alt="CFC Media Hub" class="h-20 w-auto brightness-0 invert" />
+        </a>
+        <p class="text-[14px] text-white/60 leading-relaxed max-w-[320px]">
+          CFC Media Hub — workspaces, meeting rooms and a studio for international journalists.
+        </p>
+        <div class="mt-6 text-[13px] text-white/50 leading-relaxed">
+          Located in Casablanca Finance City<br />
+          Main Street – CFC Cube, 2nd Floor<br />
+          Casablanca &middot; Morocco
+        </div>
+      </div>
+
+      {% for column in columns %}
+        <div class="col-span-2">
+          <div class="text-[12px] uppercase tracking-wide text-white font-semibold mb-4">{{ column.title }}</div>
+          <ul class="space-y-2.5">
+            {% for link in column.links %}
+              <li>
+                <a href="{{ link.url }}" class="text-[13px] text-white/60 hover:text-white transition-colors">{{ link.label }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="pt-6 space-y-3">
+      <div class="text-[12px] text-white/35 leading-relaxed max-w-[760px]">
+        An initiative by CFCA, in partnership with the Région Casablanca-Settat and the Ministry of Youth, Culture and Communication.
+      </div>
+      <div class="flex items-center justify-between text-[12px] text-white/45">
+        <div>&copy; 2026 CFC Media Hub. Operated by Casablanca Finance City Authority.</div>
+        <div class="flex items-center gap-6">
+          <button type="button" class="hover:text-white transition-colors">EN</button>
+          <button type="button" class="hover:text-white transition-colors">FR</button>
+          <button type="button" class="hover:text-white transition-colors">AR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

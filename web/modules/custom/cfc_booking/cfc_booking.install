@@ -1,0 +1,184 @@
+<?php
+
+/**
+ * @file
+ * Install hooks for CFC Booking: the "booking" content type.
+ */
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\NodeType;
+
+/**
+ * Implements hook_install().
+ */
+function cfc_booking_install(): void {
+  NodeType::create([
+    'type' => 'booking',
+    'name' => 'Booking',
+    'description' => 'A space reservation made by a journalist or CFC member.',
+  ])->save();
+
+  _cfc_booking_create_fields(_cfc_booking_field_definitions());
+}
+
+/**
+ * Adds the Stripe-related fields (real numeric amount, currency, and the
+ * PaymentIntent ID for webhook reconciliation) to the Booking content type.
+ */
+function cfc_booking_update_11001(): void {
+  _cfc_booking_create_fields([
+    'field_amount' => [
+      'type' => 'decimal',
+      'label' => 'Amount',
+      'settings' => ['precision' => 10, 'scale' => 2],
+      'description' => 'Real numeric amount charged (snapshot of the Space hourly rate × duration). Empty for free bookings.',
+    ],
+    'field_currency' => [
+      'type' => 'string',
+      'label' => 'Currency (ISO code)',
+      'settings' => ['max_length' => 3],
+    ],
+    'field_stripe_payment_intent' => [
+      'type' => 'string',
+      'label' => 'Stripe PaymentIntent ID',
+      'settings' => ['max_length' => 64],
+      'description' => 'Used to reconcile the Stripe webhook with this booking.',
+    ],
+  ]);
+}
+
+/**
+ * Installs the "Bookings" admin view (/admin/content/bookings) — config
+ * shipped in config/install isn't auto-picked-up on module *update* (only
+ * fresh install), so it's loaded and saved programmatically here.
+ */
+function cfc_booking_update_11002(): void {
+  if (\Drupal::entityTypeManager()->getStorage('view')->load('cfc_bookings')) {
+    return;
+  }
+  $module_path = \Drupal::service('extension.list.module')->getPath('cfc_booking');
+  $data = \Drupal\Component\Serialization\Yaml::decode(
+    file_get_contents($module_path . '/config/install/views.view.cfc_bookings.yml')
+  );
+  \Drupal::entityTypeManager()->getStorage('view')->create($data)->save();
+}
+
+/**
+ * Returns the full field definition set for the "booking" bundle.
+ */
+function _cfc_booking_field_definitions(): array {
+  return [
+    'field_space' => [
+      'type' => 'entity_reference',
+      'label' => 'Space',
+      'settings' => ['target_type' => 'node'],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_booking_date' => [
+      'type' => 'datetime',
+      'label' => 'Date',
+      'settings' => ['datetime_type' => 'date'],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_time_slot' => [
+      'type' => 'string',
+      'label' => 'Time slot',
+      'settings' => ['max_length' => 16],
+      'cardinality' => 1,
+      'required' => TRUE,
+      'description' => 'e.g. "10:00".',
+    ],
+    'field_duration' => [
+      'type' => 'list_string',
+      'label' => 'Duration',
+      'settings' => [
+        'allowed_values' => [
+          '1 hour' => '1 hour',
+          '2 hours' => '2 hours',
+          'Half day (4h)' => 'Half day (4h)',
+          'Full day (8h)' => 'Full day (8h)',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_guest_names' => [
+      'type' => 'string',
+      'label' => 'Guest names',
+      'settings' => ['max_length' => 128],
+      'cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED,
+      'description' => 'One full name per value.',
+    ],
+    'field_status' => [
+      'type' => 'list_string',
+      'label' => 'Status',
+      'settings' => [
+        'allowed_values' => [
+          'upcoming' => 'Upcoming',
+          'completed' => 'Completed',
+          'cancelled' => 'Cancelled',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_reference' => [
+      'type' => 'string',
+      'label' => 'Reference',
+      'settings' => ['max_length' => 32],
+      'cardinality' => 1,
+      'description' => 'Auto-generated on save, e.g. "RES-2026-4821".',
+    ],
+    'field_price' => [
+      'type' => 'string',
+      'label' => 'Price',
+      'settings' => ['max_length' => 32],
+      'cardinality' => 1,
+      'description' => 'Snapshot of the Space price label at booking time.',
+    ],
+    'field_payment_status' => [
+      'type' => 'list_string',
+      'label' => 'Payment status',
+      'settings' => [
+        'allowed_values' => [
+          'not_applicable' => 'Not applicable',
+          'pending' => 'Pending',
+          'paid' => 'Paid',
+          'failed' => 'Failed',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+  ];
+}
+
+/**
+ * Helper to create field storage + field instances on the "booking" bundle.
+ */
+function _cfc_booking_create_fields(array $fields): void {
+  foreach ($fields as $field_name => $spec) {
+    if (!FieldStorageConfig::loadByName('node', $field_name)) {
+      FieldStorageConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'type' => $spec['type'],
+        'settings' => $spec['settings'] ?? [],
+        'cardinality' => $spec['cardinality'] ?? 1,
+      ])->save();
+    }
+    if (!FieldConfig::loadByName('node', 'booking', $field_name)) {
+      FieldConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'bundle' => 'booking',
+        'label' => $spec['label'],
+        'required' => $spec['required'] ?? FALSE,
+        'description' => $spec['description'] ?? '',
+      ])->save();
+    }
+  }
+}

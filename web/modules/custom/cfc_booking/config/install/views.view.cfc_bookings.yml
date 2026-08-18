@@ -1,0 +1,446 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - user
+id: cfc_bookings
+label: Bookings
+module: views
+description: 'Manage reservations: reference, space, date/time, status, payment, guests.'
+tag: default
+base_table: node_field_data
+base_field: nid
+display:
+  default:
+    id: default
+    display_title: Default
+    display_plugin: default
+    position: 0
+    display_options:
+      title: Bookings
+      fields:
+        field_reference:
+          id: field_reference
+          table: node__field_reference
+          field: field_reference
+          relationship: none
+          entity_type: node
+          entity_field: field_reference
+          plugin_id: field
+          label: Reference
+          exclude: false
+          alter:
+            alter_text: false
+          type: string
+        field_space:
+          id: field_space
+          table: node__field_space
+          field: field_space
+          relationship: none
+          entity_type: node
+          entity_field: field_space
+          plugin_id: field
+          label: Space
+          exclude: false
+          alter:
+            alter_text: false
+          type: entity_reference_label
+          settings:
+            link: true
+        field_booking_date:
+          id: field_booking_date
+          table: node__field_booking_date
+          field: field_booking_date
+          relationship: none
+          entity_type: node
+          entity_field: field_booking_date
+          plugin_id: field
+          label: Date
+          exclude: false
+          alter:
+            alter_text: false
+          type: datetime_default
+          settings:
+            date_format: short
+            custom_date_format: ''
+            timezone: ''
+        field_time_slot:
+          id: field_time_slot
+          table: node__field_time_slot
+          field: field_time_slot
+          relationship: none
+          entity_type: node
+          entity_field: field_time_slot
+          plugin_id: field
+          label: Time
+          exclude: false
+          alter:
+            alter_text: false
+          type: string
+        field_duration:
+          id: field_duration
+          table: node__field_duration
+          field: field_duration
+          relationship: none
+          entity_type: node
+          entity_field: field_duration
+          plugin_id: field
+          label: Duration
+          exclude: false
+          alter:
+            alter_text: false
+          type: list_default
+        field_status:
+          id: field_status
+          table: node__field_status
+          field: field_status
+          relationship: none
+          entity_type: node
+          entity_field: field_status
+          plugin_id: field
+          label: Status
+          exclude: false
+          alter:
+            alter_text: false
+          type: list_default
+        field_payment_status:
+          id: field_payment_status
+          table: node__field_payment_status
+          field: field_payment_status
+          relationship: none
+          entity_type: node
+          entity_field: field_payment_status
+          plugin_id: field
+          label: 'Payment status'
+          exclude: false
+          alter:
+            alter_text: false
+          type: list_default
+        field_amount:
+          id: field_amount
+          table: node__field_amount
+          field: field_amount
+          relationship: none
+          entity_type: node
+          entity_field: field_amount
+          plugin_id: field
+          label: Amount
+          exclude: false
+          alter:
+            alter_text: false
+          type: number_decimal
+          settings:
+            thousand_separator: ''
+            decimal_separator: '.'
+            scale: 2
+            strip_trailing_zeroes: false
+            prefix_suffix: false
+        field_currency:
+          id: field_currency
+          table: node__field_currency
+          field: field_currency
+          relationship: none
+          entity_type: node
+          entity_field: field_currency
+          plugin_id: field
+          label: Currency
+          exclude: false
+          alter:
+            alter_text: false
+          type: string
+        field_guest_names:
+          id: field_guest_names
+          table: node__field_guest_names
+          field: field_guest_names
+          relationship: none
+          entity_type: node
+          entity_field: field_guest_names
+          plugin_id: field
+          label: Guests
+          exclude: false
+          alter:
+            alter_text: false
+          type: string
+          multi_type: separator
+          separator: ', '
+        name:
+          id: name
+          table: users_field_data
+          field: name
+          relationship: uid
+          entity_type: user
+          entity_field: name
+          plugin_id: field
+          label: 'Reserved by'
+          exclude: false
+          alter:
+            alter_text: false
+          type: user_name
+        operations:
+          id: operations
+          table: node
+          field: operations
+          relationship: none
+          plugin_id: entity_operations
+          label: Operations
+          exclude: false
+          alter:
+            alter_text: false
+          destination: true
+      pager:
+        type: full
+        options:
+          items_per_page: 50
+      exposed_form:
+        type: basic
+        options:
+          submit_button: Filter
+          reset_button: true
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          expose_sort_order: true
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      access:
+        type: perm
+        options:
+          perm: 'access content overview'
+      cache:
+        type: tag
+      empty:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          plugin_id: text_custom
+          empty: true
+          content: 'No bookings yet.'
+      sorts:
+        field_booking_date_value:
+          id: field_booking_date_value
+          table: node__field_booking_date
+          field: field_booking_date_value
+          relationship: none
+          entity_type: node
+          entity_field: field_booking_date
+          plugin_id: datetime
+          order: DESC
+      arguments: {  }
+      filters:
+        type:
+          id: type
+          table: node_field_data
+          field: type
+          relationship: none
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          operator: in
+          value:
+            booking: booking
+          group: 1
+          exposed: false
+        field_status_value:
+          id: field_status_value
+          table: node__field_status
+          field: field_status_value
+          relationship: none
+          entity_type: node
+          entity_field: field_status
+          plugin_id: string
+          operator: contains
+          value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_status_value_op
+            label: Status
+            use_operator: false
+            operator: field_status_value_op
+            identifier: status
+            required: false
+            remember: false
+            multiple: false
+        field_payment_status_value:
+          id: field_payment_status_value
+          table: node__field_payment_status
+          field: field_payment_status_value
+          relationship: none
+          entity_type: node
+          entity_field: field_payment_status
+          plugin_id: string
+          operator: contains
+          value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_payment_status_value_op
+            label: 'Payment status'
+            use_operator: false
+            operator: field_payment_status_value_op
+            identifier: payment_status
+            required: false
+            remember: false
+            multiple: false
+      filter_groups:
+        operator: AND
+        groups:
+          1: AND
+      style:
+        type: table
+        options:
+          columns:
+            field_reference: field_reference
+            field_space: field_space
+            field_booking_date: field_booking_date
+            field_time_slot: field_time_slot
+            field_duration: field_duration
+            field_status: field_status
+            field_payment_status: field_payment_status
+            field_amount: field_amount
+            field_currency: field_currency
+            field_guest_names: field_guest_names
+            name: name
+            operations: operations
+          default: field_booking_date
+          info:
+            field_reference:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_space:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_booking_date:
+              sortable: true
+              default_sort_order: desc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_time_slot:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_duration:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_status:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_payment_status:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_amount:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_currency:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_guest_names:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            name:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: priority-low
+            operations:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+          override: true
+          sticky: true
+          summary: ''
+          empty_table: true
+      row:
+        type: fields
+      query:
+        type: views_query
+      relationships:
+        uid:
+          id: uid
+          table: node_field_data
+          field: uid
+          admin_label: author
+          plugin_id: standard
+          required: true
+      show_admin_links: false
+      display_extenders: {  }
+    cache_metadata:
+      max-age: 0
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - user
+        - 'user.node_grants:view'
+        - user.permissions
+      tags: {  }
+  page_1:
+    id: page_1
+    display_title: Bookings
+    display_plugin: page
+    position: 1
+    display_options:
+      display_extenders: {  }
+      path: admin/content/bookings
+      menu:
+        type: tab
+        title: Bookings
+        description: 'Manage space reservations'
+        weight: 0
+        menu_name: admin
+        context: '0'
+    cache_metadata:
+      max-age: 0
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - user
+        - 'user.node_grants:view'
+        - user.permissions
+      tags: {  }

@@ -1,0 +1,53 @@
+{% set items = [
+  { icon: 'bar-chart-2', label: 'CFC Africa Insights Reports' },
+  { icon: 'layers', label: 'Community Reports' },
+  { icon: 'earth', label: 'Country Focus' },
+  { icon: 'newspaper', label: 'Africa News' },
+  { icon: 'file-text', label: 'Sector Notes' },
+  { icon: 'building', label: 'Study on the Impact of International Financial Centers' },
+] %}
+
+<section class="min-h-[80vh] bg-white flex items-center">
+  <div class="max-w-[1440px] mx-auto px-12 w-full grid grid-cols-12 gap-12 items-center py-14">
+    <div class="col-span-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-5 h-[2px] bg-[#9F5434]"></div>
+        <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Insights &middot; Knowledge Center</div>
+      </div>
+      <h1 class="tracking-tight text-neutral-900 mb-6" style="font-size: 68px; font-weight: 600; line-height: 1.04; letter-spacing: -0.03em;">
+        Africa's media intelligence.
+      </h1>
+      <p class="text-neutral-600 leading-relaxed max-w-[480px] mb-8 text-[17px]">
+        Stay informed with the latest market data and insights from Africa. Discover business opportunities through country fact sheets, news updates, sector reports and articles.
+      </p>
+      <p class="text-neutral-500 leading-relaxed max-w-[480px] mb-10 text-[15px]">
+        To access the full library and download these resources, please sign in to your CFC Media Hub account.
+      </p>
+      <div class="flex items-center gap-4">
+        {% embed 'cfc_media_hub:button' with { variant: 'terracotta', size: 'md', href: sign_in_url } %}
+          {% block label %}Sign in to access all Insights{% endblock %}
+          {% block icon %}{% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}{% endblock %}
+        {% endembed %}
+      </div>
+      <div class="mt-8 flex items-center gap-2 text-[13px] text-neutral-400">
+        {% include 'cfc_media_hub:icon' with { name: 'lock', size: 'w-4 h-4' } only %}
+        Only authenticated journalists can access the Insights library.
+      </div>
+    </div>
+
+    <div class="col-span-6">
+      <div class="bg-[#FCFCFB] border border-neutral-200 rounded-3xl p-8 space-y-3">
+        <div class="text-[12px] uppercase tracking-wide text-neutral-400 mb-5 font-semibold">What's inside</div>
+        {% for item in items %}
+          <div class="flex items-center gap-4 bg-white rounded-2xl p-4 border border-neutral-100">
+            <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0">
+              {% include 'cfc_media_hub:icon' with { name: item.icon, size: 'w-4 h-4' } only %}
+            </div>
+            <div class="text-[14px] text-neutral-900 font-semibold">{{ item.label }}</div>
+            {% include 'cfc_media_hub:icon' with { name: 'lock', size: 'w-4 h-4 text-neutral-300 ml-auto shrink-0' } only %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>

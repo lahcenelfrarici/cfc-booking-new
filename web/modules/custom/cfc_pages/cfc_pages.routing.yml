@@ -1,0 +1,71 @@
+cfc_pages.home:
+  path: '/home'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\HomeController::build'
+    _title: 'CFC Media Hub — The media hub of Africa'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.hub:
+  path: '/hub'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\HubController::build'
+    _title: 'The Hub'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.spaces:
+  path: '/spaces'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\SpacesController::build'
+    _title: 'Spaces'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.production:
+  path: '/production'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\ProductionController::build'
+    _title: 'Production'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.insights:
+  path: '/insights'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\InsightsController::build'
+    _title: 'Insights'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.account:
+  path: '/account'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\AccountController::build'
+    _title: 'My Account'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+cfc_pages.sign_in:
+  path: '/sign-in'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\SignInController::build'
+    _title: 'Sign in'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.register:
+  path: '/create-account'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\RegisterController::build'
+    _title: 'Create account'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.booking:
+  path: '/booking'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\BookingController::build'
+    _title: 'Book a space'
+  requirements:
+    _access: 'TRUE'

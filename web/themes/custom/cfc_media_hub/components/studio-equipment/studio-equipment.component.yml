@@ -1,0 +1,11 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Studio equipment
+status: stable
+description: Spaces page "Built for podcast production" equipment grid.
+props:
+  type: object
+  properties:
+    images_base:
+      type: string
+  required:
+    - images_base

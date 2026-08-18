@@ -1,0 +1,11 @@
+name: 'CFC Content'
+type: module
+description: 'Content types for CFC Media Hub repeatable entities (Space, Production).'
+package: CFC Media Hub
+core_version_requirement: ^11
+dependencies:
+  - node
+  - image
+  - text
+  - options
+  - datetime

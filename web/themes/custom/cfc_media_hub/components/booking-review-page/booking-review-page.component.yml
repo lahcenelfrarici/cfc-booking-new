@@ -1,0 +1,54 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Booking review page
+status: stable
+description: >
+  Step 4 of the booking journey: summary of the reservation just created,
+  before payment (if any) or final confirmation. Guests are managed via the
+  guests_form slot (GuestsForm), not a static prop.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+    space_label:
+      type: string
+    date:
+      type: string
+    time:
+      type: string
+    duration:
+      type: string
+    user_name:
+      type: string
+    account_type_label:
+      type: string
+    reference:
+      type: string
+    price_label:
+      type: string
+    is_paid:
+      type: boolean
+    edit_url:
+      type: string
+    confirm_url:
+      type: string
+    confirm_label:
+      type: string
+  required:
+    - home_url
+    - space_label
+    - date
+    - time
+    - duration
+    - user_name
+    - account_type_label
+    - reference
+    - price_label
+    - is_paid
+    - edit_url
+    - confirm_url
+    - confirm_label
+slots:
+  guests_form:
+    type: string
+    description: The rendered GuestsForm.

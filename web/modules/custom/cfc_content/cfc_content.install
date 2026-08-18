@@ -1,0 +1,365 @@
+<?php
+
+/**
+ * @file
+ * Install/schema hooks for CFC Content.
+ */
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\NodeType;
+
+/**
+ * Implements hook_install().
+ */
+function cfc_content_install(): void {
+  _cfc_content_create_space_type();
+  _cfc_content_create_production_type();
+}
+
+/**
+ * Creates the "Space" content type and its fields.
+ */
+function _cfc_content_create_space_type(): void {
+  NodeType::create([
+    'type' => 'space',
+    'name' => 'Space',
+    'description' => 'A bookable space (Desk, Meeting Room, Studio).',
+  ])->save();
+
+  $fields = [
+    'field_machine_key' => [
+      'type' => 'string',
+      'label' => 'Machine key',
+      'settings' => ['max_length' => 32],
+      'cardinality' => 1,
+      'required' => TRUE,
+      'description' => 'Stable slug used in URLs/anchors (e.g. "desk", "meeting", "studio").',
+    ],
+    'field_subtitle' => [
+      'type' => 'string',
+      'label' => 'Subtitle',
+      'settings' => ['max_length' => 128],
+      'cardinality' => 1,
+    ],
+    'field_summary' => [
+      'type' => 'string_long',
+      'label' => 'Summary',
+      'cardinality' => 1,
+      'description' => 'Short teaser text used on the homepage card.',
+    ],
+    'field_price_label' => [
+      'type' => 'string',
+      'label' => 'Price label',
+      'settings' => ['max_length' => 64],
+      'cardinality' => 1,
+      'description' => 'e.g. "Free" or "400 MAD / hr".',
+    ],
+    'field_capacity_meta' => [
+      'type' => 'string',
+      'label' => 'Capacity / slots meta',
+      'settings' => ['max_length' => 128],
+      'cardinality' => 1,
+      'description' => 'e.g. "6 people · 2h slots".',
+    ],
+    'field_access_rule' => [
+      'type' => 'list_string',
+      'label' => 'Access rule',
+      'settings' => [
+        'allowed_values' => [
+          'journalist' => 'Journalist only',
+          'company' => 'CFC Member only',
+          'both' => 'Journalist & CFC Member',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_highlight' => [
+      'type' => 'boolean',
+      'label' => 'Highlight (featured styling)',
+      'cardinality' => 1,
+    ],
+    'field_hero_image' => [
+      'type' => 'image',
+      'label' => 'Hero image',
+      'cardinality' => 1,
+    ],
+    'field_features' => [
+      'type' => 'string',
+      'label' => 'Features / includes',
+      'settings' => ['max_length' => 255],
+      'cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED,
+    ],
+    'field_slot_durations' => [
+      'type' => 'list_string',
+      'label' => 'Available slot durations',
+      'settings' => [
+        'allowed_values' => [
+          '1 hour' => '1 hour',
+          '2 hours' => '2 hours',
+          'Half day (4h)' => 'Half day (4h)',
+          'Full day (8h)' => 'Full day (8h)',
+        ],
+      ],
+      'cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED,
+    ],
+    'field_max_guests' => [
+      'type' => 'integer',
+      'label' => 'Max guests',
+      'cardinality' => 1,
+    ],
+    'field_cta_label' => [
+      'type' => 'string',
+      'label' => 'Call-to-action label',
+      'settings' => ['max_length' => 64],
+      'cardinality' => 1,
+    ],
+    'field_weight' => [
+      'type' => 'integer',
+      'label' => 'Display order',
+      'cardinality' => 1,
+    ],
+    'field_description' => [
+      'type' => 'text_long',
+      'label' => 'Description',
+      'cardinality' => 1,
+    ],
+    'field_concurrent_capacity' => [
+      'type' => 'integer',
+      'label' => 'Concurrent capacity',
+      'cardinality' => 1,
+      'required' => TRUE,
+      'description' => 'How many simultaneous bookings this space allows for the same time slot. 0 = unlimited (e.g. Desk). 1 = single occupancy (e.g. Meeting Room, Studio).',
+    ],
+    'field_hourly_rate' => [
+      'type' => 'decimal',
+      'label' => 'Hourly rate',
+      'settings' => ['precision' => 10, 'scale' => 2],
+      'cardinality' => 1,
+      'description' => 'Numeric price per hour used to charge online payment. Leave empty (or 0) for free spaces.',
+    ],
+    'field_currency' => [
+      'type' => 'string',
+      'label' => 'Currency (ISO code)',
+      'settings' => ['max_length' => 3],
+      'cardinality' => 1,
+      'description' => 'e.g. "EUR", "USD". Must be a currency your Stripe account can accept.',
+    ],
+  ];
+
+  _cfc_content_create_fields('node', 'space', $fields);
+}
+
+/**
+ * Creates the "Production" content type and its fields.
+ */
+function _cfc_content_create_production_type(): void {
+  NodeType::create([
+    'type' => 'production',
+    'name' => 'Production',
+    'description' => 'A piece of media content produced at the Hub (interview, report, documentary, podcast).',
+  ])->save();
+
+  $fields = [
+    'field_production_type' => [
+      'type' => 'list_string',
+      'label' => 'Type',
+      'settings' => [
+        'allowed_values' => [
+          'Interview' => 'Interview',
+          'Report' => 'Report',
+          'Documentary' => 'Documentary',
+          'Podcast' => 'Podcast',
+          'Production' => 'Production',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_publisher' => [
+      'type' => 'string',
+      'label' => 'Publisher',
+      'settings' => ['max_length' => 128],
+      'cardinality' => 1,
+    ],
+    'field_duration' => [
+      'type' => 'string',
+      'label' => 'Duration',
+      'settings' => ['max_length' => 32],
+      'cardinality' => 1,
+      'description' => 'e.g. "24 min".',
+    ],
+    'field_production_date' => [
+      'type' => 'datetime',
+      'label' => 'Date',
+      'settings' => ['datetime_type' => 'date'],
+      'cardinality' => 1,
+    ],
+    'field_image' => [
+      'type' => 'image',
+      'label' => 'Image',
+      'cardinality' => 1,
+    ],
+    'field_featured' => [
+      'type' => 'boolean',
+      'label' => 'Featured',
+      'cardinality' => 1,
+    ],
+    'field_description' => [
+      'type' => 'text_long',
+      'label' => 'Description',
+      'cardinality' => 1,
+    ],
+  ];
+
+  _cfc_content_create_fields('node', 'production', $fields);
+}
+
+/**
+ * Adds field_concurrent_capacity to the Space content type and backfills it
+ * (Desk = unlimited, Meeting Room / Studio = single occupancy).
+ */
+function cfc_content_update_11001(): void {
+  if (!FieldStorageConfig::loadByName('node', 'field_concurrent_capacity')) {
+    FieldStorageConfig::create([
+      'field_name' => 'field_concurrent_capacity',
+      'entity_type' => 'node',
+      'type' => 'integer',
+      'cardinality' => 1,
+    ])->save();
+  }
+  if (!FieldConfig::loadByName('node', 'space', 'field_concurrent_capacity')) {
+    FieldConfig::create([
+      'field_name' => 'field_concurrent_capacity',
+      'entity_type' => 'node',
+      'bundle' => 'space',
+      'label' => 'Concurrent capacity',
+      'required' => TRUE,
+      'description' => 'How many simultaneous bookings this space allows for the same time slot. 0 = unlimited (e.g. Desk). 1 = single occupancy (e.g. Meeting Room, Studio).',
+    ])->save();
+  }
+
+  $capacity_by_key = ['desk' => 0, 'meeting' => 1, 'studio' => 1];
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($storage->loadByProperties(['type' => 'space']) as $node) {
+    $key = $node->get('field_machine_key')->value;
+    $node->set('field_concurrent_capacity', $capacity_by_key[$key] ?? 1);
+    $node->save();
+  }
+}
+
+/**
+ * Adds field_hourly_rate + field_currency to the Space content type, so
+ * paid spaces (Studio) have a real numeric amount to charge via Stripe
+ * instead of just the display string in field_price_label.
+ *
+ * Defaults Studio to a placeholder rate in EUR — the client should adjust
+ * both the rate and currency from the Space edit form once their Stripe
+ * account's settlement currency is confirmed.
+ */
+function cfc_content_update_11002(): void {
+  $fields = [
+    'field_hourly_rate' => [
+      'type' => 'decimal',
+      'label' => 'Hourly rate',
+      'settings' => ['precision' => 10, 'scale' => 2],
+      'description' => 'Numeric price per hour used to charge online payment. Leave empty (or 0) for free spaces.',
+    ],
+    'field_currency' => [
+      'type' => 'string',
+      'label' => 'Currency (ISO code)',
+      'settings' => ['max_length' => 3],
+      'description' => 'e.g. "EUR", "USD". Must be a currency your Stripe account can accept.',
+    ],
+  ];
+
+  foreach ($fields as $field_name => $spec) {
+    if (!FieldStorageConfig::loadByName('node', $field_name)) {
+      FieldStorageConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'type' => $spec['type'],
+        'settings' => $spec['settings'] ?? [],
+        'cardinality' => 1,
+      ])->save();
+    }
+    if (!FieldConfig::loadByName('node', 'space', $field_name)) {
+      FieldConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'bundle' => 'space',
+        'label' => $spec['label'],
+        'description' => $spec['description'] ?? '',
+      ])->save();
+    }
+  }
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($storage->loadByProperties(['type' => 'space']) as $node) {
+    $key = $node->get('field_machine_key')->value;
+    if ($key === 'studio') {
+      // Placeholder rate — adjust from the Space edit form once the Stripe
+      // account's currency is confirmed. 400 MAD ≈ 37 EUR at time of writing.
+      $node->set('field_hourly_rate', '37.00');
+      $node->set('field_currency', 'EUR');
+      $node->save();
+    }
+  }
+}
+
+/**
+ * Updates booking rules: Desk/Meeting Room drop the "1 hour" slot (2h/4h/8h
+ * only), Studio drops both "1 hour" and "Full day" (2h/4h only), and Meeting
+ * Room's guest cap changes from 10 to 6. Desk (0 guests) and Studio (2
+ * guests) are re-set too, defensively, even though already correct.
+ */
+function cfc_content_update_11003(): void {
+  $durations_by_key = [
+    'desk' => ['2 hours', 'Half day (4h)', 'Full day (8h)'],
+    'meeting' => ['2 hours', 'Half day (4h)', 'Full day (8h)'],
+    'studio' => ['2 hours', 'Half day (4h)'],
+  ];
+  $max_guests_by_key = [
+    'desk' => 0,
+    'meeting' => 6,
+    'studio' => 2,
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($storage->loadByProperties(['type' => 'space']) as $node) {
+    $key = $node->get('field_machine_key')->value;
+    if (!isset($durations_by_key[$key])) {
+      continue;
+    }
+    $node->set('field_slot_durations', $durations_by_key[$key]);
+    $node->set('field_max_guests', $max_guests_by_key[$key]);
+    $node->save();
+  }
+}
+
+/**
+ * Helper to create field storage + field instances for a bundle.
+ */
+function _cfc_content_create_fields(string $entity_type, string $bundle, array $fields): void {
+  foreach ($fields as $field_name => $spec) {
+    if (!FieldStorageConfig::loadByName($entity_type, $field_name)) {
+      FieldStorageConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => $entity_type,
+        'type' => $spec['type'],
+        'settings' => $spec['settings'] ?? [],
+        'cardinality' => $spec['cardinality'] ?? 1,
+      ])->save();
+    }
+
+    FieldConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle,
+      'label' => $spec['label'],
+      'required' => $spec['required'] ?? FALSE,
+      'description' => $spec['description'] ?? '',
+    ])->save();
+  }
+}

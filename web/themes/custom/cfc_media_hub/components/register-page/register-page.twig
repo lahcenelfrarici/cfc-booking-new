@@ -1,0 +1,122 @@
+<div class="min-h-screen bg-[#FCFCFB] flex flex-col" x-data="{ chosen: false }">
+  <div class="w-full max-w-[1440px] mx-auto px-12 h-20 flex items-center justify-between border-b border-neutral-100 bg-white">
+    <a href="{{ home_url }}" class="flex items-center gap-2 text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">
+      {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-4 h-4' } only %}
+      Back
+    </a>
+    {% include 'cfc_media_hub:journey-steps' with { active: [1] } only %}
+    <a href="{{ home_url }}" class="text-[13px] text-neutral-400 hover:text-neutral-700 transition-colors">Cancel</a>
+  </div>
+
+  <div x-show="!chosen" class="flex-1 px-12 py-16">
+    <div class="max-w-[860px] mx-auto">
+      <div class="text-center mb-14">
+        <div class="text-[12px] uppercase tracking-[0.18em] text-[#0F6E56] font-semibold mb-4">Step 1 · Create an account</div>
+        <h1 class="tracking-tight text-neutral-900" style="font-size: 56px; font-weight: 600; line-height: 1.05; letter-spacing: -0.03em;">
+          Who are you?
+        </h1>
+        <p class="mt-4 text-neutral-500 max-w-[480px] mx-auto leading-relaxed text-[16px]">
+          Select your profile type to get started. Access conditions differ depending on your status.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <div
+          class="rounded-3xl p-9 border cursor-pointer group transition-all border-[#9F5434]/40 bg-white hover:bg-[#9F5434]/5 hover:shadow-[0_24px_60px_-20px_rgba(159,84,52,0.18)]"
+          x-on:click="document.getElementById('edit-account-type-journalist').click(); chosen = true;"
+        >
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-7 bg-[#9F5434]/10 text-[#9F5434]">
+            {% include 'cfc_media_hub:icon' with { name: 'user', size: 'w-6 h-6' } only %}
+          </div>
+          <div class="text-[11px] uppercase tracking-[0.16em] mb-2 text-[#9F5434] font-semibold">Press</div>
+          <h2 class="tracking-tight mb-3" style="font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">Journalist</h2>
+          <p class="text-neutral-500 leading-relaxed mb-7 text-[14px]">
+            Professional journalists requesting access to desks, meeting rooms and the podcast studio at CFC Media Hub.
+          </p>
+          <ul class="space-y-2.5 mb-7">
+            {% for feature in ['Desk · Free for international accredited journalists', 'Meeting Room · Free for international accredited journalists', 'Podcast Studio · 400 MAD / hour', 'Valid press accreditation required'] %}
+              <li class="flex items-start gap-2.5 text-[13px] text-neutral-600">
+                {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-4 h-4 shrink-0 mt-0.5 text-[#0F6E56]' } only %}
+                {{ feature }}
+              </li>
+            {% endfor %}
+          </ul>
+          <button type="button" class="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors mt-7 bg-[#9F5434] hover:bg-[#8A4A2E] text-white font-semibold text-[14px]">
+            Continue as journalist
+            {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4 group-hover:translate-x-0.5 transition-transform' } only %}
+          </button>
+        </div>
+
+        <div
+          class="rounded-3xl p-9 border cursor-pointer group transition-all border-neutral-200 bg-white hover:border-neutral-400 hover:shadow-[0_24px_60px_-20px_rgba(15,110,86,0.12)]"
+          x-on:click="document.getElementById('edit-account-type-cfc-member').click(); chosen = true;"
+        >
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-7 bg-neutral-100 text-neutral-600">
+            {% include 'cfc_media_hub:icon' with { name: 'building-2', size: 'w-6 h-6' } only %}
+          </div>
+          <div class="text-[11px] uppercase tracking-[0.16em] mb-2 text-neutral-400 font-semibold">Corporate</div>
+          <h2 class="tracking-tight mb-3" style="font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">CFC Member Company</h2>
+          <p class="text-neutral-500 leading-relaxed mb-7 text-[14px]">
+            Employees of companies that are members of Casablanca Finance City community.
+          </p>
+          <ul class="space-y-2.5 mb-7">
+            {% for feature in ['Podcast Studio access only · 400 MAD / hour', 'No access to Desks or Meeting Rooms', 'Verified via professional company email'] %}
+              <li class="flex items-start gap-2.5 text-[13px] text-neutral-600">
+                {% include 'cfc_media_hub:icon' with { name: 'check-circle-2', size: 'w-4 h-4 shrink-0 mt-0.5 text-neutral-300' } only %}
+                {{ feature }}
+              </li>
+            {% endfor %}
+          </ul>
+          <div class="mt-6 bg-[#9F5434]/[0.08] border border-[#9F5434]/25 rounded-xl px-4 py-3.5 flex items-start gap-3">
+            {% include 'cfc_media_hub:icon' with { name: 'alert-circle', size: 'w-4 h-4 text-[#9F5434] shrink-0 mt-0.5' } only %}
+            <div class="text-[12px] text-[#9F5434] leading-relaxed font-medium">
+              <span class="font-bold">CFC Members have access to the Podcast Studio only.</span><br />
+              Meeting Rooms and Desks are not available.
+            </div>
+          </div>
+          <button type="button" class="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors mt-7 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-[14px]">
+            Continue as company member
+            {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4 group-hover:translate-x-0.5 transition-transform' } only %}
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-8 flex items-center justify-center gap-2 text-[13px] text-neutral-400">
+        {% include 'cfc_media_hub:icon' with { name: 'shield-check', size: 'w-4 h-4 text-[#0F6E56]' } only %}
+        Your information is protected and will only be used for access verification.
+      </div>
+
+      <div class="mt-6 text-center text-[13px] text-neutral-500">
+        Already have an account?
+        <a href="{{ sign_in_url }}" class="text-[#9F5434] hover:underline underline-offset-2 font-semibold">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <div x-show="chosen" x-cloak class="flex-1 flex items-center justify-center px-12 py-16">
+    <div class="w-full max-w-[520px]">
+      <div class="flex justify-center mb-10">
+        <img src="{{ logo_url }}" alt="CFC Media Hub" class="h-16 w-auto" />
+      </div>
+
+      <div class="bg-white rounded-3xl border border-neutral-200 shadow-[0_24px_60px_-20px_rgba(15,110,86,0.08)] p-10">
+        <button type="button" x-on:click="chosen = false" class="flex items-center gap-1.5 text-[13px] text-neutral-400 hover:text-neutral-700 transition-colors mb-7">
+          {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-3.5 h-3.5' } only %}
+          Change profile type
+        </button>
+
+        <h1 class="tracking-tight text-neutral-900 mb-1" style="font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">Create your account</h1>
+        <p class="text-neutral-500 mb-8 text-[14px]">Journalists get free access to Desk &amp; Meeting Room. CFC Member employees get Studio access.</p>
+
+        <div class="cfc-form-shell" x-data="{ selectedCompany: null, emailValue: '' }">
+          {{ form }}
+        </div>
+      </div>
+
+      <div class="mt-6 pt-6 text-center text-[13px] text-neutral-500">
+        Already have an account?
+        <a href="{{ sign_in_url }}" class="text-[#9F5434] hover:underline underline-offset-2 font-semibold">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>

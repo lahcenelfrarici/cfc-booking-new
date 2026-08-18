@@ -1,0 +1,17 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Payment page
+status: stable
+description: >
+  Visual shell for the real PaymentForm (Stripe card element). The form
+  itself is a slot — rendered by Drupal Form API.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+  required:
+    - home_url
+slots:
+  form:
+    type: string
+    description: The rendered PaymentForm.

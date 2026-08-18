@@ -1,0 +1,6 @@
+services:
+  cfc_payment.stripe_webhook_subscriber:
+    class: Drupal\cfc_payment\EventSubscriber\StripeWebhookSubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }

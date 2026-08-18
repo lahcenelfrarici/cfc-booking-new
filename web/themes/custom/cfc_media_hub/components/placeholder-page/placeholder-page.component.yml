@@ -1,0 +1,11 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Placeholder page
+status: experimental
+description: Temporary "coming soon" section for routes not yet built out.
+props:
+  type: object
+  properties:
+    title:
+      type: string
+  required:
+    - title
