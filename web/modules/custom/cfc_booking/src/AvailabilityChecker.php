@@ -21,6 +21,18 @@ class AvailabilityChecker {
     'Full day (8h)' => 8,
   ];
 
+  // 17:00 is deliberately excluded: the shortest bookable duration is 2
+  // hours and closing is 18:00 — a start time later than 16:00 can never
+  // produce a valid booking, so it's not offered rather than shown
+  // permanently disabled. Shared by BookingForm (calendar) and
+  // findNextAvailable() (homepage "next slot" blocks) — one source of truth.
+  public const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+
+  // Shown in the picker as permanently non-bookable placeholder cells (never
+  // real buttons — see booking-datetime-picker.twig) so the day's timeline
+  // reads as complete instead of stopping abruptly at 16:00.
+  public const PHANTOM_TIME_SLOTS = ['17:00', '18:00'];
+
   /**
    * The establishment closes at 18:00 — no booking may extend past this,
    * regardless of space capacity (applies to Desk too).
@@ -35,6 +47,10 @@ class AvailabilityChecker {
    * Returns TRUE if the space is free for the requested date/time/duration.
    */
   public function isFree(NodeInterface $space, string $date, string $timeSlot, string $duration, ?int $excludeBookingId = NULL): bool {
+    if (!$this->isDurationAllowedForSlot($timeSlot, $duration)) {
+      return FALSE;
+    }
+
     [$newStart, $newEnd] = $this->toRange($timeSlot, $duration);
     if ($newEnd > self::CLOSING_MINUTES) {
       return FALSE;
@@ -71,6 +87,10 @@ class AvailabilityChecker {
       foreach ($timeSlots as $slot) {
         $matrix[$date][$slot] = [];
         foreach ($durations as $duration) {
+          if (!$this->isDurationAllowedForSlot($slot, $duration)) {
+            $matrix[$date][$slot][$duration] = FALSE;
+            continue;
+          }
           [$start, $end] = $this->toRange($slot, $duration);
           if ($end > self::CLOSING_MINUTES) {
             $matrix[$date][$slot][$duration] = FALSE;
@@ -88,6 +108,51 @@ class AvailabilityChecker {
       }
     }
     return $matrix;
+  }
+
+  /**
+   * Finds the first free [date, time] slot for a space/duration, starting
+   * today — used by the homepage "next available slot" blocks. Stops at the
+   * first hit instead of building a full matrix (buildMatrix()'s job when
+   * the caller needs the whole grid, e.g. the booking calendar).
+   *
+   * @return array{date: string, time: string}|null
+   */
+  public function findNextAvailable(NodeInterface $space, string $duration, int $daysAhead = 14): ?array {
+    $unlimited = (int) $space->get('field_concurrent_capacity')->value === 0;
+    $now = new \DateTime('now');
+    $today = (clone $now)->setTime(0, 0);
+
+    for ($i = 0; $i < $daysAhead; $i++) {
+      $date = (clone $today)->modify("+$i days");
+      $iso = $date->format('Y-m-d');
+      $ranges = $unlimited ? [] : $this->bookedRanges($space, $iso);
+
+      foreach (self::TIME_SLOTS as $slot) {
+        if (!$this->isDurationAllowedForSlot($slot, $duration)) {
+          continue;
+        }
+        [$start, $end] = $this->toRange($slot, $duration);
+        if ($end > self::CLOSING_MINUTES) {
+          continue;
+        }
+        if ($i === 0 && $start <= ((int) $now->format('H') * 60 + (int) $now->format('i'))) {
+          // Don't offer a slot today that's already started.
+          continue;
+        }
+        $free = TRUE;
+        foreach ($ranges as [$existingStart, $existingEnd]) {
+          if ($start < $existingEnd && $existingStart < $end) {
+            $free = FALSE;
+            break;
+          }
+        }
+        if ($free) {
+          return ['date' => $iso, 'time' => $slot];
+        }
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -115,6 +180,20 @@ class AvailabilityChecker {
       );
     }
     return $ranges;
+  }
+
+  /**
+   * A "Full day (8h)" booking must start at opening (09:00) — closing time
+   * alone would also let it start at 10:00 (10:00 + 8h = 18:00 exactly), but
+   * a "full day" is meant to span the whole business day, not just any 8h
+   * window that happens to fit. Every other duration is only bound by the
+   * closing-time check in the caller.
+   */
+  protected function isDurationAllowedForSlot(string $timeSlot, string $duration): bool {
+    if ($duration === 'Full day (8h)') {
+      return $timeSlot === '09:00';
+    }
+    return TRUE;
   }
 
   /**

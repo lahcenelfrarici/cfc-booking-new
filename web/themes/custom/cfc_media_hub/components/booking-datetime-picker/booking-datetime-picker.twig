@@ -1,9 +1,11 @@
 <div
   data-matrix='{{ matrix|raw }}'
   data-durations='{{ durations_json|raw }}'
+  data-duration-hours='{{ duration_hours_json|raw }}'
   x-data="{
     matrix: {},
     durations: [],
+    durationHours: {},
     selectedDuration: '{{ default_duration }}',
     selectedDate: '',
     selectedTime: '',
@@ -13,38 +15,62 @@
       return Object.keys(day).some((slot) => day[slot][this.selectedDuration]);
     },
     slotAvailable(slot) {
+      // Deliberately not keyed to selectedDuration: picking a duration
+      // shouldn't grey out times that were already showing as pickable —
+      // a slot stays enabled as long as it works for at least one of the
+      // space's durations. The exact duration+time combination is still
+      // re-checked for real on submit (validateForm() / AvailabilityChecker),
+      // so nothing invalid can actually get booked.
       if (!this.selectedDate) return false;
       const day = this.matrix[this.selectedDate];
-      return !!(day && day[slot] && day[slot][this.selectedDuration]);
+      return !!(day && day[slot] && Object.values(day[slot]).some((free) => free));
+    },
+    durationAvailable(d) {
+      // Unlike slotAvailable(), this IS keyed to the selected time — some
+      // durations only make sense for specific slots (e.g. Full day only
+      // starting at 09:00), so the choices shown must match the exact
+      // slot just picked, not just 'works for some slot'.
+      if (!this.selectedDate || !this.selectedTime) return false;
+      const day = this.matrix[this.selectedDate];
+      return !!(day && day[this.selectedTime] && day[this.selectedTime][d]);
+    },
+    endTime(start, duration) {
+      // Full day is meant to read as the whole business day (09:00-18:00)
+      // even though it's tracked/billed as 8h — always show closing time
+      // rather than the literal start+8h arithmetic (which would say 17:00).
+      if (duration === 'Full day (8h)') return '18:00';
+      const hours = this.durationHours[duration];
+      if (!start || !hours) return '';
+      const [h, m] = start.split(':').map(Number);
+      const total = h * 60 + m + hours * 60;
+      const eh = Math.floor(total / 60) % 24;
+      const em = total % 60;
+      return String(eh).padStart(2, '0') + ':' + String(em).padStart(2, '0');
     },
     pickDate(iso) {
       if (!this.dayAvailable(iso)) return;
       this.selectedDate = iso;
       document.getElementById('{{ date_field_id }}').value = iso;
-      if (this.selectedTime && !this.slotAvailable(this.selectedTime)) {
-        this.selectedTime = '';
-        document.getElementById('{{ time_field_id }}').value = '';
-      }
     },
     pickTime(slot) {
       if (!this.slotAvailable(slot)) return;
       this.selectedTime = slot;
       document.getElementById('{{ time_field_id }}').value = slot;
+      if (!this.durationAvailable(this.selectedDuration)) {
+        const fallback = this.durations.find((d) => this.durationAvailable(d));
+        if (fallback) {
+          this.selectedDuration = fallback;
+          document.getElementById('{{ duration_field_id }}').value = fallback;
+        }
+      }
     },
     pickDuration(d) {
+      if (!this.durationAvailable(d)) return;
       this.selectedDuration = d;
       document.getElementById('{{ duration_field_id }}').value = d;
-      if (this.selectedDate && !this.dayAvailable(this.selectedDate)) {
-        this.selectedDate = '';
-        document.getElementById('{{ date_field_id }}').value = '';
-      }
-      if (this.selectedTime && !this.slotAvailable(this.selectedTime)) {
-        this.selectedTime = '';
-        document.getElementById('{{ time_field_id }}').value = '';
-      }
     },
   }"
-  x-init="matrix = JSON.parse($el.dataset.matrix); durations = JSON.parse($el.dataset.durations);"
+  x-init="matrix = JSON.parse($el.dataset.matrix); durations = JSON.parse($el.dataset.durations); durationHours = JSON.parse($el.dataset.durationHours);"
 >
   {% if not has_space %}
     <p class="text-neutral-500 text-[14px] bg-neutral-50 border border-neutral-100 rounded-2xl px-5 py-4">
@@ -100,6 +126,14 @@
             {{ slot }}
           </button>
         {% endfor %}
+        {% for slot in phantom_slots %}
+          <div
+            class="py-3 rounded-xl border text-[14px] text-center select-none transition-all bg-white border-neutral-200 text-neutral-900 hover:border-[#9F5434]/40 hover:bg-[#9F5434]/5"
+            aria-disabled="true"
+          >
+            {{ slot }}
+          </div>
+        {% endfor %}
       </div>
 
       <div class="mt-8">
@@ -108,6 +142,7 @@
           {% for d in durations %}
             <button
               type="button"
+              x-show="durationAvailable('{{ d }}')"
               x-on:click="pickDuration('{{ d }}')"
               x-bind:class="selectedDuration === '{{ d }}' ? 'bg-[#9F5434] border-[#9F5434] text-white font-semibold' : 'bg-white border-neutral-200 text-neutral-700 hover:border-neutral-400'"
               class="px-5 py-2.5 rounded-xl border text-[13px] transition-all"
@@ -121,7 +156,7 @@
       <div x-show="selectedTime" x-cloak class="mt-6 p-5 bg-[#9F5434]/5 border border-[#9F5434]/20 rounded-2xl flex items-center gap-3">
         {% include 'cfc_media_hub:icon' with { name: 'clock', size: 'w-4 h-4 text-[#9F5434]' } only %}
         <span class="text-[14px] text-neutral-700">
-          <strong x-text="selectedTime"></strong> &middot; <span x-text="selectedDuration"></span>
+          <strong x-text="selectedTime + ' - ' + endTime(selectedTime, selectedDuration)"></strong> &middot; <span x-text="selectedDuration"></span>
         </span>
       </div>
     </div>

@@ -26,8 +26,9 @@ props:
       type: string
     price_label:
       type: string
-    is_paid:
-      type: boolean
+    max_guests:
+      type: integer
+      description: 'From the space''s field_max_guests — the guests_form slot is only shown when this is greater than 0 (e.g. hidden for Desk).'
     edit_url:
       type: string
     confirm_url:
@@ -44,7 +45,7 @@ props:
     - account_type_label
     - reference
     - price_label
-    - is_paid
+    - max_guests
     - edit_url
     - confirm_url
     - confirm_label

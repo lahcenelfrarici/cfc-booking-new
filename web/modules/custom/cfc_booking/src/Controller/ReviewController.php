@@ -44,6 +44,7 @@ class ReviewController extends ControllerBase {
     $price_label = $amount
       ? number_format((float) $amount, 2) . ' ' . $node->get('field_currency')->value
       : (string) $this->t('Free');
+    $max_guests = $space ? (int) $space->get('field_max_guests')->value : 0;
 
     return [
       '#type' => 'component',
@@ -58,12 +59,10 @@ class ReviewController extends ControllerBase {
         'account_type_label' => $owner->hasRole('journalist') ? (string) $this->t('Journalist') : (string) $this->t('CFC Member'),
         'reference' => (string) $node->get('field_reference')->value,
         'price_label' => $price_label,
-        'is_paid' => $is_paid,
+        'max_guests' => $max_guests,
         'edit_url' => Url::fromRoute('cfc_booking.cancel', ['node' => $node->id()], ['query' => ['destination' => '/booking']])->toString(),
-        'confirm_url' => $is_paid
-          ? Url::fromRoute('cfc_booking.pay', ['node' => $node->id()])->toString()
-          : Url::fromRoute('cfc_pages.account')->toString(),
-        'confirm_label' => $is_paid ? (string) $this->t('Proceed to payment') : (string) $this->t('Confirm reservation'),
+        'confirm_url' => Url::fromRoute('cfc_booking.pay', ['node' => $node->id()])->toString(),
+        'confirm_label' => $is_paid ? (string) $this->t('Proceed to payment') : (string) $this->t('Continue'),
       ],
       '#slots' => [
         'guests_form' => $this->cfcFormBuilder->getForm(GuestsForm::class, $node),

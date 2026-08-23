@@ -34,7 +34,7 @@
     </div>
 
     <div class="col-span-5 relative">
-      {% include 'cfc_media_hub:booking-widget' with { booking_base_url: booking_base_url } only %}
+      {% include 'cfc_media_hub:booking-widget' with { booking_base_url: booking_base_url, next_slots_json: next_slots_json } only %}
 
       <div class="absolute -bottom-8 -left-10 hidden xl:flex items-center gap-3 bg-white rounded-xl shadow-lg border border-neutral-200/70 p-3 pr-5">
         <img src="https://images.unsplash.com/photo-1761543262131-9d464d0d7426?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200" alt="Studio in use" class="w-12 h-12 rounded-lg object-cover" />

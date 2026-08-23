@@ -11,7 +11,15 @@ props:
       type: string
     booking_base_url:
       type: string
+    next_slots:
+      type: object
+      description: Real next-available-slot data keyed by space id — passed through to booking-widget.
+    next_slots_json:
+      type: string
+      description: Same data as next_slots, pre-encoded as JSON for the booking-widget's Alpine state.
   required:
     - spaces_url
     - production_url
     - booking_base_url
+    - next_slots
+    - next_slots_json

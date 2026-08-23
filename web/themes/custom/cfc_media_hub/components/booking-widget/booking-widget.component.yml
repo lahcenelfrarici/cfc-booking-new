@@ -1,11 +1,18 @@
 $schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
 name: Booking widget
 status: stable
-description: Homepage "quick check" booking teaser — space tabs, capacity picker, links into the booking journey.
+description: Homepage "quick check" booking teaser — space tabs showing the real next available slot, linking directly into a booking when possible.
 props:
   type: object
   properties:
     booking_base_url:
       type: string
+    next_slots_json:
+      type: string
+      description: >
+        Real next-available-slot data keyed by space id ("desk"/"meeting"/
+        "studio"), each entry has title, day_label, time_range, price_label,
+        book_url — pre-encoded as JSON for the widget's Alpine state.
   required:
     - booking_base_url
+    - next_slots_json

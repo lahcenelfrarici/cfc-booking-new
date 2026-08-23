@@ -1,9 +1,3 @@
-{% set slots = [
-  { day: 'Today', time: '16:00 – 18:00', space: 'Studio', id: 'studio' },
-  { day: 'Tue 28', time: '09:00 – 11:00', space: 'Meeting Room', id: 'meeting' },
-  { day: 'Wed 29', time: 'All day', space: 'Desk', id: 'desk' },
-] %}
-
 <section class="bg-[#0F6E56] text-white py-36 relative overflow-hidden">
   <div class="absolute inset-0 opacity-[0.08] pointer-events-none" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 32px 32px;"></div>
   <div class="absolute -top-32 -right-20 w-[500px] h-[500px] rounded-full bg-[#085041] blur-3xl opacity-60"></div>
@@ -41,13 +35,15 @@
           {% for s in slots %}
             <div class="flex items-center justify-between py-3 border-b border-white/10 last:border-0">
               <div>
-                <div class="text-[14px] font-semibold">{{ s.space }}</div>
-                <div class="text-[12px] text-white/60 mt-0.5">{{ s.day }} &middot; {{ s.time }}</div>
+                <div class="text-[14px] font-semibold">{{ s.title }}</div>
+                <div class="text-[12px] text-white/60 mt-0.5">{{ s.day_label }} &middot; {{ s.time_range }}</div>
               </div>
-              <a href="{{ booking_base_url }}?space={{ s.id }}" class="text-[12px] bg-white text-[#9F5434] px-3.5 py-1.5 rounded-md hover:bg-[#9F5434] hover:text-white transition-colors font-semibold">
+              <a href="{{ s.book_url }}" class="text-[12px] bg-white text-[#9F5434] px-3.5 py-1.5 rounded-md hover:bg-[#9F5434] hover:text-white transition-colors font-semibold">
                 Book
               </a>
             </div>
+          {% else %}
+            <p class="text-[13px] text-white/60">No slots available right now — check the full calendar.</p>
           {% endfor %}
         </div>
       </div>

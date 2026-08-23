@@ -12,16 +12,19 @@ use Stripe\StripeClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Real Stripe card payment for a paid booking (currently: Studio).
+ * The right-hand action panel of "Complete your booking" (step 5).
  *
- * The Stripe Card Element (module `stripe`) creates/attaches a PaymentIntent
- * and confirms it client-side via Stripe.js — the card number never reaches
- * this server. On submit we only receive the PaymentIntent ID back. Whether
- * the charge actually succeeded is confirmed two ways:
- *  - here, as a fast-path UX check, so the user gets an immediate result;
- *  - authoritatively, by StripeWebhookSubscriber, which is the only thing
- *    allowed to treat a booking as definitively paid (e.g. for anything
- *    that matters operationally — the fast path is UX only).
+ * Two branches, chosen by the booking's field_payment_status:
+ *  - 'pending' (Studio): a real Stripe Card Element that creates/attaches a
+ *    PaymentIntent and confirms it client-side via Stripe.js — the card
+ *    number never reaches this server. On submit we only receive the
+ *    PaymentIntent ID back. Whether the charge actually succeeded is
+ *    confirmed two ways: here, as a fast-path UX check, so the user gets an
+ *    immediate result; authoritatively, by StripeWebhookSubscriber, which is
+ *    the only thing allowed to treat a booking as definitively paid.
+ *  - 'not_applicable' (Desk/Meeting Room): no charge is possible, so this is
+ *    just a single confirm button — no data changes, purely a UX step
+ *    matching the booking journey's step 5 before the confirmation page.
  */
 class PaymentForm extends FormBase {
 
@@ -51,24 +54,47 @@ class PaymentForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL): array {
-    if (!$this->isPayable($node)) {
+    if (!$this->isAccessible($node)) {
       $form_state->setRedirectUrl(Url::fromRoute('cfc_pages.account'));
       return $form;
     }
 
     $form_state->set('cfc_booking_nid', (int) $node->id());
+    $is_payable = $node->get('field_payment_status')->value === 'pending';
+    $form_state->set('cfc_is_payable', $is_payable);
 
-    $space = $node->get('field_space')->entity;
+    if (!$is_payable) {
+      $form['confirm'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['bg-[#9F5434]/5', 'border', 'border-[#9F5434]/20', 'rounded-3xl', 'p-10', 'text-center']],
+      ];
+      $form['confirm']['icon'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['w-14', 'h-14', 'rounded-full', 'bg-[#9F5434]/10', 'flex', 'items-center', 'justify-center', 'mx-auto', 'mb-5']],
+        'svg' => [
+          '#type' => 'component',
+          '#component' => 'cfc_media_hub:icon',
+          '#props' => ['name' => 'check-circle-2', 'size' => 'w-7 h-7 text-[#9F5434]'],
+        ],
+      ];
+      $form['confirm']['heading'] = [
+        '#markup' => '<h2 class="tracking-tight mb-3" style="font-size: 28px; font-weight: 600;">' . $this->t('No payment required.') . '</h2>',
+      ];
+      $form['confirm']['description'] = [
+        '#markup' => '<p class="text-[15px] text-neutral-600 leading-relaxed mb-8 max-w-[360px] mx-auto">'
+          . $this->t('Desks and Meeting Rooms are available free of charge for international accredited journalists. Simply confirm to finalise your reservation.')
+          . '</p>',
+      ];
+      $form['confirm']['submit'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Confirm reservation'),
+        '#attributes' => ['class' => ['bg-[#9F5434]', 'hover:bg-[#8A4A2E]', 'text-white', 'px-8', 'py-3.5', 'rounded-2xl', 'font-semibold', 'text-[14px]', 'transition-colors']],
+      ];
+      return $form;
+    }
+
     $amount = (float) $node->get('field_amount')->value;
     $currency = strtoupper($node->get('field_currency')->value ?: 'EUR');
-
-    $form['summary'] = [
-      '#markup' => '<div class="cfc-payment-summary space-y-1 mb-6 text-[14px] text-neutral-700">'
-        . '<p class="font-semibold text-neutral-900">' . ($space ? $space->label() : (string) $this->t('Booking')) . '</p>'
-        . '<p>' . $node->get('field_booking_date')->value . ' — ' . $node->get('field_time_slot')->value . ' (' . $node->get('field_duration')->value . ')</p>'
-        . '<p>' . number_format($amount, 2) . ' ' . $currency . '</p>'
-        . '</div>',
-    ];
 
     $form['card'] = [
       '#type' => 'stripe',
@@ -100,6 +126,9 @@ class PaymentForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
+    if (!$form_state->get('cfc_is_payable')) {
+      return;
+    }
     $card = $form_state->getValue('card');
     if (empty($card['payment_intent'])) {
       $form_state->setErrorByName('card', $this->t('Please enter your card details.'));
@@ -113,36 +142,39 @@ class PaymentForm extends FormBase {
     $nid = $form_state->get('cfc_booking_nid');
     $node = $nid ? $this->cfcEntityTypeManager->getStorage('node')->load($nid) : NULL;
 
-    if (!$this->isPayable($node)) {
+    if (!$this->isAccessible($node)) {
       $form_state->setRedirectUrl(Url::fromRoute('cfc_pages.account'));
       return;
     }
 
-    $card = $form_state->getValue('card');
-    $payment_intent_id = $card['payment_intent'];
-    $node->set('field_stripe_payment_intent', $payment_intent_id);
+    if ($form_state->get('cfc_is_payable')) {
+      $card = $form_state->getValue('card');
+      $payment_intent_id = $card['payment_intent'];
+      $node->set('field_stripe_payment_intent', $payment_intent_id);
 
-    if ($this->paymentSucceeded($payment_intent_id)) {
-      $node->set('field_payment_status', 'paid');
-      $this->messenger()->addStatus($this->t('Payment received. Your booking is confirmed.'));
+      if ($this->paymentSucceeded($payment_intent_id)) {
+        $node->set('field_payment_status', 'paid');
+        $this->messenger()->addStatus($this->t('Payment received. Your booking is confirmed.'));
+      }
+      else {
+        $this->messenger()->addStatus($this->t('Payment submitted. We will confirm your booking shortly.'));
+      }
+      $node->save();
     }
-    else {
-      $this->messenger()->addStatus($this->t('Payment submitted. We will confirm your booking shortly.'));
-    }
-    $node->save();
 
-    $form_state->setRedirectUrl(Url::fromRoute('cfc_pages.account'));
+    $form_state->setRedirectUrl(Url::fromRoute('cfc_booking.confirmation', ['node' => $node->id()]));
   }
 
   /**
-   * A booking can be paid if it belongs to the current user, is a real
-   * "booking" node, and still has an outstanding balance.
+   * A booking's payment step is reachable by its owner, for a real "booking"
+   * node, as long as it isn't already fully paid (PaymentController redirects
+   * that case to the confirmation page before this form is even built).
    */
-  protected function isPayable(?NodeInterface $node): bool {
+  protected function isAccessible(?NodeInterface $node): bool {
     return $node
       && $node->bundle() === 'booking'
       && (int) $node->getOwnerId() === (int) $this->currentUser->id()
-      && $node->get('field_payment_status')->value === 'pending';
+      && $node->get('field_payment_status')->value !== 'paid';
   }
 
   /**

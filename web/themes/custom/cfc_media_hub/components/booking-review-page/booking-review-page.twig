@@ -54,9 +54,11 @@
       </div>
     </div>
 
-    <div class="bg-white rounded-3xl border border-neutral-200 p-8 mb-6">
-      {{ guests_form }}
-    </div>
+    {% if max_guests > 0 %}
+      <div class="bg-white rounded-3xl border border-neutral-200 p-8 mb-6">
+        {{ guests_form }}
+      </div>
+    {% endif %}
 
     <div class="flex items-center justify-between gap-4">
       <a href="{{ edit_url }}" class="text-[13px] text-neutral-400 hover:text-red-500 underline underline-offset-2 transition-colors">

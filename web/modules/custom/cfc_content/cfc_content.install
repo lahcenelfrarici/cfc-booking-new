@@ -10,6 +10,26 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\NodeType;
 
 /**
+ * Default widget/formatter per field type — fields created programmatically
+ * (via FieldConfig::create(), as this module does throughout) never get an
+ * entity form/view display the way Field UI would auto-generate one, so
+ * without this the admin edit form only ever shows Title. See
+ * _cfc_content_build_default_displays().
+ */
+const CFC_CONTENT_FIELD_DISPLAY_MAP = [
+  'string' => ['widget' => 'string_textfield', 'formatter' => 'string'],
+  'string_long' => ['widget' => 'string_textarea', 'formatter' => 'basic_string'],
+  'text_long' => ['widget' => 'text_textarea', 'formatter' => 'text_default'],
+  'list_string' => ['widget' => 'options_select', 'formatter' => 'list_default'],
+  'boolean' => ['widget' => 'boolean_checkbox', 'formatter' => 'boolean'],
+  'image' => ['widget' => 'image_image', 'formatter' => 'image'],
+  'integer' => ['widget' => 'number', 'formatter' => 'number_integer'],
+  'decimal' => ['widget' => 'number', 'formatter' => 'number_decimal'],
+  'datetime' => ['widget' => 'datetime_default', 'formatter' => 'datetime_default'],
+  'entity_reference' => ['widget' => 'entity_reference_autocomplete', 'formatter' => 'entity_reference_label'],
+];
+
+/**
  * Implements hook_install().
  */
 function cfc_content_install(): void {
@@ -336,6 +356,57 @@ function cfc_content_update_11003(): void {
     $node->set('field_max_guests', $max_guests_by_key[$key]);
     $node->save();
   }
+}
+
+/**
+ * Builds the missing entity form + view displays for "space" and
+ * "production" — without these, the admin edit form for these nodes only
+ * shows the Title field, since our fields were created via code (not the
+ * Field UI, which is what normally auto-generates these displays).
+ */
+function cfc_content_update_11004(): void {
+  $space_fields = [
+    'field_machine_key', 'field_subtitle', 'field_summary', 'field_price_label',
+    'field_capacity_meta', 'field_access_rule', 'field_highlight', 'field_hero_image',
+    'field_features', 'field_slot_durations', 'field_max_guests', 'field_cta_label',
+    'field_weight', 'field_description', 'field_concurrent_capacity', 'field_hourly_rate',
+    'field_currency',
+  ];
+  $production_fields = [
+    'field_production_type', 'field_publisher', 'field_duration', 'field_production_date',
+    'field_image', 'field_featured', 'field_description',
+  ];
+
+  _cfc_content_build_default_displays('space', $space_fields);
+  _cfc_content_build_default_displays('production', $production_fields);
+}
+
+/**
+ * Creates (or completes) the default form + view display for a bundle,
+ * assigning a widget/formatter per field based on its storage type (see
+ * CFC_CONTENT_FIELD_DISPLAY_MAP). Safe to re-run: setComponent() overwrites.
+ */
+function _cfc_content_build_default_displays(string $bundle, array $field_names): void {
+  $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', $bundle);
+  $form_display = \Drupal::service('entity_display.repository')->getFormDisplay('node', $bundle, 'default');
+  $view_display = \Drupal::service('entity_display.repository')->getViewDisplay('node', $bundle, 'default');
+
+  $weight = 0;
+  foreach ($field_names as $field_name) {
+    if (!isset($field_definitions[$field_name])) {
+      continue;
+    }
+    $field_type = $field_definitions[$field_name]->getType();
+    $map = CFC_CONTENT_FIELD_DISPLAY_MAP[$field_type] ?? NULL;
+    if (!$map) {
+      continue;
+    }
+    $form_display->setComponent($field_name, ['type' => $map['widget'], 'weight' => $weight]);
+    $view_display->setComponent($field_name, ['type' => $map['formatter'], 'weight' => $weight]);
+    $weight++;
+  }
+  $form_display->save();
+  $view_display->save();
 }
 
 /**

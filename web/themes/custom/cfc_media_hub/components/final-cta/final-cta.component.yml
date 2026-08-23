@@ -7,5 +7,13 @@ props:
   properties:
     booking_base_url:
       type: string
+    slots:
+      type: object
+      description: >
+        Real next-available-slot data keyed by space id, from
+        HomeController::buildNextSlots() — each entry has title, day_label,
+        time_range, book_url (direct booking link for an eligible logged-in
+        user, otherwise the manual /booking?space=X fallback).
   required:
     - booking_base_url
+    - slots

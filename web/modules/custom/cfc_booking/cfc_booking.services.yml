@@ -2,3 +2,6 @@ services:
   cfc_booking.availability_checker:
     class: Drupal\cfc_booking\AvailabilityChecker
     arguments: ['@entity_type.manager']
+  cfc_booking.creator:
+    class: Drupal\cfc_booking\BookingCreator
+    arguments: ['@cfc_content.repository', '@entity_type.manager']

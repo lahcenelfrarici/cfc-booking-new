@@ -2,15 +2,43 @@ $schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schema
 name: Payment page
 status: stable
 description: >
-  Visual shell for the real PaymentForm (Stripe card element). The form
-  itself is a slot — rendered by Drupal Form API.
+  Step 5 of the booking journey: "Complete your booking" — reservation
+  summary card next to the PaymentForm action (Stripe card element, or a
+  simple confirm button for free bookings). The form itself is a slot —
+  rendered by Drupal Form API.
 props:
   type: object
   properties:
     home_url:
       type: string
+    space_label:
+      type: string
+    date:
+      type: string
+    time:
+      type: string
+    duration:
+      type: string
+    user_name:
+      type: string
+    guest_names:
+      type: array
+      items:
+        type: string
+    total_label:
+      type: string
+    reference:
+      type: string
   required:
     - home_url
+    - space_label
+    - date
+    - time
+    - duration
+    - user_name
+    - guest_names
+    - total_label
+    - reference
 slots:
   form:
     type: string

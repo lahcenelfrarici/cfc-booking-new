@@ -1,0 +1,41 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Confirmation page
+status: stable
+description: >
+  Final step of the booking journey: the confirmed reservation's digital
+  access card, ported from the BookingJourney prototype's ConfirmationStep +
+  PrintableCard.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+    logo_url:
+      type: string
+    reference:
+      type: string
+    user_name:
+      type: string
+    account_type_label:
+      type: string
+    organization:
+      type: string
+    space_label:
+      type: string
+    date:
+      type: string
+    time:
+      type: string
+    duration:
+      type: string
+  required:
+    - home_url
+    - logo_url
+    - reference
+    - user_name
+    - account_type_label
+    - organization
+    - space_label
+    - date
+    - time
+    - duration

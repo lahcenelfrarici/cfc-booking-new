@@ -65,6 +65,50 @@ function cfc_booking_update_11002(): void {
 }
 
 /**
+ * Builds the missing entity form + view display for "booking" — without
+ * this, the admin edit form only shows the Title field, since our fields
+ * were created via code (not the Field UI, which is what normally
+ * auto-generates these displays). Same fix as cfc_content_update_11004,
+ * for the "space"/"production" bundles.
+ */
+function cfc_booking_update_11003(): void {
+  $display_map = [
+    'string' => ['widget' => 'string_textfield', 'formatter' => 'string'],
+    'list_string' => ['widget' => 'options_select', 'formatter' => 'list_default'],
+    'decimal' => ['widget' => 'number', 'formatter' => 'number_decimal'],
+    'datetime' => ['widget' => 'datetime_default', 'formatter' => 'datetime_default'],
+    'entity_reference' => ['widget' => 'entity_reference_autocomplete', 'formatter' => 'entity_reference_label'],
+  ];
+
+  // _cfc_booking_field_definitions() only covers the original field set —
+  // field_amount/field_currency/field_stripe_payment_intent were added
+  // later by cfc_booking_update_11001() and aren't in it.
+  $field_names = array_merge(
+    array_keys(_cfc_booking_field_definitions()),
+    ['field_amount', 'field_currency', 'field_stripe_payment_intent']
+  );
+  $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'booking');
+  $form_display = \Drupal::service('entity_display.repository')->getFormDisplay('node', 'booking', 'default');
+  $view_display = \Drupal::service('entity_display.repository')->getViewDisplay('node', 'booking', 'default');
+
+  $weight = 0;
+  foreach ($field_names as $field_name) {
+    if (!isset($field_definitions[$field_name])) {
+      continue;
+    }
+    $map = $display_map[$field_definitions[$field_name]->getType()] ?? NULL;
+    if (!$map) {
+      continue;
+    }
+    $form_display->setComponent($field_name, ['type' => $map['widget'], 'weight' => $weight]);
+    $view_display->setComponent($field_name, ['type' => $map['formatter'], 'weight' => $weight]);
+    $weight++;
+  }
+  $form_display->save();
+  $view_display->save();
+}
+
+/**
  * Returns the full field definition set for the "booking" bundle.
  */
 function _cfc_booking_field_definitions(): array {

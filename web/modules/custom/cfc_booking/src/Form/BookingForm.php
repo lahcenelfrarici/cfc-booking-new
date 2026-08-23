@@ -3,6 +3,7 @@
 namespace Drupal\cfc_booking\Form;
 
 use Drupal\cfc_booking\AvailabilityChecker;
+use Drupal\cfc_booking\BookingCreator;
 use Drupal\cfc_content\ContentRepository;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
@@ -26,11 +27,10 @@ class BookingForm extends FormBase {
 
   protected const INPUT_CLASSES = ['w-full', 'border', 'border-neutral-200', 'rounded-xl', 'px-4', 'py-3', 'text-[14px]', 'text-neutral-900', 'bg-white', 'focus:outline-none', 'focus:border-[#0F6E56]'];
 
-  protected const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-
   public function __construct(
     protected ContentRepository $contentRepository,
     protected AvailabilityChecker $availabilityChecker,
+    protected BookingCreator $bookingCreator,
     protected AccountProxyInterface $currentUser,
     protected EntityTypeManagerInterface $cfcEntityTypeManager,
   ) {}
@@ -42,6 +42,7 @@ class BookingForm extends FormBase {
     return new static(
       $container->get('cfc_content.repository'),
       $container->get('cfc_booking.availability_checker'),
+      $container->get('cfc_booking.creator'),
       $container->get('current_user'),
       $container->get('entity_type.manager'),
     );
@@ -58,21 +59,7 @@ class BookingForm extends FormBase {
    * Returns the Space data eligible for the current user's role.
    */
   protected function eligibleSpaces(): array {
-    $roles = $this->currentUser->getRoles();
-    $allowed_rules = [];
-    if (in_array('journalist', $roles, TRUE)) {
-      $allowed_rules = array_merge($allowed_rules, ['journalist', 'both']);
-    }
-    if (in_array('cfc_member', $roles, TRUE)) {
-      $allowed_rules = array_merge($allowed_rules, ['company', 'both']);
-    }
-    $filtered = array_filter(
-      $this->contentRepository->getSpaces(),
-      static fn(array $space) => in_array($space['access_rule'], $allowed_rules, TRUE)
-    );
-    // Re-key by machine key ("desk"/"meeting"/"studio") so $spaces[$id]
-    // lookups work — getSpaces() returns a plain sequential list.
-    return array_column($filtered, NULL, 'id');
+    return $this->bookingCreator->eligibleSpaces($this->currentUser->getRoles());
   }
 
   /**
@@ -91,6 +78,25 @@ class BookingForm extends FormBase {
 
     $space_options = array_combine(array_column($spaces, 'id'), array_column($spaces, 'title'));
     $selected_space_id = $form_state->getValue('space') ?: (($initial_space && isset($space_options[$initial_space])) ? $initial_space : NULL);
+
+    // The date/time/duration hidden fields still hold whatever was POSTed
+    // alongside the space card's AJAX request — normally their stale values
+    // from before a space was even picked (e.g. duration="1 hour", the
+    // fallback default shown before any space is selected). Form API
+    // prioritises that submitted input over the freshly computed
+    // #default_value on rebuild, so without this the hidden fields silently
+    // keep the old value even though the visible picker correctly shows the
+    // new space's real default — leading to "duration not available" errors
+    // on submit unless the user happens to click a duration button
+    // explicitly. Tracking the last-seen space in $form_state (persisted
+    // across AJAX rebuilds via the form cache) and clearing those three
+    // inputs whenever it changes forces the rebuilt wrapper to use its
+    // fresh, space-correct defaults.
+    if ($form_state->get('cfc_last_space') !== $selected_space_id) {
+      $user_input = &$form_state->getUserInput();
+      unset($user_input['booking_date'], $user_input['time_slot'], $user_input['duration']);
+      $form_state->set('cfc_last_space', $selected_space_id);
+    }
 
     $form['space'] = [
       '#type' => 'select',
@@ -235,7 +241,7 @@ class BookingForm extends FormBase {
     $matrix = [];
     if ($space_data) {
       $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-      $matrix = $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), self::TIME_SLOTS, $durations);
+      $matrix = $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations);
     }
 
     $wrapper['picker'] = [
@@ -244,10 +250,12 @@ class BookingForm extends FormBase {
       '#props' => [
         'has_space' => (bool) $space_data,
         'days' => $days,
-        'time_slots' => self::TIME_SLOTS,
+        'time_slots' => AvailabilityChecker::TIME_SLOTS,
         'durations' => $durations,
         'durations_json' => Json::encode($durations),
         'matrix' => Json::encode($matrix),
+        'duration_hours_json' => Json::encode(AvailabilityChecker::DURATION_HOURS),
+        'phantom_slots' => AvailabilityChecker::PHANTOM_TIME_SLOTS,
         'default_duration' => $default_duration,
         'date_field_id' => 'cfc-booking-date',
         'time_field_id' => 'cfc-booking-time',
@@ -334,36 +342,21 @@ class BookingForm extends FormBase {
     $spaces = $this->eligibleSpaces();
     $space_id = $form_state->getValue('space');
     $space_data = $spaces[$space_id];
-    $is_paid = $space_data['hourly_rate'] > 0;
-
-    $reference = 'RES-' . date('Y') . '-' . random_int(1000, 9999);
     $duration = $form_state->getValue('duration');
-    $amount = $is_paid ? $space_data['hourly_rate'] * AvailabilityChecker::DURATION_HOURS[$duration] : NULL;
 
-    $booking = $this->cfcEntityTypeManager->getStorage('node')->create([
-      'type' => 'booking',
-      'title' => $space_data['title'] . ' — ' . $form_state->getValue('booking_date') . ' ' . $form_state->getValue('time_slot'),
-      'uid' => $this->currentUser->id(),
-      'field_space' => ['target_id' => $space_data['nid']],
-      'field_booking_date' => $form_state->getValue('booking_date'),
-      'field_time_slot' => $form_state->getValue('time_slot'),
-      'field_duration' => $duration,
-      'field_guest_names' => [],
-      'field_status' => 'upcoming',
-      'field_reference' => $reference,
-      'field_price' => $space_data['price_label'],
-      'field_amount' => $amount,
-      'field_currency' => $is_paid ? $space_data['currency'] : NULL,
-      'field_payment_status' => $is_paid ? 'pending' : 'not_applicable',
-      'status' => 1,
-    ]);
-    $booking->save();
+    $booking = $this->bookingCreator->create(
+      $space_data,
+      (int) $this->currentUser->id(),
+      $form_state->getValue('booking_date'),
+      $form_state->getValue('time_slot'),
+      $duration,
+    );
 
     if ($lock_name = $form_state->get('cfc_lock_name')) {
       \Drupal::lock()->release($lock_name);
     }
 
-    $this->messenger()->addStatus($this->t('Reservation @ref created — please review the details below.', ['@ref' => $reference]));
+    $this->messenger()->addStatus($this->t('Reservation @ref created — please review the details below.', ['@ref' => (string) $booking->get('field_reference')->value]));
     $form_state->setRedirectUrl(Url::fromRoute('cfc_booking.review', ['node' => $booking->id()]));
   }
 

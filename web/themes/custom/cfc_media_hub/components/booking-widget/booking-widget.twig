@@ -1,32 +1,14 @@
 <div class="relative"
+  data-slots='{{ next_slots_json|raw }}'
   x-data="{
     active: 'studio',
-    pickerOpen: false,
-    capacityIndex: { desk: 0, meeting: 3, studio: 0 },
+    slots: {},
     tabs: [ { id: 'desk', label: 'Desk' }, { id: 'meeting', label: 'Meeting Room' }, { id: 'studio', label: 'Studio' } ],
-    capacityOptions: {
-      desk: [ { label: '1 journalist', value: '1 journalist' } ],
-      meeting: [
-        { label: '1 person', value: '1 person' },
-        { label: '2 people', value: '2 people' },
-        { label: '3 people', value: '3 people' },
-        { label: '5 people', value: '5 people' },
-        { label: '6 people', value: '6 people' },
-      ],
-      studio: [
-        { label: '1 journalist only', value: '1 journalist · no guests' },
-        { label: '1 journalist + 1 guest', value: '1 journalist · 1 guest' },
-        { label: '1 journalist + 2 guests', value: '1 journalist · 2 guests' },
-      ],
-    },
-    get options() { return this.capacityOptions[this.active]; },
-    get selected() { return this.options[this.capacityIndex[this.active] ?? 0]; },
-    get isDeskFixed() { return this.active === 'desk'; },
-    get pricingText() {
-      return this.active === 'studio' ? 'Studio · 400 MAD / hr' : (this.active === 'meeting' ? 'Meeting Room · Free for journalists' : 'Desk · Free for journalists');
-    },
-    selectTab(id) { this.active = id; this.pickerOpen = false; },
+    get slot() { return this.slots[this.active] || null; },
+    get href() { return this.slot ? this.slot.book_url : '{{ booking_base_url }}?space=' + this.active; },
+    selectTab(id) { this.active = id; },
   }"
+  x-init="slots = JSON.parse($el.dataset.slots);"
 >
   <div class="absolute -inset-4 bg-gradient-to-br from-[#9F5434]/10 via-transparent to-[#9F5434]/5 rounded-[28px] blur-2xl"></div>
   <div class="relative bg-white rounded-3xl shadow-[0_30px_80px_-30px_rgba(15,110,86,0.28),0_4px_12px_-4px_rgba(11,15,14,0.06)] border border-neutral-900/[0.06] overflow-visible">
@@ -56,72 +38,46 @@
       </div>
     </div>
 
-    <div class="px-7 py-6 grid grid-cols-2 gap-3">
-      <div class="text-left border border-neutral-200 rounded-xl px-4 py-3">
-        <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
-          {% include 'cfc_media_hub:icon' with { name: 'calendar', size: 'w-4 h-4 text-[#9F5434]' } only %}
-          Date
-        </div>
-        <div class="text-[14px] text-neutral-900 font-medium">Tue, 28 Apr</div>
-      </div>
-      <div class="text-left border border-neutral-200 rounded-xl px-4 py-3">
-        <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
-          {% include 'cfc_media_hub:icon' with { name: 'clock', size: 'w-4 h-4 text-[#9F5434]' } only %}
-          Time slot
-        </div>
-        <div class="text-[14px] text-neutral-900 font-medium">10:00 – 12:00</div>
-      </div>
-
-      <div class="col-span-2 relative" x-on:click.outside="pickerOpen = false">
-        <button
-          type="button"
-          x-on:click="if (!isDeskFixed) pickerOpen = !pickerOpen"
-          :class="isDeskFixed ? 'border-neutral-200 cursor-default' : (pickerOpen ? 'border-[#9F5434]/50 bg-[#9F5434]/5' : 'border-neutral-200 hover:border-[#9F5434]/40 hover:bg-[#9F5434]/5')"
-          class="w-full text-left border rounded-xl px-4 py-3 transition-colors"
-        >
-          <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
-            {% include 'cfc_media_hub:icon' with { name: 'users', size: 'w-4 h-4 text-[#9F5434]' } only %}
-            <span x-text="active === 'desk' ? 'Journalist' : (active === 'meeting' ? 'Attendees' : 'Capacity')"></span>
+    <div class="px-7 py-6">
+      <template x-if="slot">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="text-left border border-neutral-200 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
+              {% include 'cfc_media_hub:icon' with { name: 'calendar', size: 'w-4 h-4 text-[#9F5434]' } only %}
+              Date
+            </div>
+            <div class="text-[14px] text-neutral-900 font-medium" x-text="slot.day_label"></div>
           </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[14px] text-neutral-900 font-medium" x-text="selected.value"></span>
-            <span x-show="!isDeskFixed" :class="pickerOpen ? 'rotate-180' : ''" class="transition-transform">
-              {% include 'cfc_media_hub:icon' with { name: 'chevron-down', size: 'w-4 h-4 text-neutral-400' } only %}
-            </span>
+          <div class="text-left border border-neutral-200 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
+              {% include 'cfc_media_hub:icon' with { name: 'clock', size: 'w-4 h-4 text-[#9F5434]' } only %}
+              Time slot
+            </div>
+            <div class="text-[14px] text-neutral-900 font-medium" x-text="slot.time_range"></div>
           </div>
-          <div x-show="active === 'studio'" class="mt-1 text-[11px] text-[#9F5434] font-medium">
-            Max: 1 journalist + 2 guests
-          </div>
-        </button>
-
-        <div x-show="pickerOpen && !isDeskFixed" x-cloak class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-neutral-200 rounded-xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] z-50 overflow-hidden">
-          <template x-for="(opt, i) in options" :key="opt.value">
-            <button
-              type="button"
-              x-on:click="capacityIndex[active] = i; pickerOpen = false;"
-              :class="i === capacityIndex[active] ? 'bg-[#9F5434]/8 text-[#9F5434] font-semibold' : 'text-neutral-700 hover:bg-neutral-50 font-normal'"
-              class="w-full text-left px-4 py-3 text-[14px] transition-colors flex items-center justify-between border-b border-neutral-100 last:border-0"
-            >
-              <span x-text="opt.label"></span>
-              <span x-show="i === capacityIndex[active]" class="w-2 h-2 rounded-full bg-[#9F5434]"></span>
-            </button>
-          </template>
         </div>
-      </div>
+      </template>
+      <template x-if="!slot">
+        <p class="text-[13px] text-neutral-500 bg-neutral-50 border border-neutral-100 rounded-xl px-4 py-3">
+          No availability in the next two weeks — check the full calendar.
+        </p>
+      </template>
     </div>
 
     <div class="px-7 pb-7">
       <a
-        :href="'{{ booking_base_url }}?space=' + active"
+        :href="href"
         class="btn-premium w-full bg-[#9F5434] hover:bg-[#8A4A2E] text-white py-4 rounded-2xl flex items-center justify-center gap-2 group"
       >
-        <span class="text-[14px] font-semibold">Check availability</span>
+        <span class="text-[14px] font-semibold" x-text="slot ? 'Check availability' : 'View calendar'"></span>
         {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4', class: 'group-hover:translate-x-0.5 transition-transform' } only %}
       </a>
     </div>
 
-    <div class="px-7 py-3 bg-[#9F5434]/5 border-t border-[#9F5434]/15 text-[12px]">
-      <span class="text-neutral-700" x-text="pricingText"></span>
-    </div>
+    <template x-if="slot">
+      <div class="px-7 py-3 bg-[#9F5434]/5 border-t border-[#9F5434]/15 text-[12px]">
+        <span class="text-neutral-700" x-text="slot.title + ' · ' + slot.price_label"></span>
+      </div>
+    </template>
   </div>
 </div>
