@@ -13,6 +13,29 @@ props:
         Real next-available-slot data keyed by space id ("desk"/"meeting"/
         "studio"), each entry has title, day_label, time_range, price_label,
         book_url — pre-encoded as JSON for the widget's Alpine state.
+    space_pickers_json:
+      type: string
+      description: >
+        Full 14-day availability matrix per space id, pre-encoded as JSON —
+        lets the Date/Time cards expand into a real clickable picker instead
+        of only showing the precomputed next slot.
+    duration_hours_json:
+      type: string
+      description: AvailabilityChecker::DURATION_HOURS, pre-encoded as JSON.
+    time_slots_json:
+      type: string
+      description: AvailabilityChecker::TIME_SLOTS, pre-encoded as JSON.
+    eligible_json:
+      type: string
+      description: Map of space id => true for spaces the current user can quick-book directly, pre-encoded as JSON.
+    quick_book_template:
+      type: string
+      description: cfc_booking.quick_book URL with __SPACE__/__DATE__/__TIME__/__DURATION__ placeholders.
   required:
     - booking_base_url
     - next_slots_json
+    - space_pickers_json
+    - duration_hours_json
+    - time_slots_json
+    - eligible_json
+    - quick_book_template

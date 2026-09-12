@@ -903,12 +903,14 @@ $settings['migrate_node_migrate_type_classic'] = FALSE;
 # if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
+$settings['file_temp_path'] = 'C:/laragon/www/cfc-booking/tmp';
+
 $databases['default']['default'] = array (
-  'database' => 'drupal',
-  'username' => 'drupal',
-  'password' => 'drupal',
+  'database' => 'cfc_booking',
+  'username' => 'root',
+  'password' => '',
   'prefix' => '',
-  'host' => 'db',
+  'host' => 'localhost',
   'port' => 3306,
   'isolation_level' => 'READ COMMITTED',
   'driver' => 'mysql',

@@ -43,6 +43,7 @@ class HomeController extends ControllerBase {
     $production_url = Url::fromRoute('cfc_pages.production')->toString();
     $booking_base_url = Url::fromRoute('cfc_pages.booking')->toString();
     $next_slots = $this->buildNextSlots();
+    $space_pickers = $this->buildSpacePickers();
 
     return [
       'hero' => [
@@ -54,6 +55,16 @@ class HomeController extends ControllerBase {
           'booking_base_url' => $booking_base_url,
           'next_slots' => $next_slots,
           'next_slots_json' => Json::encode($next_slots),
+          'space_pickers_json' => Json::encode($space_pickers),
+          'duration_hours_json' => Json::encode(AvailabilityChecker::DURATION_HOURS),
+          'time_slots_json' => Json::encode(AvailabilityChecker::TIME_SLOTS),
+          'eligible_json' => Json::encode($this->eligibleSpaceIds()),
+          'quick_book_template' => Url::fromRoute('cfc_booking.quick_book', [
+            'space' => '__SPACE__',
+            'date' => '__DATE__',
+            'time' => '__TIME__',
+            'duration' => '__DURATION__',
+          ])->toString(),
         ],
         '#cache' => [
           'contexts' => ['user.roles', 'user'],
@@ -143,10 +154,82 @@ class HomeController extends ControllerBase {
         'day_label' => $this->dayLabel($next['date']),
         'time_range' => $next['time'] . ' – ' . $this->endTime($next['time'], $duration),
         'price_label' => $space_data['price_label'],
+        'capacity_meta' => $space_data['capacity_meta'],
         'book_url' => $book_url,
       ];
     }
     return $slots;
+  }
+
+  /**
+   * Which space ids the current user can quick-book directly — same
+   * eligibility check as buildNextSlots(), exposed separately so the
+   * widget's manually-picked date/time can also skip straight to
+   * quick_book instead of only the one precomputed "next slot".
+   *
+   * @return array
+   *   Map of space id => TRUE for eligible spaces only.
+   */
+  protected function eligibleSpaceIds(): array {
+    if (!$this->currentUser()->isAuthenticated()) {
+      return [];
+    }
+    $eligible = $this->bookingCreator->eligibleSpaces($this->currentUser()->getRoles());
+    return array_fill_keys(array_keys($eligible), TRUE);
+  }
+
+  /**
+   * Builds the full 14-day availability matrix per space, so the homepage
+   * booking widget's Date/Time cards can be clicked open into a real picker
+   * instead of only ever showing the single precomputed "next slot" — same
+   * underlying data (AvailabilityChecker::buildMatrix()) as the full
+   * /booking form, just embedded three times (one per space, tab-switched
+   * client-side with no page reload).
+   *
+   * @return array
+   *   Keyed by space id, each entry: days, time_slots, durations,
+   *   durations_json, matrix_json, duration_hours_json, default_duration.
+   */
+  protected function buildSpacePickers(): array {
+    $days = $this->next14Days();
+    $pickers = [];
+
+    foreach ($this->contentRepository->getSpaces() as $space_data) {
+      $durations = $space_data['slot_durations'] ?: array_keys(AvailabilityChecker::DURATION_HOURS);
+      $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
+      $matrix = $space_node
+        ? $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations)
+        : [];
+
+      $pickers[$space_data['id']] = [
+        'days' => $days,
+        'durations' => $durations,
+        'matrix' => $matrix,
+        'default_duration' => $durations[0] ?? '2 hours',
+      ];
+    }
+
+    return $pickers;
+  }
+
+  /**
+   * Returns the next 14 days as [iso, weekday, day, month] — same shape as
+   * BookingForm::next14Days(), duplicated here since the homepage widget
+   * needs the identical calendar independently of the full booking form.
+   */
+  protected function next14Days(): array {
+    $days = [];
+    $today = new \DateTime('today');
+    for ($i = 0; $i < 14; $i++) {
+      $date = (clone $today)->modify("+$i days");
+      $days[] = [
+        'iso' => $date->format('Y-m-d'),
+        'weekday' => $date->format('D'),
+        'day' => $date->format('j'),
+        'month' => $date->format('M'),
+      ];
+    }
+    return $days;
   }
 
   /**

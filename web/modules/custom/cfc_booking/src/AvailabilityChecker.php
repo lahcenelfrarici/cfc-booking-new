@@ -21,17 +21,20 @@ class AvailabilityChecker {
     'Full day (8h)' => 8,
   ];
 
-  // 17:00 is deliberately excluded: the shortest bookable duration is 2
-  // hours and closing is 18:00 — a start time later than 16:00 can never
-  // produce a valid booking, so it's not offered rather than shown
-  // permanently disabled. Shared by BookingForm (calendar) and
-  // findNextAvailable() (homepage "next slot" blocks) — one source of truth.
-  public const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+  // Full business-hours grid, 09:00 through 18:00 (closing). 17:00 and 18:00
+  // can never start a valid booking (the shortest duration is 2 hours and
+  // closing is 18:00), so they always come back disabled from the standard
+  // closing-time check in isFree()/buildMatrix() — same logic path as every
+  // other slot, rather than a separate hardcoded placeholder, so the picker
+  // shows one consistent available/disabled state across the whole day.
+  // Shared by BookingForm (calendar) and findNextAvailable() (homepage "next
+  // slot" blocks) — one source of truth.
+  public const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
 
-  // Shown in the picker as permanently non-bookable placeholder cells (never
-  // real buttons — see booking-datetime-picker.twig) so the day's timeline
-  // reads as complete instead of stopping abruptly at 16:00.
-  public const PHANTOM_TIME_SLOTS = ['17:00', '18:00'];
+  // Kept for backward compatibility with callers still wiring this through
+  // (BookingForm, the booking-datetime-picker component) — now empty since
+  // 17:00/18:00 are real slots in TIME_SLOTS above.
+  public const PHANTOM_TIME_SLOTS = [];
 
   /**
    * The establishment closes at 18:00 — no booking may extend past this,

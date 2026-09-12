@@ -120,9 +120,12 @@ class ComponentMetadata {
    * @throws \Drupal\Core\Render\Component\Exception\InvalidComponentException
    */
   public function __construct(array $metadata_info, string $app_root, bool $enforce_schemas) {
-    $path = $metadata_info['path'];
+    // Normalize to forward slashes so the prefix comparison below still
+    // matches on Windows, where native path scanning yields backslashes
+    // but $app_root is forward-slash normalized.
+    $path = str_replace('\\', '/', $metadata_info['path']);
     // Make the absolute path, relative to the Drupal root.
-    $app_root = rtrim($app_root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    $app_root = str_replace('\\', '/', rtrim($app_root, '/\\')) . '/';
     if (str_starts_with($path, $app_root)) {
       $path = substr($path, strlen($app_root));
     }

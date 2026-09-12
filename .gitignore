@@ -1,0 +1,11 @@
+# Drupal runtime cache (regenerated automatically, never edit by hand)
+web/sites/default/files/php/twig/
+web/sites/default/files/css/
+web/sites/default/files/js/
+
+# Local scratch
+tmp/
+
+# Local environment overrides
+web/sites/default/settings.local.php
+.env

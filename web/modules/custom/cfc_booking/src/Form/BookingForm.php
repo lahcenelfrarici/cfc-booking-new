@@ -76,6 +76,21 @@ class BookingForm extends FormBase {
       return $form;
     }
 
+    // Some spaces are restricted by account type (e.g. Desk/Meeting Room are
+    // journalist-only). Rather than silently omitting their cards, tell the
+    // user why — otherwise "only Studio shows up" reads as a bug rather than
+    // the intended access rule.
+    $all_titles = array_column($this->contentRepository->getSpaces(), 'title');
+    $eligible_titles = array_column($spaces, 'title');
+    $hidden_titles = array_diff($all_titles, $eligible_titles);
+    if ($hidden_titles) {
+      $form['restriction_note'] = [
+        '#markup' => '<p class="text-[13px] text-neutral-500 bg-neutral-50 border border-neutral-100 rounded-xl px-4 py-3">'
+          . $this->t('@hidden not shown: reserved for accredited journalists.', ['@hidden' => implode(', ', $hidden_titles)])
+          . '</p>',
+      ];
+    }
+
     $space_options = array_combine(array_column($spaces, 'id'), array_column($spaces, 'title'));
     $selected_space_id = $form_state->getValue('space') ?: (($initial_space && isset($space_options[$initial_space])) ? $initial_space : NULL);
 

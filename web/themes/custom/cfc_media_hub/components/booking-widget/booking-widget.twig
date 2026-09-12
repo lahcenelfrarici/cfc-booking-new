@@ -1,14 +1,122 @@
 <div class="relative"
   data-slots='{{ next_slots_json|raw }}'
+  data-pickers='{{ space_pickers_json|raw }}'
+  data-duration-hours='{{ duration_hours_json|raw }}'
+  data-time-slots='{{ time_slots_json|raw }}'
+  data-eligible='{{ eligible_json|raw }}'
   x-data="{
     active: 'studio',
     slots: {},
+    pickers: {},
+    durationHours: {},
+    timeSlots: [],
+    eligible: {},
+    manual: {},
+    pickerOpen: false,
     tabs: [ { id: 'desk', label: 'Desk' }, { id: 'meeting', label: 'Meeting Room' }, { id: 'studio', label: 'Studio' } ],
+
     get slot() { return this.slots[this.active] || null; },
-    get href() { return this.slot ? this.slot.book_url : '{{ booking_base_url }}?space=' + this.active; },
+    get picker() { return this.pickers[this.active] || { days: [], durations: [], matrix: {}, default_duration: null }; },
+    get sel() { return this.manual[this.active] || null; },
+    get hasManual() { return !!(this.sel && this.sel.date && this.sel.time); },
+
     selectTab(id) { this.active = id; },
+
+    togglePicker() {
+      if (!this.manual[this.active]) {
+        this.manual[this.active] = { date: null, time: null, duration: this.picker.default_duration };
+      }
+      this.pickerOpen = !this.pickerOpen;
+    },
+
+    // Tied to the currently selected duration (falls back to the space's
+    // default before any date is picked) — a day is worth showing as
+    // available if at least one time slot works for that duration.
+    dayAvailable(iso) {
+      const day = this.picker.matrix[iso];
+      if (!day) return false;
+      const duration = this.sel ? this.sel.duration : this.picker.default_duration;
+      return Object.keys(day).some((slot) => day[slot][duration]);
+    },
+    // Not tied to the selected duration: a time stays enabled as long as it
+    // works for at least one of the space's durations (exact combination is
+    // re-checked server-side in validateForm()/AvailabilityChecker before
+    // anything is actually booked) — same rule as the full /booking picker.
+    slotAvailable(time) {
+      if (!this.sel || !this.sel.date) return false;
+      const day = this.picker.matrix[this.sel.date];
+      return !!(day && day[time] && Object.values(day[time]).some((free) => free));
+    },
+    durationAvailable(d) {
+      if (!this.sel || !this.sel.date || !this.sel.time) return false;
+      const day = this.picker.matrix[this.sel.date];
+      return !!(day && day[this.sel.time] && day[this.sel.time][d]);
+    },
+
+    pickDate(iso) {
+      if (!this.dayAvailable(iso)) return;
+      this.manual[this.active].date = iso;
+      this.manual[this.active].time = null;
+    },
+    pickTime(time) {
+      if (!this.slotAvailable(time)) return;
+      this.manual[this.active].time = time;
+      if (!this.durationAvailable(this.manual[this.active].duration)) {
+        const fallback = this.picker.durations.find((d) => this.durationAvailable(d));
+        if (fallback) this.manual[this.active].duration = fallback;
+      }
+    },
+    pickDuration(d) {
+      if (!this.durationAvailable(d)) return;
+      this.manual[this.active].duration = d;
+    },
+
+    dayLabel(iso) {
+      const days = this.picker.days;
+      if (days[0] && days[0].iso === iso) return 'Today';
+      if (days[1] && days[1].iso === iso) return 'Tomorrow';
+      const d = days.find((x) => x.iso === iso);
+      return d ? (d.weekday + ' ' + d.day) : iso;
+    },
+    endTime(start, duration) {
+      if (duration === 'Full day (8h)') return '18:00';
+      const hours = this.durationHours[duration];
+      if (!start || !hours) return '';
+      const [h, m] = start.split(':').map(Number);
+      const total = h * 60 + m + hours * 60;
+      const eh = Math.floor(total / 60) % 24;
+      const em = total % 60;
+      return String(eh).padStart(2, '0') + ':' + String(em).padStart(2, '0');
+    },
+
+    get displayDate() {
+      if (this.sel && this.sel.date) return this.dayLabel(this.sel.date);
+      return this.slot ? this.slot.day_label : null;
+    },
+    get displayTime() {
+      if (this.sel && this.sel.time) return this.sel.time + ' – ' + this.endTime(this.sel.time, this.sel.duration);
+      return this.slot ? this.slot.time_range : null;
+    },
+
+    get href() {
+      if (this.hasManual && this.eligible[this.active]) {
+        return '{{ quick_book_template|raw }}'
+          .replace('__SPACE__', this.active)
+          .replace('__DATE__', this.sel.date)
+          .replace('__TIME__', encodeURIComponent(this.sel.time))
+          .replace('__DURATION__', encodeURIComponent(this.sel.duration));
+      }
+      if (this.slot) return this.slot.book_url;
+      return '{{ booking_base_url }}?space=' + this.active;
+    },
   }"
-  x-init="slots = JSON.parse($el.dataset.slots);"
+  x-init="
+    slots = JSON.parse($el.dataset.slots);
+    pickers = JSON.parse($el.dataset.pickers);
+    durationHours = JSON.parse($el.dataset.durationHours);
+    timeSlots = JSON.parse($el.dataset.timeSlots);
+    eligible = JSON.parse($el.dataset.eligible);
+  "
 >
   <div class="absolute -inset-4 bg-gradient-to-br from-[#9F5434]/10 via-transparent to-[#9F5434]/5 rounded-[28px] blur-2xl"></div>
   <div class="relative bg-white rounded-3xl shadow-[0_30px_80px_-30px_rgba(15,110,86,0.28),0_4px_12px_-4px_rgba(11,15,14,0.06)] border border-neutral-900/[0.06] overflow-visible">
@@ -39,29 +147,101 @@
     </div>
 
     <div class="px-7 py-6">
-      <template x-if="slot">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="text-left border border-neutral-200 rounded-xl px-4 py-3">
-            <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
-              {% include 'cfc_media_hub:icon' with { name: 'calendar', size: 'w-4 h-4 text-[#9F5434]' } only %}
-              Date
-            </div>
-            <div class="text-[14px] text-neutral-900 font-medium" x-text="slot.day_label"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          x-on:click="togglePicker()"
+          class="text-left border rounded-xl px-4 py-3 transition-colors"
+          x-bind:class="pickerOpen ? 'border-[#9F5434] bg-[#9F5434]/[0.04]' : 'border-neutral-200 hover:border-[#9F5434]/40'"
+        >
+          <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
+            {% include 'cfc_media_hub:icon' with { name: 'calendar', size: 'w-4 h-4 text-[#9F5434]' } only %}
+            Date
           </div>
-          <div class="text-left border border-neutral-200 rounded-xl px-4 py-3">
-            <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
-              {% include 'cfc_media_hub:icon' with { name: 'clock', size: 'w-4 h-4 text-[#9F5434]' } only %}
-              Time slot
-            </div>
-            <div class="text-[14px] text-neutral-900 font-medium" x-text="slot.time_range"></div>
+          <div class="text-[14px] text-neutral-900 font-medium" x-text="displayDate || 'Select a date'"></div>
+        </button>
+        <button
+          type="button"
+          x-on:click="togglePicker()"
+          class="text-left border rounded-xl px-4 py-3 transition-colors"
+          x-bind:class="pickerOpen ? 'border-[#9F5434] bg-[#9F5434]/[0.04]' : 'border-neutral-200 hover:border-[#9F5434]/40'"
+        >
+          <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
+            {% include 'cfc_media_hub:icon' with { name: 'clock', size: 'w-4 h-4 text-[#9F5434]' } only %}
+            Time slot
           </div>
+          <div class="text-[14px] text-neutral-900 font-medium" x-text="displayTime || 'Select a time'"></div>
+        </button>
+        <div class="text-left border border-neutral-200 rounded-xl px-4 py-3 col-span-2" x-show="slot" x-cloak>
+          <div class="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 mb-1">
+            {% include 'cfc_media_hub:icon' with { name: 'users', size: 'w-4 h-4 text-[#9F5434]' } only %}
+            Capacity &amp; slots
+          </div>
+          <div class="text-[14px] text-neutral-900 font-medium" x-text="slot ? slot.capacity_meta : ''"></div>
         </div>
-      </template>
-      <template x-if="!slot">
-        <p class="text-[13px] text-neutral-500 bg-neutral-50 border border-neutral-100 rounded-xl px-4 py-3">
-          No availability in the next two weeks — check the full calendar.
-        </p>
-      </template>
+      </div>
+
+      <div x-show="pickerOpen" x-cloak class="mt-5 pt-5 border-t border-neutral-100">
+        <div class="text-[11px] uppercase tracking-wide text-neutral-500 mb-2.5 font-semibold">Choose a date</div>
+        <div class="grid grid-cols-5 gap-2">
+          <template x-for="d in picker.days" :key="d.iso">
+            <button
+              type="button"
+              x-on:click="pickDate(d.iso)"
+              x-bind:disabled="!dayAvailable(d.iso)"
+              x-bind:class="{
+                'opacity-30 cursor-not-allowed border-neutral-100 bg-neutral-50': !dayAvailable(d.iso),
+                'bg-[#9F5434] border-[#9F5434] text-white': sel && sel.date === d.iso,
+                'border-neutral-200 bg-white hover:border-neutral-300': dayAvailable(d.iso) && !(sel && sel.date === d.iso),
+              }"
+              class="rounded-lg py-1.5 text-center border transition-all"
+            >
+              <div class="text-[9px]" x-bind:class="sel && sel.date === d.iso ? 'text-white/70' : 'text-neutral-400'" x-text="d.weekday"></div>
+              <div class="text-[13px] font-bold" x-text="d.day"></div>
+            </button>
+          </template>
+        </div>
+
+        <template x-if="sel && sel.date">
+          <div class="mt-4">
+            <div class="text-[11px] uppercase tracking-wide text-neutral-500 mb-2.5 font-semibold">Available times</div>
+            <div class="flex flex-wrap gap-2">
+              <template x-for="t in timeSlots" :key="t">
+                <button
+                  type="button"
+                  x-on:click="pickTime(t)"
+                  x-bind:disabled="!slotAvailable(t)"
+                  x-bind:class="{
+                    'opacity-30 cursor-not-allowed bg-neutral-50 border-neutral-100 text-neutral-400': !slotAvailable(t),
+                    'bg-[#9F5434] border-[#9F5434] text-white font-semibold': sel && sel.time === t,
+                    'bg-white border-neutral-200 text-neutral-900 hover:border-[#9F5434]/40': slotAvailable(t) && !(sel && sel.time === t),
+                  }"
+                  class="px-3 py-1.5 rounded-lg border text-[12px] transition-all"
+                  x-text="t"
+                ></button>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <template x-if="sel && sel.time">
+          <div class="mt-4">
+            <div class="text-[11px] uppercase tracking-wide text-neutral-500 mb-2.5 font-semibold">Duration</div>
+            <div class="flex flex-wrap gap-2">
+              <template x-for="d in picker.durations" :key="d">
+                <button
+                  type="button"
+                  x-show="durationAvailable(d)"
+                  x-on:click="pickDuration(d)"
+                  x-bind:class="sel.duration === d ? 'bg-[#9F5434] border-[#9F5434] text-white font-semibold' : 'bg-white border-neutral-200 text-neutral-700 hover:border-neutral-400'"
+                  class="px-3 py-1.5 rounded-lg border text-[12px] transition-all"
+                  x-text="d"
+                ></button>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
     </div>
 
     <div class="px-7 pb-7">
@@ -69,7 +249,7 @@
         :href="href"
         class="btn-premium w-full bg-[#9F5434] hover:bg-[#8A4A2E] text-white py-4 rounded-2xl flex items-center justify-center gap-2 group"
       >
-        <span class="text-[14px] font-semibold" x-text="slot ? 'Check availability' : 'View calendar'"></span>
+        <span class="text-[14px] font-semibold" x-text="hasManual || slot ? 'Check availability' : 'View calendar'"></span>
         {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4', class: 'group-hover:translate-x-0.5 transition-transform' } only %}
       </a>
     </div>

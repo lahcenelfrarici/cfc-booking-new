@@ -47,8 +47,8 @@
                 class="w-full border border-neutral-200 rounded-xl px-4 py-3 pr-11 text-[14px] text-neutral-900 bg-white focus:outline-none focus:border-[#0F6E56] transition-colors"
               />
               <button type="button" x-on:click="showPassword = !showPassword" tabindex="-1" class="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors">
-                <span x-show="!showPassword">{% include 'cfc_media_hub:icon' with { name: 'eye', size: 'w-4 h-4' } only %}</span>
-                <span x-show="showPassword" x-cloak>{% include 'cfc_media_hub:icon' with { name: 'eye-off', size: 'w-4 h-4' } only %}</span>
+                <span x-show="!showPassword" class="inline-flex">{% include 'cfc_media_hub:icon' with { name: 'eye', size: 'w-4 h-4' } only %}</span>
+                <span x-show="showPassword" x-cloak class="inline-flex">{% include 'cfc_media_hub:icon' with { name: 'eye-off', size: 'w-4 h-4' } only %}</span>
               </button>
             </div>
           </div>

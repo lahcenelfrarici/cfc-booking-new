@@ -36,7 +36,7 @@ cfc_pages.insights:
     _controller: '\Drupal\cfc_pages\Controller\InsightsController::build'
     _title: 'Insights'
   requirements:
-    _access: 'TRUE'
+    _user_is_logged_in: 'TRUE'
 
 cfc_pages.account:
   path: '/account'
