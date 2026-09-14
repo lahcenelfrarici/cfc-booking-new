@@ -30,6 +30,18 @@ cfc_pages.production:
   requirements:
     _access: 'TRUE'
 
+cfc_pages.production_detail:
+  path: '/production/{node}'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\ProductionController::detail'
+    _title_callback: '\Drupal\cfc_pages\Controller\ProductionController::detailTitle'
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
 cfc_pages.insights:
   path: '/insights'
   defaults:

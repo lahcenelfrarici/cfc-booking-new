@@ -5,11 +5,8 @@ description: Production/Ecosystem page — recent content grid. Data comes from 
 props:
   type: object
   properties:
-    insights_url:
-      type: string
     productions:
       type: array
-      description: Array of Production nodes, mapped by Drupal\cfc_content\ContentRepository::getProductions().
+      description: Array of Production nodes, mapped by Drupal\cfc_content\ContentRepository::getProductions(). Each item includes its own detail "url".
   required:
-    - insights_url
     - productions

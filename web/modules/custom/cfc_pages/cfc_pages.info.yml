@@ -7,3 +7,4 @@ dependencies:
   - cfc_content
   - cfc_account
   - cfc_booking
+  - cfc_connections

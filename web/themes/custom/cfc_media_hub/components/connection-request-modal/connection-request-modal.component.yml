@@ -1,11 +1,17 @@
 $schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
 name: Connection request modal
-status: experimental
+status: stable
 description: >
-  Modal form for submitting a connection request. Expects an ancestor Alpine
-  scope exposing a boolean "open" variable that controls visibility.
-  Front-end only for now — submission handling lands with the Connection
-  Request entity in a later phase.
+  Modal shell for submitting a connection request (CFCA / CFC Member /
+  another organisation). Expects an ancestor Alpine scope exposing a boolean
+  "open" variable that controls visibility. The actual form — cards, fields,
+  validation, AJAX submit and backoffice storage — is
+  Drupal\cfc_connections\Form\ConnectionRequestForm, passed in as a prop.
 props:
   type: object
-  properties: {}
+  properties:
+    connection_form:
+      type: object
+      description: Render array of Drupal\cfc_connections\Form\ConnectionRequestForm.
+  required:
+    - connection_form

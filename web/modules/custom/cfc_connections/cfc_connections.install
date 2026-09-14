@@ -1,0 +1,91 @@
+<?php
+
+/**
+ * @file
+ * Install hooks for CFC Connections: the "connection_request" webform used
+ * as the backoffice + email backend for the "Submit a Connection Request"
+ * modal (the modal itself is a custom Figma-matched form — see
+ * Drupal\cfc_connections\Form\ConnectionRequestForm — this webform is never
+ * rendered to visitors).
+ */
+
+use Drupal\webform\Entity\Webform;
+
+/**
+ * Implements hook_install().
+ */
+function cfc_connections_install(): void {
+  _cfc_connections_create_webform();
+}
+
+/**
+ * Creates the "connection_request" webform (elements + email notification
+ * handler) if it doesn't already exist.
+ */
+function _cfc_connections_create_webform(): void {
+  if (Webform::load('connection_request')) {
+    return;
+  }
+
+  $elements = <<<'YAML'
+connection_type:
+  '#type': select
+  '#title': 'Connect with'
+  '#options':
+    cfca: CFCA
+    member: 'A CFC Member'
+    other: 'Another organisation'
+  '#required': true
+target_member:
+  '#type': entity_autocomplete
+  '#title': 'CFC member company'
+  '#target_type': taxonomy_term
+  '#selection_settings':
+    target_bundles:
+      cfc_member_companies: cfc_member_companies
+organisation_name:
+  '#type': textfield
+  '#title': Organisation
+purpose:
+  '#type': textarea
+  '#title': 'Purpose of request'
+  '#required': true
+contact_name:
+  '#type': textfield
+  '#title': 'Contact name'
+  '#required': true
+contact_email:
+  '#type': email
+  '#title': 'Contact email'
+  '#required': true
+YAML;
+
+  $webform = Webform::create([
+    'id' => 'connection_request',
+    'title' => 'Connection request',
+    'description' => 'Submissions from the "Submit a Connection Request" modal on the homepage. The modal is a custom Figma-matched form; this webform only stores the data, sends the notification email and gives an admin results view.',
+    'category' => 'CFC Media Hub',
+    'elements' => $elements,
+    'status' => 'open',
+  ]);
+  $webform->save();
+
+  $handler_config = [
+    'id' => 'email',
+    'label' => 'CFC team notification',
+    'handler_id' => 'cfc_team_email',
+    'status' => 1,
+    'weight' => 0,
+    'settings' => [
+      'to_mail' => \Drupal::config('system.site')->get('mail'),
+      'from_mail' => '[site:mail]',
+      'from_name' => '[site:name]',
+      'subject' => 'New connection request: [webform_submission:values:organisation_name] ([webform_submission:values:connection_type])',
+      'body' => "Connect with: [webform_submission:values:connection_type]\nOrganisation: [webform_submission:values:organisation_name]\nPurpose: [webform_submission:values:purpose]\n\nFrom: [webform_submission:values:contact_name] <[webform_submission:values:contact_email]>\n\nView: [webform_submission:url]",
+      'html' => FALSE,
+    ],
+  ];
+  $handler = \Drupal::service('plugin.manager.webform.handler')->createInstance('email', $handler_config);
+  $webform->addWebformHandler($handler);
+  $webform->save();
+}

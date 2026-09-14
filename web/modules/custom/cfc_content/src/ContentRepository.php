@@ -3,6 +3,7 @@
 namespace Drupal\cfc_content;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Url;
 use Drupal\file\FileInterface;
 use Drupal\node\NodeInterface;
 
@@ -72,6 +73,19 @@ class ContentRepository {
   }
 
   /**
+   * Returns a single published Production node by id, mapped as a plain
+   * array, or NULL if it doesn't exist, isn't published, or isn't a
+   * Production.
+   */
+  public function getProduction(int $id): ?array {
+    $node = $this->entityTypeManager->getStorage('node')->load($id);
+    if (!$node instanceof NodeInterface || $node->bundle() !== 'production' || !$node->isPublished()) {
+      return NULL;
+    }
+    return $this->mapProduction($node);
+  }
+
+  /**
    * Maps a Space node to a plain array matching the component props shape.
    */
   protected function mapSpace(NodeInterface $node): array {
@@ -114,7 +128,9 @@ class ContentRepository {
       'duration' => (string) $node->get('field_duration')->value,
       'date' => $formatted_date,
       'featured' => (bool) $node->get('field_featured')->value,
+      'description' => (string) $node->get('field_description')->value,
       'image_url' => $this->fieldImageUrl($node, 'field_image'),
+      'url' => Url::fromRoute('cfc_pages.production_detail', ['node' => $node->id()])->toString(),
     ];
   }
 

@@ -1,0 +1,9 @@
+name: 'CFC Connections'
+type: module
+description: 'The "Submit a Connection Request" modal (CFCA / CFC Member / other organisation), backed by a webform for backoffice review and email notifications.'
+package: CFC Media Hub
+core_version_requirement: ^11
+dependencies:
+  - taxonomy
+  - webform
+  - cfc_account

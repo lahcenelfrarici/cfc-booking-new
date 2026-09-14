@@ -1,0 +1,112 @@
+{% set icon_by_type = { Interview: 'mic', Report: 'file-text', Documentary: 'video', Podcast: 'headphones', Production: 'video' } %}
+{% set p = production %}
+
+<section class="bg-neutral-950 text-white pt-16 pb-0 relative overflow-hidden">
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(15,110,86,0.25),_transparent_60%)]"></div>
+
+  <div class="relative max-w-[1440px] mx-auto px-12">
+    <a href="{{ production_url }}" class="inline-flex items-center gap-2 text-[13px] text-white/60 hover:text-white transition-colors mb-10">
+      {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-3.5 h-3.5' } only %}
+      All productions
+    </a>
+
+    <div class="flex items-center gap-2 mb-5">
+      <span class="bg-[#9F5434] text-white px-3 py-1 rounded-full text-[11px] font-semibold">{{ p.type }}</span>
+      {% if p.featured %}
+        <span class="bg-white/10 text-white px-3 py-1 rounded-full text-[11px] font-semibold">Featured</span>
+      {% endif %}
+    </div>
+
+    <h1 class="tracking-tight max-w-[820px]" style="font-size: 44px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em;">
+      {{ p.title }}
+    </h1>
+
+    <div class="flex flex-wrap items-center gap-3 text-[13px] text-white/70 mt-6 mb-12">
+      {% if p.publisher %}<span class="font-semibold text-white">{{ p.publisher }}</span>{% endif %}
+      {% if p.publisher and p.duration %}<span class="w-1 h-1 rounded-full bg-white/30"></span>{% endif %}
+      {% if p.duration %}
+        <span class="flex items-center gap-1.5">
+          {% include 'cfc_media_hub:icon' with { name: 'clock', size: 'w-3.5 h-3.5' } only %}
+          {{ p.duration }}
+        </span>
+      {% endif %}
+      {% if p.date %}<span class="w-1 h-1 rounded-full bg-white/30"></span>{% endif %}
+      {% if p.date %}
+        <span class="flex items-center gap-1.5">
+          {% include 'cfc_media_hub:icon' with { name: 'calendar', size: 'w-3.5 h-3.5' } only %}
+          {{ p.date }}
+        </span>
+      {% endif %}
+    </div>
+
+    <div class="relative rounded-t-2xl overflow-hidden h-[420px] bg-white/5">
+      {% if p.image_url %}
+        <img src="{{ p.image_url }}" alt="{{ p.title }}" class="w-full h-full object-cover" />
+      {% else %}
+        <div class="w-full h-full flex items-center justify-center">
+          {% include 'cfc_media_hub:icon' with { name: icon_by_type[p.type] ?? 'file-text', size: 'w-14 h-14', class: 'text-white/15' } only %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="bg-white py-16">
+  <div class="max-w-[1440px] mx-auto px-12">
+    <div class="grid grid-cols-12 gap-x-12 gap-y-10">
+      <div class="col-span-12 lg:col-span-8">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-4 h-[2px] bg-[#9F5434]"></div>
+          <div class="text-[12px] uppercase tracking-[0.18em] text-[#0F6E56] font-semibold">About this {{ p.type|lower }}</div>
+        </div>
+
+        {% if p.description %}
+          <p class="text-neutral-700 leading-relaxed text-[16px]" style="white-space: pre-line;">{{ p.description }}</p>
+        {% else %}
+          <div class="rounded-2xl border border-dashed border-neutral-200 p-7 flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
+              {% include 'cfc_media_hub:icon' with { name: icon_by_type[p.type] ?? 'file-text', size: 'w-4 h-4', class: 'text-neutral-400' } only %}
+            </div>
+            <p class="text-neutral-500 leading-relaxed text-[14px] pt-2">
+              A full write-up for this {{ p.type|lower }} hasn't been published yet. Check back soon for the full story behind "{{ p.title }}".
+            </p>
+          </div>
+        {% endif %}
+      </div>
+
+      <aside class="col-span-12 lg:col-span-4">
+        <div class="rounded-2xl bg-neutral-50 border border-neutral-200/80 p-6">
+          <div class="text-[11px] uppercase tracking-[0.14em] text-neutral-400 font-semibold mb-5">Details</div>
+          <dl class="space-y-4 text-[13px]">
+            <div class="flex items-center justify-between gap-4">
+              <dt class="text-neutral-400">Type</dt>
+              <dd class="text-neutral-900 font-semibold text-right">{{ p.type }}</dd>
+            </div>
+            {% if p.publisher %}
+              <div class="flex items-center justify-between gap-4">
+                <dt class="text-neutral-400">Publisher</dt>
+                <dd class="text-neutral-900 font-semibold text-right">{{ p.publisher }}</dd>
+              </div>
+            {% endif %}
+            {% if p.duration %}
+              <div class="flex items-center justify-between gap-4">
+                <dt class="text-neutral-400">Duration</dt>
+                <dd class="text-neutral-900 font-semibold text-right">{{ p.duration }}</dd>
+              </div>
+            {% endif %}
+            {% if p.date %}
+              <div class="flex items-center justify-between gap-4">
+                <dt class="text-neutral-400">Published</dt>
+                <dd class="text-neutral-900 font-semibold text-right">{{ p.date }}</dd>
+              </div>
+            {% endif %}
+          </dl>
+          <a href="{{ production_url }}" class="mt-6 flex items-center justify-center gap-2 border border-neutral-200 hover:border-[#9F5434]/40 hover:bg-[#9F5434]/5 transition-colors px-4 py-3 rounded-xl text-[13px] font-semibold text-neutral-900">
+            {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-3.5 h-3.5' } only %}
+            All productions
+          </a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,16 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Production detail
+status: stable
+description: Single Production page — full detail view of one "Production" content type node.
+props:
+  type: object
+  properties:
+    production:
+      type: object
+      description: A single Production node, mapped by Drupal\cfc_content\ContentRepository::getProduction().
+    production_url:
+      type: string
+      description: URL back to the "all productions" listing page.
+  required:
+    - production
+    - production_url

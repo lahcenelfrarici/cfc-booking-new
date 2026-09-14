@@ -19,10 +19,14 @@
 
     <div class="grid grid-cols-3 gap-6">
       {% for p in productions %}
-        <a href="{{ insights_url }}" class="group bg-white border border-neutral-200/80 rounded-2xl overflow-hidden hover:border-[#9F5434]/30 hover:shadow-[0_20px_50px_-20px_rgba(159,84,52,0.12)] transition-all block">
+        <a href="{{ p.url }}" class="group bg-white border border-neutral-200/80 rounded-2xl overflow-hidden hover:border-[#9F5434]/30 hover:shadow-[0_20px_50px_-20px_rgba(159,84,52,0.12)] transition-all block">
           <div class="h-[200px] overflow-hidden relative bg-neutral-100">
             {% if p.image_url %}
               <img src="{{ p.image_url }}" alt="{{ p.title }}" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-200">
+                {% include 'cfc_media_hub:icon' with { name: icon_by_type[p.type] ?? 'file-text', size: 'w-8 h-8', class: 'text-neutral-300' } only %}
+              </div>
             {% endif %}
             <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
             <div class="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full {{ p.type == 'Interview' ? 'bg-[#9F5434] text-white' : 'bg-white/15 backdrop-blur-sm text-white' }}">

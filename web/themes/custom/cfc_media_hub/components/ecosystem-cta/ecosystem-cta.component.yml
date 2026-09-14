@@ -4,4 +4,9 @@ status: stable
 description: Homepage "Connecting you to Africa's business ecosystem" section with the connection request modal.
 props:
   type: object
-  properties: {}
+  properties:
+    connection_form:
+      type: object
+      description: Render array of Drupal\cfc_connections\Form\ConnectionRequestForm, passed through to the connection-request-modal component.
+  required:
+    - connection_form

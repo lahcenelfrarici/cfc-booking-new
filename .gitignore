@@ -2,6 +2,7 @@
 web/sites/default/files/php/twig/
 web/sites/default/files/css/
 web/sites/default/files/js/
+web/sites/default/files/styles/
 
 # Local scratch
 tmp/

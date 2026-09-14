@@ -4,6 +4,7 @@ namespace Drupal\cfc_pages\Controller;
 
 use Drupal\cfc_booking\AvailabilityChecker;
 use Drupal\cfc_booking\BookingCreator;
+use Drupal\cfc_connections\Form\ConnectionRequestForm;
 use Drupal\cfc_content\ContentRepository;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
@@ -94,6 +95,9 @@ class HomeController extends ControllerBase {
       'ecosystem' => [
         '#type' => 'component',
         '#component' => 'cfc_media_hub:ecosystem-cta',
+        '#props' => [
+          'connection_form' => $this->formBuilder()->getForm(ConnectionRequestForm::class),
+        ],
       ],
       'final_cta' => [
         '#type' => 'component',
