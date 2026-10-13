@@ -359,6 +359,214 @@ function cfc_content_update_11003(): void {
 }
 
 /**
+ * Creates the "News item" content type (All/News/Events/Updates/Agenda) and
+ * seeds it with the items already visible in the Figma preview, so /news
+ * isn't empty the moment the page exists.
+ */
+function cfc_content_update_11005(): void {
+  if (NodeType::load('news_item')) {
+    return;
+  }
+
+  NodeType::create([
+    'type' => 'news_item',
+    'name' => 'News item',
+    'description' => 'An item on the public "News" page (news, events, updates or agenda entry).',
+  ])->save();
+
+  $fields = [
+    'field_news_category' => [
+      'type' => 'list_string',
+      'label' => 'Category',
+      'settings' => [
+        'allowed_values' => [
+          'news' => 'News',
+          'events' => 'Events',
+          'updates' => 'Updates',
+          'agenda' => 'Agenda',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_news_date' => [
+      'type' => 'datetime',
+      'label' => 'Date',
+      'settings' => ['datetime_type' => 'date'],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_image' => [
+      'type' => 'image',
+      'label' => 'Image',
+      'cardinality' => 1,
+    ],
+    'field_summary' => [
+      'type' => 'text_long',
+      'label' => 'Summary',
+      'cardinality' => 1,
+      'description' => 'Short teaser shown on the News listing card.',
+    ],
+    'field_weight' => [
+      'type' => 'integer',
+      'label' => 'Display order',
+      'cardinality' => 1,
+    ],
+  ];
+  _cfc_content_create_fields('node', 'news_item', $fields);
+  _cfc_content_build_default_displays('news_item', array_keys($fields));
+
+  $items = [
+    ['News', 'CFC Media Hub Now Open to International Press Correspondents', '2026-09-01', "The CFC Media Hub officially opens its doors to accredited international journalists based in Morocco, offering professional workspaces, meeting rooms and a podcast studio."],
+    ['Events', "Upcoming: Media Roundtable on Africa's Economic Outlook", '2026-10-05', "Join us for an exclusive roundtable discussion bringing together journalists and CFC community members to explore key economic themes shaping Africa's investment landscape."],
+    ['Updates', 'Podcast Studio Now Available for Booking', '2026-09-10', "The Hub's professional podcast studio is now accepting reservations. Equipped with three cameras, professional microphones and integrated lighting, it is available to both accredited journalists and CFC member companies."],
+  ];
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($items as $weight => [$category, $title, $date, $summary]) {
+    $storage->create([
+      'type' => 'news_item',
+      'title' => $title,
+      'field_news_category' => strtolower($category),
+      'field_news_date' => $date,
+      'field_summary' => ['value' => $summary, 'format' => 'plain_text'],
+      'field_weight' => $weight,
+      'status' => 1,
+    ])->save();
+  }
+}
+
+/**
+ * Creates the "Insight document" content type and migrates the Insights
+ * page's previously hardcoded categories/documents into real nodes, so the
+ * page keeps its existing look immediately after becoming dynamic.
+ */
+function cfc_content_update_11006(): void {
+  if (NodeType::load('insight_document')) {
+    return;
+  }
+
+  NodeType::create([
+    'type' => 'insight_document',
+    'name' => 'Insight document',
+    'description' => 'A report/document on the Insights knowledge center page.',
+  ])->save();
+
+  $fields = [
+    'field_insight_category' => [
+      'type' => 'list_string',
+      'label' => 'Category',
+      'settings' => [
+        'allowed_values' => [
+          'cfc-africa-insights' => 'CFC Africa Insights Reports',
+          'community' => 'Community Reports',
+          'country-focus' => 'Country Focus',
+          'africa-news' => 'Africa News',
+          'sector-notes' => 'Sector Notes',
+          'ifc-impact' => 'Study on the Impact of International Financial Centers',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_insight_date' => [
+      'type' => 'datetime',
+      'label' => 'Date',
+      'settings' => ['datetime_type' => 'date'],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_pages' => [
+      'type' => 'string',
+      'label' => 'Pages',
+      'settings' => ['max_length' => 32],
+      'cardinality' => 1,
+      'description' => 'e.g. "84 pages".',
+    ],
+    'field_insight_tag' => [
+      'type' => 'list_string',
+      'label' => 'Tag',
+      'settings' => [
+        'allowed_values' => [
+          'New' => 'New',
+          'Updated' => 'Updated',
+        ],
+      ],
+      'cardinality' => 1,
+    ],
+    'field_pdf' => [
+      'type' => 'file',
+      'label' => 'PDF document',
+      'settings' => ['file_extensions' => 'pdf'],
+      'cardinality' => 1,
+    ],
+    'field_weight' => [
+      'type' => 'integer',
+      'label' => 'Display order',
+      'cardinality' => 1,
+    ],
+  ];
+  _cfc_content_create_fields('node', 'insight_document', $fields);
+  _cfc_content_build_default_displays('insight_document', array_keys($fields));
+
+  $categories = [
+    'cfc-africa-insights' => [
+      ['Africa Media Landscape — Annual Report 2025', '2025-06-01', '84 pages', 'New'],
+      ['Financial Press Coverage of Sub-Saharan Africa — Q1 2025', '2025-04-01', '42 pages', NULL],
+      ['Digital Media Penetration across Africa — 2024 Review', '2024-12-01', '60 pages', NULL],
+      ["Africa's Editorial Independence Index — 2024", '2024-10-01', '38 pages', NULL],
+    ],
+    'community' => [
+      ['CFC Member Outlook — H1 2025', '2025-05-01', '28 pages', 'New'],
+      ['Casablanca as a Financial Centre — Comparative Study', '2025-03-01', '52 pages', NULL],
+      ['Cross-Border Investment Report — MENA & Africa 2024', '2024-11-01', '66 pages', NULL],
+    ],
+    'country-focus' => [
+      ['Country Focus — Morocco 2025', '2025-05-01', '22 pages', 'Updated'],
+      ["Country Focus — Côte d'Ivoire 2025", '2025-05-01', '20 pages', 'Updated'],
+      ['Country Focus — Nigeria 2025', '2025-04-01', '24 pages', NULL],
+      ['Country Focus — Kenya 2025', '2025-04-01', '20 pages', NULL],
+      ['Country Focus — Senegal 2025', '2025-03-01', '18 pages', NULL],
+    ],
+    'africa-news' => [
+      ['Africa Investment Review — July 2025', '2025-07-01', '8 pages', 'New'],
+      ['CFC Monthly Digest — June 2025', '2025-06-01', '12 pages', NULL],
+      ['Morocco Economy Update — Q2 2025', '2025-06-01', '6 pages', NULL],
+      ['Pan-African Market Briefing — May 2025', '2025-05-01', '10 pages', NULL],
+    ],
+    'sector-notes' => [
+      ['African Fintech — Sector Note Q2 2025', '2025-06-01', '12 pages', 'New'],
+      ['Renewable Energy in North Africa — Q1 2025 Update', '2025-03-01', '14 pages', NULL],
+      ['Agricultural Commodities & Media Coverage — 2024', '2024-12-01', '10 pages', NULL],
+      ['Telecoms and Connectivity in Sub-Saharan Africa', '2024-10-01', '16 pages', NULL],
+    ],
+    'ifc-impact' => [
+      ['Impact of International Financial Centers on African Economies — 2025', '2025-03-01', '56 pages', 'New'],
+      ['CFC Casablanca — Contribution to Regional Development, 2024', '2024-12-01', '44 pages', NULL],
+      ['IFC Benchmarking Study: Casablanca, Nairobi, Johannesburg', '2024-09-01', '38 pages', NULL],
+    ],
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($categories as $category => $documents) {
+    foreach ($documents as $weight => [$title, $date, $pages, $tag]) {
+      $values = [
+        'type' => 'insight_document',
+        'title' => $title,
+        'field_insight_category' => $category,
+        'field_insight_date' => $date,
+        'field_pages' => $pages,
+        'field_weight' => $weight,
+        'status' => 1,
+      ];
+      if ($tag) {
+        $values['field_insight_tag'] = $tag;
+      }
+      $storage->create($values)->save();
+    }
+  }
+}
+
+/**
  * Builds the missing entity form + view displays for "space" and
  * "production" — without these, the admin edit form for these nodes only
  * shows the Title field, since our fields were created via code (not the
@@ -432,5 +640,195 @@ function _cfc_content_create_fields(string $entity_type, string $bundle, array $
       'required' => $spec['required'] ?? FALSE,
       'description' => $spec['description'] ?? '',
     ])->save();
+  }
+}
+
+/**
+ * Re-shapes "Space" field_features from a flat string list into
+ * "icon|Title|Subtitle" entries (parsed by ContentRepository::mapSpace())
+ * so the "Includes" grid on /spaces shows a per-feature icon + bold title +
+ * subtitle, matching the Figma reference, instead of a generic checkmark
+ * with a single line of text. Backfills the exact Desk/Meeting Room/Studio
+ * feature list from that reference.
+ */
+function cfc_content_update_11007(): void {
+  $field_config = FieldConfig::loadByName('node', 'space', 'field_features');
+  if ($field_config) {
+    $field_config->setDescription('One per line, as "icon|Title|Subtitle" (icon = a filename from the icon component, e.g. "monitor"). Shown as the "Includes" cards on /spaces.');
+    $field_config->save();
+  }
+
+  $features_by_key = [
+    'desk' => [
+      'monitor|Desk|Dedicated workstation',
+      'wifi|Internet|Dedicated connection',
+      'printer|Print|On-site printing',
+    ],
+    'meeting' => [
+      'lock|Private room|Video conferencing · 6 seats',
+      'monitor|Presentation|4K display + whiteboard',
+      'video|Video call|Zoom, Teams, Meet',
+    ],
+    'studio' => [
+      'camera|3 Cameras|Professional setup',
+      'mic|3 Microphones|Integrated Lighting',
+      'video|Control Room|Mobile · Technician',
+    ],
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($storage->loadByProperties(['type' => 'space']) as $node) {
+    $key = $node->get('field_machine_key')->value;
+    if (!isset($features_by_key[$key])) {
+      continue;
+    }
+    $node->set('field_features', $features_by_key[$key]);
+    $node->save();
+  }
+}
+
+/**
+ * Adds "Space" field_teaser_features — a short plain-text bullet list for the
+ * homepage "Three spaces. One hub." teaser cards, separate from
+ * field_features (which now holds the richer icon|Title|Subtitle entries for
+ * the /spaces detail cards — the two sections show different, shorter
+ * wording on the homepage per the Figma reference).
+ */
+function cfc_content_update_11008(): void {
+  if (!FieldStorageConfig::loadByName('node', 'field_teaser_features')) {
+    FieldStorageConfig::create([
+      'field_name' => 'field_teaser_features',
+      'entity_type' => 'node',
+      'type' => 'string',
+      'settings' => ['max_length' => 128],
+      'cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED,
+    ])->save();
+  }
+  if (!FieldConfig::loadByName('node', 'space', 'field_teaser_features')) {
+    FieldConfig::create([
+      'field_name' => 'field_teaser_features',
+      'entity_type' => 'node',
+      'bundle' => 'space',
+      'label' => 'Teaser features',
+      'description' => 'One short line per item. Shown on the homepage "Three spaces. One hub." cards.',
+    ])->save();
+  }
+
+  $teaser_features_by_key = [
+    'desk' => ['Dedicated internet', 'Print on-site', 'Quiet environment'],
+    'meeting' => ['6 people · Soundproofed', '4K conferencing', '2h slots'],
+    'studio' => ['3 cameras · 3 microphones', 'Integrated lighting', 'Mobile control room'],
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($storage->loadByProperties(['type' => 'space']) as $node) {
+    $key = $node->get('field_machine_key')->value;
+    if (!isset($teaser_features_by_key[$key])) {
+      continue;
+    }
+    $node->set('field_teaser_features', $teaser_features_by_key[$key]);
+    $node->save();
+  }
+
+  _cfc_content_build_default_displays('space', ['field_teaser_features']);
+}
+
+/**
+ * Adds "Space" field_meta1_label/value and field_meta2_label/value — the
+ * first two columns of the /spaces detail card's bottom meta row (the
+ * third column is always "Pricing", from the existing field_price_label).
+ * Labels vary per space in the Figma reference (Desk: Slots/Bookings;
+ * Meeting Room and Studio: Capacity/Slots), so both are editable per node
+ * rather than hardcoded in the template.
+ */
+function cfc_content_update_11009(): void {
+  $fields = [
+    'field_meta1_label' => ['type' => 'string', 'label' => 'Meta column 1 — label', 'settings' => ['max_length' => 32]],
+    'field_meta1_value' => ['type' => 'string', 'label' => 'Meta column 1 — value', 'settings' => ['max_length' => 64]],
+    'field_meta2_label' => ['type' => 'string', 'label' => 'Meta column 2 — label', 'settings' => ['max_length' => 32]],
+    'field_meta2_value' => ['type' => 'string', 'label' => 'Meta column 2 — value', 'settings' => ['max_length' => 64]],
+  ];
+  foreach ($fields as $field_name => $spec) {
+    if (!FieldStorageConfig::loadByName('node', $field_name)) {
+      FieldStorageConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'type' => $spec['type'],
+        'settings' => $spec['settings'] ?? [],
+        'cardinality' => 1,
+      ])->save();
+    }
+    if (!FieldConfig::loadByName('node', 'space', $field_name)) {
+      FieldConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'bundle' => 'space',
+        'label' => $spec['label'],
+      ])->save();
+    }
+  }
+
+  $meta_by_key = [
+    'desk' => ['Slots', 'Half-day · 2h slots', 'Bookings', 'Unlimited'],
+    'meeting' => ['Capacity', '6 people', 'Slots', '2h slots'],
+    'studio' => ['Capacity', '1 journalist · 2 guests', 'Slots', 'Half-day max'],
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($storage->loadByProperties(['type' => 'space']) as $node) {
+    $key = $node->get('field_machine_key')->value;
+    if (!isset($meta_by_key[$key])) {
+      continue;
+    }
+    [$label1, $value1, $label2, $value2] = $meta_by_key[$key];
+    $node->set('field_meta1_label', $label1);
+    $node->set('field_meta1_value', $value1);
+    $node->set('field_meta2_label', $label2);
+    $node->set('field_meta2_value', $value2);
+    $node->save();
+  }
+
+  _cfc_content_build_default_displays('space', ['field_meta1_label', 'field_meta1_value', 'field_meta2_label', 'field_meta2_value']);
+}
+
+/**
+ * Re-seeds the Space cards' subtitle/summary/capacity_meta/price_label to
+ * match the booking space-picker text exactly, and makes Studio free
+ * (field_price_label + field_hourly_rate) per the confirmed pricing update.
+ */
+function cfc_content_update_11010(): void {
+  $updates = [
+    'desk' => [
+      'field_subtitle' => 'Co-working · Press lounge',
+      'field_summary' => 'Flexible desks reserved for international accredited journalists. Quiet, professional environment with internet, coffee and print.',
+      'field_capacity_meta' => 'Half-day slots · 2h minimum',
+      'field_price_label' => 'Free',
+    ],
+    'meeting' => [
+      'field_subtitle' => 'Private · Video conferencing',
+      'field_summary' => 'Video conferencing room for interviews, editorial meetings and professional exchanges. Seats 6 people.',
+      'field_capacity_meta' => '2h slots · 6 people',
+      'field_price_label' => 'Free',
+    ],
+    'studio' => [
+      'field_subtitle' => 'Podcast production',
+      'field_summary' => 'Professional podcast studio for recording, interviews and content production. 3 cameras, 3 microphones, integrated lighting and technician.',
+      'field_capacity_meta' => 'Half-day max · 3 seats',
+      'field_price_label' => 'Free',
+      'field_hourly_rate' => 0,
+    ],
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach ($updates as $key => $values) {
+    $nodes = $storage->loadByProperties(['type' => 'space', 'field_machine_key' => $key]);
+    $node = reset($nodes);
+    if (!$node) {
+      continue;
+    }
+    foreach ($values as $field => $value) {
+      $node->set($field, $value);
+    }
+    $node->save();
   }
 }

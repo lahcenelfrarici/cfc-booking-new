@@ -72,8 +72,10 @@ class QuickBookController extends ControllerBase {
 
     // Same short-lived lock + real-time re-check as BookingForm::validateForm()
     // — the slot shown on the homepage may have been taken since that page
-    // was cached/rendered.
-    $lock_name = 'cfc_booking:' . $space . ':' . $date;
+    // was cached/rendered. Scoped by account type too — see BookingForm for
+    // why (separate availability pool per type on shared spaces like Studio).
+    $account_type = $this->bookingCreator->accountTypeFromRoles($this->currentUser()->getRoles());
+    $lock_name = 'cfc_booking:' . $space . ':' . $date . ':' . ($account_type ?? 'none');
     $lock = \Drupal::lock();
     if (!$lock->acquire($lock_name, 5)) {
       $this->messenger()->addStatus($this->t('That slot is being booked by someone else right now — please choose another.'));
@@ -81,13 +83,13 @@ class QuickBookController extends ControllerBase {
     }
 
     $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-    if (!$this->availabilityChecker->isFree($space_node, $date, $time, $duration)) {
+    if (!$this->availabilityChecker->isFree($space_node, $date, $time, $duration, NULL, $account_type)) {
       $lock->release($lock_name);
       $this->messenger()->addStatus($this->t('That slot was just taken — please choose another.'));
       return new RedirectResponse($fallback_url);
     }
 
-    $booking = $this->bookingCreator->create($space_data, (int) $this->currentUser()->id(), $date, $time, $duration);
+    $booking = $this->bookingCreator->create($space_data, (int) $this->currentUser()->id(), $date, $time, $duration, $account_type);
     $lock->release($lock_name);
 
     $this->messenger()->addStatus($this->t('Reservation @ref created — please review the details below.', [

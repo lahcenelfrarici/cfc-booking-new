@@ -9,9 +9,9 @@
   <div class="max-w-[1440px] mx-auto px-12">
     <div class="flex items-end justify-between mb-12">
       <div class="max-w-[680px]">
-        <div class="flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] mb-4">
-          <span class="text-[#9F5434] font-bold">03</span>
-          <span class="text-[#9F5434] font-semibold">&middot; The spaces</span>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-5 h-[2px] bg-[#9F5434]"></div>
+          <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">The Spaces</div>
         </div>
         <h2 class="tracking-tight text-neutral-900 mb-5" style="font-size: 48px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
           Three complementary spaces, one workflow.
@@ -21,7 +21,7 @@
         </p>
       </div>
       <a href="{{ spaces_url }}" class="flex items-center gap-2 border border-neutral-300 hover:border-[#9F5434] hover:text-[#9F5434] hover:bg-white transition-colors px-6 py-3 rounded-xl text-[13px] font-medium">
-        View all spaces
+        Choose your space
         {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}
       </a>
     </div>
@@ -41,7 +41,7 @@
             <span class="text-[11px] px-2.5 py-1 rounded-full font-semibold {{ s.access_rule == 'both' ? 'bg-[#9F5434] text-white' : 'bg-neutral-100 text-neutral-600' }}">
               {{ tag_by_access[s.access_rule] }}
             </span>
-            <a href="{{ spaces_url }}#space-{{ s.id }}" class="text-[#0F6E56] text-[13px] flex items-center gap-1 group font-semibold">
+            <a href="{{ spaces_url }}#space-{{ s.id }}" class="text-[#9F5434] text-[13px] flex items-center gap-1 group font-semibold">
               Learn more
               {% include 'cfc_media_hub:icon' with { name: 'arrow-up-right', size: 'w-3.5 h-3.5', class: 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform' } only %}
             </a>

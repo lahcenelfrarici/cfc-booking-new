@@ -1,47 +1,10 @@
-{% set categories = [
-  { id: 'cfc-africa-insights', label: 'CFC Africa Insights Reports', icon: 'bar-chart-2', documents: [
-    { title: 'Africa Media Landscape — Annual Report 2025', date: 'June 2025', pages: '84 pages', tag: 'New' },
-    { title: 'Financial Press Coverage of Sub-Saharan Africa — Q1 2025', date: 'April 2025', pages: '42 pages', tag: null },
-    { title: 'Digital Media Penetration across Africa — 2024 Review', date: 'December 2024', pages: '60 pages', tag: null },
-    { title: "Africa's Editorial Independence Index — 2024", date: 'October 2024', pages: '38 pages', tag: null },
-  ] },
-  { id: 'community', label: 'Community Reports', icon: 'layers', documents: [
-    { title: 'CFC Member Outlook — H1 2025', date: 'May 2025', pages: '28 pages', tag: 'New' },
-    { title: 'Casablanca as a Financial Centre — Comparative Study', date: 'March 2025', pages: '52 pages', tag: null },
-    { title: 'Cross-Border Investment Report — MENA & Africa 2024', date: 'November 2024', pages: '66 pages', tag: null },
-  ] },
-  { id: 'country-focus', label: 'Country Focus', icon: 'earth', documents: [
-    { title: 'Country Focus — Morocco 2025', date: 'May 2025', pages: '22 pages', tag: 'Updated' },
-    { title: "Country Focus — Côte d'Ivoire 2025", date: 'May 2025', pages: '20 pages', tag: 'Updated' },
-    { title: 'Country Focus — Nigeria 2025', date: 'April 2025', pages: '24 pages', tag: null },
-    { title: 'Country Focus — Kenya 2025', date: 'April 2025', pages: '20 pages', tag: null },
-    { title: 'Country Focus — Senegal 2025', date: 'March 2025', pages: '18 pages', tag: null },
-  ] },
-  { id: 'africa-news', label: 'Africa News', icon: 'newspaper', documents: [
-    { title: 'Africa Investment Review — July 2025', date: 'July 2025', pages: '8 pages', tag: 'New' },
-    { title: 'CFC Monthly Digest — June 2025', date: 'June 2025', pages: '12 pages', tag: null },
-    { title: 'Morocco Economy Update — Q2 2025', date: 'June 2025', pages: '6 pages', tag: null },
-    { title: 'Pan-African Market Briefing — May 2025', date: 'May 2025', pages: '10 pages', tag: null },
-  ] },
-  { id: 'sector-notes', label: 'Sector Notes', icon: 'file-text', documents: [
-    { title: 'African Fintech — Sector Note Q2 2025', date: 'June 2025', pages: '12 pages', tag: 'New' },
-    { title: 'Renewable Energy in North Africa — Q1 2025 Update', date: 'March 2025', pages: '14 pages', tag: null },
-    { title: 'Agricultural Commodities & Media Coverage — 2024', date: 'December 2024', pages: '10 pages', tag: null },
-    { title: 'Telecoms and Connectivity in Sub-Saharan Africa', date: 'October 2024', pages: '16 pages', tag: null },
-  ] },
-  { id: 'ifc-impact', label: 'Study on the Impact of International Financial Centers', icon: 'building', documents: [
-    { title: 'Impact of International Financial Centers on African Economies — 2025', date: 'March 2025', pages: '56 pages', tag: 'New' },
-    { title: 'CFC Casablanca — Contribution to Regional Development, 2024', date: 'December 2024', pages: '44 pages', tag: null },
-    { title: 'IFC Benchmarking Study: Casablanca, Nairobi, Johannesburg', date: 'September 2024', pages: '38 pages', tag: null },
-  ] },
-] %}
 {% set categories_with_icons = [] %}
 {% for cat in categories %}
   {% set categories_with_icons = categories_with_icons|merge([cat|merge({
     icon_svg: source(componentMetadata.path ~ '/../icon/icons/' ~ cat.icon ~ '.svg'),
   })]) %}
 {% endfor %}
-{% set alpine_state = { query: '', activeCategory: null, selectedDoc: null, categories: categories_with_icons } %}
+{% set alpine_state = { query: initial_query|default(''), activeCategory: null, selectedDoc: null, categories: categories_with_icons } %}
 
 <div class="min-h-screen bg-[#FCFCFB]" x-data="{{ alpine_state|json_encode|e('html_attr') }}">
 
@@ -70,15 +33,15 @@
         </div>
       </div>
 
-      <div class="relative max-w-[640px]">
-        <span class="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400">
-          {% include 'cfc_media_hub:icon' with { name: 'search', size: 'w-5 h-5' } only %}
+      <div class="relative max-w-[480px]">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
+          {% include 'cfc_media_hub:icon' with { name: 'search', size: 'w-4 h-4' } only %}
         </span>
         <input
           type="text"
           x-model="query"
           placeholder="Search reports, country focus, sector notes…"
-          class="w-full bg-[#F6F6F5] border border-neutral-200 rounded-2xl pl-14 pr-5 py-4 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-[#9F5434] focus:bg-white transition-all"
+          class="w-full bg-white border border-neutral-200 rounded-full pl-11 pr-4 py-2.5 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-[#9F5434] transition-all"
         />
       </div>
     </div>
@@ -115,7 +78,7 @@
         <div class="grid grid-cols-12 gap-4">
           <template x-for="doc in cat.documents" :key="doc.title">
             <div
-              x-on:click="selectedDoc = { title: doc.title, date: doc.date, category: cat.label, pages: doc.pages }"
+              x-on:click="selectedDoc = { title: doc.title, date: doc.date, category: cat.label, pages: doc.pages, pdfUrl: doc.pdf_url }"
               class="col-span-6 group bg-white border border-neutral-200/80 rounded-2xl p-6 hover:border-[#9F5434]/30 hover:shadow-[0_12px_40px_-16px_rgba(159,84,52,0.12)] transition-all cursor-pointer flex items-start justify-between gap-4"
             >
               <div class="flex-1">
@@ -181,10 +144,18 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <button type="button" class="flex-1 bg-[#9F5434] hover:bg-[#8A4A2E] text-white py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors font-semibold text-[14px]">
-              {% include 'cfc_media_hub:icon' with { name: 'download', size: 'w-4 h-4' } only %}
-              Download PDF
-            </button>
+            <template x-if="selectedDoc.pdfUrl">
+              <a :href="selectedDoc.pdfUrl" target="_blank" rel="noopener" class="flex-1 bg-[#9F5434] hover:bg-[#8A4A2E] text-white py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors font-semibold text-[14px]">
+                {% include 'cfc_media_hub:icon' with { name: 'download', size: 'w-4 h-4' } only %}
+                Download PDF
+              </a>
+            </template>
+            <template x-if="!selectedDoc.pdfUrl">
+              <button type="button" disabled class="flex-1 bg-neutral-200 text-neutral-400 py-3.5 rounded-2xl flex items-center justify-center gap-2 font-semibold text-[14px] cursor-not-allowed">
+                {% include 'cfc_media_hub:icon' with { name: 'download', size: 'w-4 h-4' } only %}
+                No PDF uploaded yet
+              </button>
+            </template>
             <button type="button" x-on:click="selectedDoc = null" class="border border-neutral-200 hover:border-neutral-400 text-neutral-600 px-5 py-3.5 rounded-2xl text-[14px] font-medium transition-colors">
               Close
             </button>
@@ -193,5 +164,50 @@
       </template>
     </div>
   </div>
+
+  <section class="bg-[#FCFCFB] py-20 border-t border-neutral-100" x-data="{ open: false }">
+    <div class="max-w-[1440px] mx-auto px-12 grid grid-cols-12 gap-12 items-center">
+      <div class="col-span-7">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-5 h-[2px] bg-[#9F5434]"></div>
+          <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Connect &middot; CFC Community</div>
+        </div>
+        <h2 class="tracking-tight text-neutral-900 mb-6" style="font-size: 40px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em;">
+          Looking to connect with CFC members.
+        </h2>
+        <p class="text-neutral-600 leading-relaxed max-w-[560px] mb-8 text-[15px]">
+          As a journalist covering Morocco and Africa, you have privileged access to the CFC community. Submit a connection request and our team will coordinate introductions with relevant CFC member companies, institutions and experts on your behalf.
+        </p>
+        <button type="button" x-on:click="open = true" class="inline-flex items-center gap-2 bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-7 py-3.5 rounded-full transition-colors shadow-[0_8px_20px_-8px_rgba(159,84,52,0.4)]">
+          <span class="font-semibold text-[14px]">Submit a Connection Request</span>
+          {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}
+        </button>
+      </div>
+
+      <div class="col-span-5">
+        <div class="bg-white border border-neutral-200 rounded-2xl p-7">
+          <div class="text-[11px] uppercase tracking-wide text-neutral-400 font-semibold mb-5">What you can request</div>
+          <ul class="space-y-3.5">
+            {% for item in [
+              'Expert interviews with CFC-based executives',
+              'Background briefings from sector specialists',
+              'Data and market intelligence introductions',
+              'Facilitated access to CFC community events',
+              'Custom connection requests for specific stories',
+            ] %}
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 shrink-0 text-[#9F5434]">
+                  {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-3.5 h-3.5' } only %}
+                </span>
+                <span class="text-[14px] text-neutral-700 leading-relaxed">{{ item }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {% include 'cfc_media_hub:connection-request-modal' with { connection_form: connection_form } only %}
+  </section>
 
 </div>

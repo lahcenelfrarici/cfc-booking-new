@@ -1,0 +1,15 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: News listing
+status: stable
+description: Public "News" page — All / News / Events / Updates / Agenda. Data comes from real "News item" content type nodes.
+props:
+  type: object
+  properties:
+    items:
+      type: array
+      description: Array of News item nodes, mapped by Drupal\cfc_content\ContentRepository::getNewsItems().
+    home_url:
+      type: string
+  required:
+    - items
+    - home_url

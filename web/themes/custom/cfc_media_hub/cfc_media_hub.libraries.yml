@@ -3,5 +3,6 @@ global:
   css:
     theme:
       dist/main.css: {}
+      css/style_my_local.css: {}
   js:
     dist/main.js: {}

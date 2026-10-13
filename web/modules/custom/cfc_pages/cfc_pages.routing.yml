@@ -42,6 +42,26 @@ cfc_pages.production_detail:
       node:
         type: entity:node
 
+cfc_pages.news:
+  path: '/news'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\NewsController::build'
+    _title: 'News'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.news_detail:
+  path: '/news/{node}'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\NewsController::detail'
+    _title_callback: '\Drupal\cfc_pages\Controller\NewsController::detailTitle'
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
 cfc_pages.insights:
   path: '/insights'
   defaults:
@@ -63,6 +83,14 @@ cfc_pages.sign_in:
   defaults:
     _controller: '\Drupal\cfc_pages\Controller\SignInController::build'
     _title: 'Sign in'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.forgot_password:
+  path: '/forgot-password'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\ForgotPasswordController::build'
+    _title: 'Reset password'
   requirements:
     _access: 'TRUE'
 

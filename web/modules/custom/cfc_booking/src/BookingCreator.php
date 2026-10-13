@@ -40,13 +40,30 @@ class BookingCreator {
   }
 
   /**
+   * Derives the "journalist"/"cfc_member" account type from a role list —
+   * same precedence as eligibleSpaces(). Used to key the per-type
+   * availability pool on spaces shared by both account types (Studio), and
+   * to snapshot field_booker_account_type on new bookings. Returns NULL for
+   * a user with neither role (shouldn't normally happen post-registration).
+   */
+  public function accountTypeFromRoles(array $roles): ?string {
+    if (in_array('journalist', $roles, TRUE)) {
+      return 'journalist';
+    }
+    if (in_array('cfc_member', $roles, TRUE)) {
+      return 'cfc_member';
+    }
+    return NULL;
+  }
+
+  /**
    * Creates a booking node, snapshotting the price/amount at booking time.
    *
    * The caller is responsible for the availability lock/real-time check
    * beforehand (BookingForm and QuickBookController each need different
    * error handling around that part — inline form error vs. a redirect).
    */
-  public function create(array $spaceData, int $uid, string $date, string $time, string $duration): NodeInterface {
+  public function create(array $spaceData, int $uid, string $date, string $time, string $duration, ?string $accountType = NULL): NodeInterface {
     $is_paid = $spaceData['hourly_rate'] > 0;
     $reference = 'RES-' . date('Y') . '-' . random_int(1000, 9999);
     $amount = $is_paid ? $spaceData['hourly_rate'] * AvailabilityChecker::DURATION_HOURS[$duration] : NULL;
@@ -66,6 +83,7 @@ class BookingCreator {
       'field_amount' => $amount,
       'field_currency' => $is_paid ? $spaceData['currency'] : NULL,
       'field_payment_status' => $is_paid ? 'pending' : 'not_applicable',
+      'field_booker_account_type' => $accountType,
       'status' => 1,
     ]);
     $booking->save();

@@ -2,8 +2,9 @@ $schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schema
 name: Sign-in page
 status: stable
 description: >
-  Sign-in / forgot-password page. Posts to Drupal core's real user.login and
-  user.pass routes (genuine authentication), styled to match the design.
+  Sign-in page. Posts to Drupal core's real user.login route (genuine
+  authentication), styled to match the design. "Forgot password?" links out
+  to the dedicated forgot-password-page component/route.
 props:
   type: object
   properties:
@@ -11,11 +12,9 @@ props:
       type: string
     login_form_build_id:
       type: string
-    password_action:
-      type: string
-    password_form_build_id:
-      type: string
     create_account_url:
+      type: string
+    forgot_password_url:
       type: string
     home_url:
       type: string
@@ -24,8 +23,7 @@ props:
   required:
     - login_action
     - login_form_build_id
-    - password_action
-    - password_form_build_id
     - create_account_url
+    - forgot_password_url
     - home_url
     - logo_url

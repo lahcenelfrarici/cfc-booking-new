@@ -2,9 +2,12 @@
 
 namespace Drupal\cfc_pages\Controller;
 
+use Drupal\cfc_connections\Form\ConnectionRequestForm;
+use Drupal\cfc_content\ContentRepository;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Builds the Insights page — gated teaser for anonymous users, full
@@ -12,8 +15,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class InsightsController extends ControllerBase {
 
+  public function __construct(
+    protected ContentRepository $contentRepository,
+    protected RequestStack $cfcRequestStack,
+  ) {}
+
   public static function create(ContainerInterface $container) {
-    return new static();
+    return new static(
+      $container->get('cfc_content.repository'),
+      $container->get('request_stack'),
+    );
   }
 
   /**
@@ -38,8 +49,14 @@ class InsightsController extends ControllerBase {
       '#component' => 'cfc_media_hub:insights-content',
       '#props' => [
         'home_url' => Url::fromRoute('<front>')->toString(),
+        'categories' => $this->contentRepository->getInsightCategories(),
+        'initial_query' => (string) $this->cfcRequestStack->getCurrentRequest()->query->get('q', ''),
+        'connection_form' => $this->formBuilder()->getForm(ConnectionRequestForm::class),
       ],
-      '#cache' => ['contexts' => ['user.roles:authenticated']],
+      '#cache' => [
+        'contexts' => ['user.roles:authenticated', 'url.query_args:q'],
+        'tags' => ['node_list:insight_document'],
+      ],
     ];
   }
 

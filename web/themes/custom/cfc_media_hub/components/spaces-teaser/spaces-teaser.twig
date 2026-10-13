@@ -7,7 +7,7 @@
       <div>
         <div class="flex items-center gap-3 mb-3">
           <div class="w-5 h-[2px] bg-[#9F5434]"></div>
-          <div class="text-[12px] uppercase tracking-[0.18em] text-[#0F6E56] font-semibold">Spaces</div>
+          <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Spaces</div>
         </div>
         <h2 class="text-neutral-900 tracking-tight max-w-[680px]" style="font-size: 56px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
           Three spaces. <span class="text-neutral-400">One hub.</span>
@@ -19,7 +19,7 @@
       {% for s in spaces %}
         {% set tag = tag_by_access[s.access_rule] ?? null %}
         {% set icon = icon_by_key[s.id] ?? null %}
-        <article class="group relative rounded-2xl overflow-hidden border transition-all hover:-translate-y-1 {{ s.highlight ? 'border-[#0F6E56] bg-[#0F6E56] text-white shadow-[0_30px_80px_-30px_rgba(15,110,86,0.5)]' : 'border-neutral-200 bg-white hover:border-[#9F5434]/30 hover:shadow-[0_20px_50px_-20px_rgba(159,84,52,0.1)]' }}">
+        <article class="group relative rounded-2xl overflow-hidden border transition-all hover:-translate-y-1 {{ s.highlight ? 'border-[#9F5434] bg-[#9F5434] text-white shadow-[0_30px_80px_-30px_rgba(159,84,52,0.5)]' : 'border-neutral-200 bg-white hover:border-[#9F5434]/30 hover:shadow-[0_20px_50px_-20px_rgba(159,84,52,0.1)]' }}">
           <a href="{{ spaces_url }}#space-{{ s.id }}" class="relative h-56 overflow-hidden block bg-neutral-100">
             {% if s.image_url %}
               <img src="{{ s.image_url }}" alt="{{ s.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -30,7 +30,7 @@
               {% endembed %}
             {% endif %}
             {% if icon %}
-              <div class="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center backdrop-blur {{ s.highlight ? 'bg-white text-[#0F6E56]' : 'bg-white/85 text-neutral-700' }}">
+              <div class="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center backdrop-blur {{ s.highlight ? 'bg-white text-[#9F5434]' : 'bg-white/85 text-neutral-700' }}">
                 {% include 'cfc_media_hub:icon' with { name: icon, size: 'w-4 h-4' } only %}
               </div>
             {% endif %}
@@ -43,9 +43,9 @@
             <p class="leading-relaxed mb-6 text-[14px] {{ s.highlight ? 'text-white/85' : 'text-neutral-600' }}">{{ s.summary }}</p>
 
             <ul class="space-y-2 mb-7">
-              {% for f in s.features %}
+              {% for f in s.teaser_features %}
                 <li class="flex items-center gap-2 text-[13px] {{ s.highlight ? 'text-white/90' : 'text-neutral-700' }}">
-                  {% include 'cfc_media_hub:icon' with { name: 'check', size: 'w-3.5 h-3.5 ' ~ (s.highlight ? 'text-[#CDEDE3]' : 'text-[#9F5434]') } only %}
+                  {% include 'cfc_media_hub:icon' with { name: 'check', size: 'w-3.5 h-3.5 ' ~ (s.highlight ? 'text-white/80' : 'text-[#9F5434]') } only %}
                   {{ f }}
                 </li>
               {% endfor %}

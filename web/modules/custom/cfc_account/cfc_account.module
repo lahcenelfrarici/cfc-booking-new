@@ -34,3 +34,18 @@ function cfc_account_user_login_resolve_email(array &$form, FormStateInterface $
     $form_state->setValue('name', $account->getAccountName());
   }
 }
+
+/**
+ * Implements hook_mail().
+ *
+ * Only one key so far: the "forgot password" 6-digit verification code sent
+ * by ForgotPasswordRequestForm.
+ */
+function cfc_account_mail(string $key, array &$message, array $params): void {
+  if ($key !== 'reset_code') {
+    return;
+  }
+  $message['subject'] = t('Your CFC Media Hub verification code');
+  $message['body'][] = t('Your verification code is: @code', ['@code' => $params['code']]);
+  $message['body'][] = t('This code expires in @minutes minutes. If you did not request a password reset, you can safely ignore this email.', ['@minutes' => $params['minutes']]);
+}

@@ -29,6 +29,9 @@ props:
       type: string
     booking_url:
       type: string
+    insights_url:
+      type: string
+      description: Target for the small navbar search button — submits "q" to the Insights page.
   required:
     - home_url
     - logo_url

@@ -3,12 +3,23 @@ name: Insights content
 status: stable
 description: >
   Authenticated Insights knowledge center — search, category filter and
-  document detail modal. Document data is static for now; will be replaced by
-  real Insight content entities in a later phase.
+  document detail modal. Data comes from real "Insight document" content type
+  nodes, grouped by Drupal\cfc_content\ContentRepository::getInsightCategories().
 props:
   type: object
   properties:
     home_url:
       type: string
+    categories:
+      type: array
+      description: Array of {id, label, icon, documents}, from ContentRepository::getInsightCategories().
+    initial_query:
+      type: string
+      description: Pre-fills the search box — set from the ?q= query string (e.g. from the navbar search).
+    connection_form:
+      type: object
+      description: Render array of Drupal\cfc_connections\Form\ConnectionRequestForm, for the "Looking to connect with CFC members" section.
   required:
     - home_url
+    - categories
+    - connection_form

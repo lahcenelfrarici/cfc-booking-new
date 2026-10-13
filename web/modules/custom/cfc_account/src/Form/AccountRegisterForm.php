@@ -21,7 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class AccountRegisterForm extends FormBase {
 
-  protected const INPUT_CLASSES = ['w-full', 'border', 'border-neutral-200', 'rounded-xl', 'px-4', 'py-3', 'text-[14px]', 'text-neutral-900', 'bg-white', 'focus:outline-none', 'focus:border-[#0F6E56]'];
+  protected const INPUT_CLASSES = ['w-full', 'border', 'border-neutral-200', 'rounded-xl', 'px-4', 'py-3', 'text-[14px]', 'text-neutral-900', 'bg-white', 'focus:outline-none', 'focus:border-[#9F5434]'];
   protected const LABEL_CLASSES = ['text-[12px]', 'text-neutral-600', 'uppercase', 'tracking-wide', 'font-semibold', 'block', 'mb-1.5'];
 
   public function __construct(
@@ -52,37 +52,45 @@ class AccountRegisterForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['#attributes']['class'][] = 'space-y-5';
 
+    // Driven by the card selector in register-page.twig, which sets the
+    // outer `type` Alpine variable on click. Bound reactively here via
+    // x-bind:value rather than a one-time $refs write — this field lives
+    // inside the nested cfc-form-shell x-data (see {{ form }} in
+    // register-page.twig), and Alpine's $refs does NOT cross nested x-data
+    // boundaries (confirmed: a card click in the outer scope writing via
+    // $refs.accountTypeField silently resolved to undefined, leaving this
+    // field stuck on its default and misrouting CFC Member submissions
+    // through the journalist validation branch). Plain reactive data DOES
+    // cascade into nested x-data scopes, so x-bind:value="type" is reliable
+    // where $refs was not. Visibility of the type-specific sections below
+    // also uses x-show reading this same `type` variable, not Drupal
+    // #states — #states doesn't reliably react to a dispatched 'change'
+    // event on a hidden input either (confirmed separately).
     $form['account_type'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('I am…'),
-      '#options' => [
-        'journalist' => $this->t('A journalist'),
-        'cfc_member' => $this->t('A CFC member company employee'),
-      ],
+      '#type' => 'hidden',
       '#default_value' => 'journalist',
-      '#required' => TRUE,
-    ];
-
-    // Shown first (before any other field) so it sits at the top of the
-    // CFC-only section once account_type reveals it — journalist fields
-    // stay hidden in that state, so this naturally becomes the first
-    // visible thing, matching the prototype's placement.
-    $form['cfc_notice'] = [
-      '#markup' => Markup::create($this->cfcNoticeMarkup()),
+      '#attributes' => ['x-bind:value' => 'type'],
     ];
 
     // Journalist-only fields.
-    $form['accreditation_number'] = [
+    $form['journalist_fields'] = [
+      '#type' => 'container',
+      '#attributes' => ['x-show' => "type === 'journalist'"],
+    ];
+    $form['journalist_fields']['accreditation_number'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Accreditation number'),
       '#attributes' => ['class' => self::INPUT_CLASSES, 'placeholder' => 'e.g. MA-PRESS-2025-XXXX'],
-      '#states' => ['visible' => [':input[name="account_type"]' => ['value' => 'journalist']]],
     ];
-    $form['organization'] = [
+    $form['journalist_fields']['passport_number'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Passport number'),
+      '#attributes' => ['class' => self::INPUT_CLASSES, 'placeholder' => 'Passport number'],
+    ];
+    $form['journalist_fields']['organization'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Media organisation'),
       '#attributes' => ['class' => self::INPUT_CLASSES, 'placeholder' => 'Publication or media outlet'],
-      '#states' => ['visible' => [':input[name="account_type"]' => ['value' => 'journalist']]],
     ];
 
     // CFC Member-only fields.
@@ -97,28 +105,34 @@ class AccountRegisterForm extends FormBase {
     // pipeline doesn't run them through Xss::filter() — that regex-based
     // sanitizer doesn't understand Alpine's `x-data="{ ... }"` syntax and
     // mangles it (strips <label>/<template>, corrupts attribute values).
+    $form['cfc_fields'] = [
+      '#type' => 'container',
+      '#attributes' => ['x-show' => "type === 'cfc_member'", 'x-cloak' => TRUE],
+    ];
+    $form['cfc_fields']['cfc_notice'] = [
+      '#markup' => Markup::create($this->cfcNoticeMarkup()),
+    ];
     $companies = $this->cfcEntityTypeManager->getStorage('taxonomy_term')->loadTree('cfc_member_companies', 0, 1, TRUE);
     $company_data = array_map(static fn($term) => [
       'id' => (string) $term->id(),
       'name' => $term->label(),
       'domain' => (string) $term->get('field_company_domain')->value,
     ], $companies);
-    $form['cfc_company'] = [
+    $form['cfc_fields']['cfc_company'] = [
       '#type' => 'hidden',
-      // A hidden field has no visual presence, so no #states needed here —
-      // the widget itself (in #prefix) carries its own visibility condition.
+      // A hidden field has no visual presence — the widget itself (in
+      // #prefix) carries the x-show that controls the manual-entry field.
       '#attributes' => ['x-ref' => 'cfcCompanyField'],
       '#prefix' => Markup::create($this->companySearchWidgetMarkup(Json::encode($company_data))),
     ];
-    $form['manual_organization'] = [
+    $form['cfc_fields']['manual_organization'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Organisation name'),
-      '#attributes' => ['class' => self::INPUT_CLASSES, 'placeholder' => 'Enter your organisation'],
-      '#states' => [
-        'visible' => [
-          ':input[name="account_type"]' => ['value' => 'cfc_member'],
-          ':input[name="cfc_company"]' => ['value' => '_manual'],
-        ],
+      '#attributes' => [
+        'class' => self::INPUT_CLASSES,
+        'placeholder' => 'Enter your organisation',
+        'x-show' => 'manualCompany',
+        'x-cloak' => TRUE,
       ],
     ];
 
@@ -157,11 +171,22 @@ class AccountRegisterForm extends FormBase {
       '#required' => TRUE,
     ];
 
+    $form['newsletter_opt_in'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('I would like to receive the CFC Media Hub newsletter.'),
+      '#wrapper_attributes' => ['class' => ['bg-neutral-50', 'border', 'border-neutral-200', 'rounded-xl', 'px-4', 'py-3.5', 'flex', 'items-center']],
+      '#attributes' => ['class' => ['w-4', 'h-4', 'rounded', 'border-neutral-300', 'text-[#9F5434]', 'focus:ring-[#9F5434]', 'mr-3']],
+    ];
+
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Create account'),
       '#attributes' => ['class' => ['w-full', 'bg-[#9F5434]', 'hover:bg-[#8A4A2E]', 'text-white', 'py-3.5', 'rounded-2xl', 'font-semibold', 'text-[14px]', 'transition-colors']],
+    ];
+
+    $form['terms_notice'] = [
+      '#markup' => Markup::create($this->termsNoticeMarkup()),
     ];
 
     return $form;
@@ -180,6 +205,9 @@ class AccountRegisterForm extends FormBase {
       }
       if (!$form_state->getValue('organization')) {
         $form_state->setErrorByName('organization', $this->t('Please enter your media organisation.'));
+      }
+      if (!$form_state->getValue('passport_number')) {
+        $form_state->setErrorByName('passport_number', $this->t('Please enter your passport number.'));
       }
     }
     else {
@@ -229,10 +257,12 @@ class AccountRegisterForm extends FormBase {
       'field_first_name' => $form_state->getValue('first_name'),
       'field_last_name' => $form_state->getValue('last_name'),
       'field_organization' => $organization,
+      'field_newsletter_opt_in' => (bool) $form_state->getValue('newsletter_opt_in'),
       'roles' => [$type === 'journalist' ? 'journalist' : 'cfc_member'],
     ];
     if ($type === 'journalist') {
       $values['field_accreditation_number'] = $form_state->getValue('accreditation_number');
+      $values['field_passport_number'] = $form_state->getValue('passport_number');
     }
     elseif ($company_value !== '_manual') {
       $values['field_cfc_company'] = ['target_id' => $this->parseCompanyTid($company_value)];
@@ -258,7 +288,7 @@ class AccountRegisterForm extends FormBase {
     // ($refs, $nextTick, $el) inside a real heredoc, which is exactly the
     // kind of subtle mistake that caused two bugs already in this file.
     $markup = <<<'HTML'
-      <div class="js-form-wrapper" data-drupal-states='{"visible":{":input[name=\"account_type\"]":{"value":"cfc_member"}}}' data-companies='__COMPANIES_JSON__' x-data="{ companies: [] }" x-init="companies = JSON.parse($el.dataset.companies)">
+      <div class="js-form-wrapper" data-companies='__COMPANIES_JSON__' x-data="{ companies: [] }" x-init="companies = JSON.parse($el.dataset.companies)">
         <label class="text-[12px] text-neutral-600 uppercase tracking-wide block mb-1.5 font-semibold">Company *</label>
 
         <template x-if="selectedCompany">
@@ -296,6 +326,7 @@ class AccountRegisterForm extends FormBase {
                   class="w-full text-left px-4 py-3 hover:bg-[#9F5434]/5 transition-colors border-b border-neutral-100 last:border-0"
                   x-on:click="
                     selectedCompany = c;
+                    manualCompany = false;
                     query = '';
                     open = false;
                     $refs.cfcCompanyField.value = c.id + '|' + c.domain;
@@ -316,8 +347,9 @@ class AccountRegisterForm extends FormBase {
         <button
           type="button"
           x-show="!selectedCompany"
-          class="text-[12px] text-[#0F6E56] underline underline-offset-2 text-left mb-4 block"
+          class="text-[12px] text-[#9F5434] underline underline-offset-2 text-left mb-4 block"
           x-on:click="
+            manualCompany = true;
             $refs.cfcCompanyField.value = '_manual';
             $refs.cfcCompanyField.dispatchEvent(new Event('change', { bubbles: true }));
           "
@@ -335,21 +367,33 @@ class AccountRegisterForm extends FormBase {
   }
 
   /**
-   * Markup for the CFC Member notice ("Podcast Studio only…"), visible only
-   * once account_type = cfc_member. Static content, no dynamic values, but
-   * still wrapped in Markup::create() at the call site since it carries the
-   * same data-drupal-states attribute as the other CFC-only blocks.
+   * Markup for the CFC Member notice ("Podcast Studio only…"). Visibility
+   * comes entirely from the parent #cfc_fields container's x-show — no
+   * #states here (see the account_type field's comment on why #states +
+   * a dispatched change event on a hidden input is unreliable).
    */
   protected function cfcNoticeMarkup(): string {
     return <<<'HTML'
-      <div class="js-form-wrapper mb-6" data-drupal-states='{"visible":{":input[name=\"account_type\"]":{"value":"cfc_member"}}}'>
+      <div class="mb-6">
         <div class="bg-[#9F5434]/[0.08] border border-[#9F5434]/25 rounded-xl px-4 py-3.5 flex items-start gap-3">
           <span class="icon shrink-0 w-4 h-4 text-[#9F5434] mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg></span>
           <div class="text-[12px] text-[#9F5434] leading-relaxed font-medium">
             <span class="font-bold">CFC Members have access to the Podcast Studio only.</span><br />
-            Meeting Rooms and Desks are not available. Studio sessions are billed at <span class="font-bold">400 MAD / hour</span>.
+            Meeting Rooms and Desks are not available. Studio access is free of charge.
           </div>
         </div>
+      </div>
+      HTML;
+  }
+
+  /**
+   * Markup for the "By creating an account you agree to…" legal notice,
+   * shown under the submit button for both account types.
+   */
+  protected function termsNoticeMarkup(): string {
+    return <<<'HTML'
+      <div class="text-center text-[12px] text-neutral-400 mt-4">
+        By creating an account you agree to our <a href="#" class="text-[#9F5434] underline underline-offset-2 font-semibold">Terms of Service</a> and <a href="#" class="text-[#9F5434] underline underline-offset-2 font-semibold">Privacy Policy</a>.
       </div>
       HTML;
   }

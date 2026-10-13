@@ -1,7 +1,7 @@
 $schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
 name: Hub vision & mission
 status: stable
-description: Hub page vision/mission sections with the connection request CTA and modal.
+description: Hub page "Our vision." / "Our mission." sections.
 props:
   type: object
   properties: {}

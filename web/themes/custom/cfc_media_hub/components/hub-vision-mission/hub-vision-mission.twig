@@ -1,37 +1,46 @@
-<section class="bg-white py-20 border-t border-neutral-100">
+<section class="bg-white py-16 border-t border-neutral-100">
   <div class="max-w-[1440px] mx-auto px-12">
-    <div class="grid grid-cols-12 gap-12 items-start">
-      <div class="col-span-4">
-        <div class="flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] mb-4">
-          <span class="text-[#9F5434] font-bold">01</span>
-          <span class="text-[#9F5434] font-semibold">&middot; Our vision</span>
+    <div class="grid grid-cols-12 gap-6 items-stretch">
+      <div class="col-span-4 bg-[#9F5434] rounded-3xl p-10 flex flex-col justify-between relative overflow-hidden min-h-[340px]">
+        <div class="absolute -bottom-12 -right-12 w-52 h-52 rounded-full bg-white/[0.05]"></div>
+        <div class="absolute -top-8 -left-8 w-36 h-36 rounded-full bg-white/[0.04]"></div>
+        <div class="absolute bottom-16 right-4 w-20 h-20 rounded-full bg-white/[0.04]"></div>
+        <div class="relative">
+          <h2 class="tracking-tight text-white" style="font-size: 76px; font-weight: 700; line-height: 0.9; letter-spacing: -0.04em;">Our<br />vision.</h2>
         </div>
-        <h2 class="tracking-tight text-neutral-900 mb-8" style="font-size: 44px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">Our vision.</h2>
-        <div class="w-10 h-[3px] bg-[#9F5434] rounded-full"></div>
+        <div class="relative">
+          <div class="w-8 h-[2px] bg-white/35"></div>
+        </div>
       </div>
-      <div class="col-span-8 space-y-7">
-        <div class="pl-8 border-l-[3px] border-[#9F5434]">
-          <p class="text-neutral-900 leading-relaxed" style="font-size: 20px; font-weight: 500; line-height: 1.5; letter-spacing: -0.01em;">
+      <div class="col-span-8 pl-4 flex flex-col">
+        <div class="flex-1 flex flex-col justify-center pb-7 border-b border-neutral-100">
+          <div class="text-[#9F5434]/[0.12] leading-none select-none pointer-events-none -mb-6" style="font-size: 112px; font-family: Georgia, serif; line-height: 1;">&ldquo;</div>
+          <blockquote class="relative text-neutral-900" style="font-size: 25px; font-weight: 500; line-height: 1.48; letter-spacing: -0.012em;">
             At a time when technological disruption is transforming the way information is produced and consumed, the CFC Media Hub aspires to become the reference platform supporting high-quality economic journalism on Africa.
+          </blockquote>
+          <div class="flex items-center gap-3 mt-5">
+            <div class="w-12 h-[2px] bg-[#9F5434]"></div>
+            <div class="text-[11px] uppercase tracking-[0.2em] text-[#9F5434] font-semibold">Strategic Vision</div>
+          </div>
+        </div>
+        <div class="pt-5">
+          <p class="text-neutral-600 leading-relaxed max-w-[680px]" style="font-size: 15px; line-height: 1.7;">
+            By providing a permanent anchor point for international journalists and foreign correspondents accredited in Morocco, the CFC Media Hub seeks to strengthen the Kingdom's position as a regional financial, economic and media hub, while fostering greater international visibility for the stories, opportunities and transformations shaping Africa's future.
           </p>
         </div>
-        <p class="text-neutral-600 leading-relaxed text-[16px]">
-          By providing a permanent anchor point for international journalists and foreign correspondents accredited in Morocco, the CFC Media Hub seeks to strengthen the Kingdom's position as a regional financial, economic and media hub, while fostering greater international visibility for the stories, opportunities and transformations shaping Africa's future.
-        </p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="bg-[#FCFCFB] py-20 border-t border-[#9F5434]/10 relative overflow-hidden" x-data="{ open: false }">
+<section class="bg-[#FCFCFB] py-14 border-t border-[#9F5434]/10 relative overflow-hidden">
   <div class="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-bl from-[#9F5434]/5 to-transparent pointer-events-none"></div>
   <div class="relative max-w-[1440px] mx-auto px-12">
 
-    <div class="grid grid-cols-12 gap-12 mb-12">
+    <div class="grid grid-cols-12 gap-12 mb-8">
       <div class="col-span-4">
-        <div class="flex items-center gap-2 text-[12px] uppercase tracking-[0.18em] mb-4">
-          <span class="text-[#9F5434] font-bold">02</span>
-          <span class="text-[#9F5434] font-semibold">&middot; Our mission</span>
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-5 h-[2px] bg-[#9F5434]"></div>
         </div>
         <h2 class="tracking-tight text-neutral-900" style="font-size: 44px; font-weight: 600; line-height: 1.04; letter-spacing: -0.025em;">Our mission.</h2>
       </div>
@@ -43,51 +52,60 @@
     </div>
 
     <div class="grid grid-cols-3 gap-5">
-      <div class="bg-white border border-[#9F5434]/15 rounded-2xl p-7 hover:border-[#9F5434]/30 transition-colors">
-        <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center mb-5 shrink-0">
-          {% include 'cfc_media_hub:icon' with { name: 'map-pin', size: 'w-5 h-5' } only %}
+      <div class="bg-white border border-[#9F5434]/20 rounded-2xl overflow-hidden shadow-[0_2px_12px_-4px_rgba(159,84,52,0.08)] hover:shadow-[0_8px_24px_-8px_rgba(159,84,52,0.18)] hover:border-[#9F5434]/40 transition-all">
+        <div class="h-[3px] bg-[#9F5434]"></div>
+        <div class="p-6">
+          <div class="w-10 h-10 rounded-xl bg-[#9F5434] text-white flex items-center justify-center mb-4 shrink-0">
+            {% include 'cfc_media_hub:icon' with { name: 'map-pin', size: 'w-5 h-5' } only %}
+          </div>
+          <h3 class="tracking-tight text-neutral-900 mb-3" style="font-size: 16px; font-weight: 700; letter-spacing: -0.01em;">A Dedicated Workspace</h3>
+          <p class="text-neutral-600 leading-relaxed text-[14px]">
+            Recognising that many international correspondents do not have a permanent office or operational base in Morocco, the Hub provides a dedicated workspace at the heart of Casablanca Finance City, one of Africa's leading business districts and home to a unique community of international companies, financial institutions, investors and regional headquarters.
+          </p>
         </div>
-        <p class="text-neutral-600 leading-relaxed text-[14px]">
-          Recognising that many international correspondents do not have a permanent office or operational base in Morocco, the Hub provides a dedicated workspace at the heart of Casablanca Finance City, one of Africa's leading business districts and home to a unique community of international companies, financial institutions, investors and regional headquarters.
-        </p>
       </div>
-      <div class="bg-white border border-[#9F5434]/15 rounded-2xl p-7 hover:border-[#9F5434]/30 transition-colors">
-        <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center mb-5 shrink-0">
-          {% include 'cfc_media_hub:icon' with { name: 'earth', size: 'w-5 h-5' } only %}
+      <div class="bg-white border border-[#9F5434]/20 rounded-2xl overflow-hidden shadow-[0_2px_12px_-4px_rgba(159,84,52,0.08)] hover:shadow-[0_8px_24px_-8px_rgba(159,84,52,0.18)] hover:border-[#9F5434]/40 transition-all">
+        <div class="h-[3px] bg-[#9F5434]"></div>
+        <div class="p-6">
+          <div class="w-10 h-10 rounded-xl bg-[#9F5434] text-white flex items-center justify-center mb-4 shrink-0">
+            {% include 'cfc_media_hub:icon' with { name: 'earth', size: 'w-5 h-5' } only %}
+          </div>
+          <h3 class="tracking-tight text-neutral-900 mb-3" style="font-size: 16px; font-weight: 700; letter-spacing: -0.01em;">Gateway to Africa's Ecosystem</h3>
+          <p class="text-neutral-600 leading-relaxed text-[14px]">
+            Far more than a co-working space, the Hub serves as a gateway to Morocco's and Africa's economic ecosystem. It offers media professionals state-of-the-art facilities, access to reliable data, expert insights and privileged connections with leading business stakeholders.
+          </p>
         </div>
-        <p class="text-neutral-600 leading-relaxed text-[14px]">
-          Far more than a co-working space, the Hub serves as a gateway to Morocco's and Africa's economic ecosystem. It offers media professionals state-of-the-art facilities, access to reliable data, expert insights and privileged connections with leading business stakeholders.
-        </p>
       </div>
-      <div class="bg-white border border-[#9F5434]/15 rounded-2xl p-7 hover:border-[#9F5434]/30 transition-colors">
-        <div class="w-10 h-10 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center mb-5 shrink-0">
-          {% include 'cfc_media_hub:icon' with { name: 'users', size: 'w-5 h-5' } only %}
+      <div class="bg-white border border-[#9F5434]/20 rounded-2xl overflow-hidden shadow-[0_2px_12px_-4px_rgba(159,84,52,0.08)] hover:shadow-[0_8px_24px_-8px_rgba(159,84,52,0.18)] hover:border-[#9F5434]/40 transition-all">
+        <div class="h-[3px] bg-[#9F5434]"></div>
+        <div class="p-6">
+          <div class="w-10 h-10 rounded-xl bg-[#9F5434] text-white flex items-center justify-center mb-4 shrink-0">
+            {% include 'cfc_media_hub:icon' with { name: 'users', size: 'w-5 h-5' } only %}
+          </div>
+          <h3 class="tracking-tight text-neutral-900 mb-3" style="font-size: 16px; font-weight: 700; letter-spacing: -0.01em;">Community &amp; Learning</h3>
+          <p class="text-neutral-600 leading-relaxed text-[14px]">
+            Through media partnerships, masterclasses, networking events and curated introductions, the Hub facilitates meaningful exchanges between journalists and the CFC community, enabling richer access to information, perspectives and expertise.
+          </p>
         </div>
-        <p class="text-neutral-600 leading-relaxed text-[14px]">
-          Through media partnerships, masterclasses, networking events and curated introductions, the Hub facilitates meaningful exchanges between journalists and the CFC community, enabling richer access to information, perspectives and expertise.
-        </p>
       </div>
     </div>
 
-    <div class="mt-10 pt-8 border-t border-[#9F5434]/10 grid grid-cols-12 gap-12 items-end">
-      <div class="col-span-8 space-y-4">
-        <p class="text-neutral-500 leading-relaxed italic text-[13px]">
-          While the Hub facilitates access, collaboration and knowledge-sharing, editorial choices and content production remain entirely under the responsibility of participating journalists and media organisations.
-        </p>
-        <p class="text-neutral-500 leading-relaxed text-[13px]">
-          This initiative is made possible through the support of the Casablanca-Settat Region, committed to strengthening the region's attractiveness and international influence, and in partnership with Morocco's Ministry of Youth, Culture and Communication, reflecting a shared ambition to support a vibrant media ecosystem, foster international media engagement and reinforce Morocco's position as a regional media hub.
-        </p>
-      </div>
-      <div class="col-span-4 flex flex-col items-end gap-3">
-        <p class="text-neutral-700 text-right text-[14px] font-semibold">Looking to connect with CFC member companies?</p>
-        <p class="text-neutral-500 text-right text-[13px]">Submit a connection request and our team will coordinate on your behalf.</p>
-        <button type="button" x-on:click="open = true" class="shrink-0 flex items-center gap-2 bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-7 py-4 rounded-xl transition-colors group font-semibold text-[14px]">
-          Submit a Connection Request
-          {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4', class: 'group-hover:translate-x-0.5 transition-transform' } only %}
-        </button>
+    <div class="mt-6 bg-[#9F5434]/[0.04] border border-[#9F5434]/15 rounded-xl px-6 py-4">
+      <p class="text-neutral-600 leading-relaxed italic text-[13px]">
+        While the Hub facilitates access, collaboration and knowledge-sharing, editorial choices and content production remain entirely under the responsibility of participating journalists and media organisations.
+      </p>
+    </div>
+    <div class="mt-6 pt-6 border-t border-[#9F5434]/10 space-y-4">
+      <p class="text-neutral-600 leading-relaxed text-[16px]">
+        This initiative is made possible through the support of the Casablanca-Settat Region, committed to strengthening the region's attractiveness and international influence, and in partnership with Morocco's Ministry of Youth, Culture and Communication, reflecting a shared ambition to support a vibrant media ecosystem, foster international media engagement and reinforce Morocco's position as a regional media hub.
+      </p>
+      <div class="pt-1">
+        <div class="inline-flex items-center gap-6 bg-white border border-neutral-200/80 rounded-2xl px-6 py-4 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]">
+          <span class="text-[13px] text-neutral-500 font-medium">Région Casablanca-Settat</span>
+          <div class="w-px h-10 bg-neutral-200"></div>
+          <span class="text-[13px] text-neutral-500 font-medium">Ministère de la Jeunesse, de la Culture et de la Communication</span>
+        </div>
       </div>
     </div>
   </div>
-
-  {% include 'cfc_media_hub:connection-request-modal' only %}
 </section>

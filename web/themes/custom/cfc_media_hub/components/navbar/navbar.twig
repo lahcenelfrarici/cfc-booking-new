@@ -7,7 +7,7 @@
     <nav class="flex items-center gap-9">
       {% for link in links %}
         <a href="{{ link.url }}" class="relative flex flex-col items-center gap-1.5 text-[14px] font-{{ link.active ? 'semibold' : 'normal' }} transition-colors group">
-          <span class="{{ link.active ? 'text-[#0F6E56]' : 'text-neutral-700 group-hover:text-[#0F6E56]' }}">{{ link.label }}</span>
+          <span class="{{ link.active ? 'text-[#9F5434]' : 'text-neutral-700 group-hover:text-[#9F5434]' }}">{{ link.label }}</span>
           {% if link.active %}
             <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#9F5434]"></span>
           {% endif %}
@@ -16,13 +16,35 @@
     </nav>
 
     <div class="flex items-center gap-4">
+      <div class="relative" x-data="{ open: false, query: '' }" x-on:click.outside="open = false">
+        <button
+          type="button"
+          x-on:click="open = !open; $nextTick(() => open && $refs.navSearchInput.focus())"
+          class="w-9 h-9 rounded-full flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+          aria-label="Search"
+        >
+          {% include 'cfc_media_hub:icon' with { name: 'search', size: 'w-4 h-4' } only %}
+        </button>
+        <form x-show="open" x-cloak method="get" action="{{ insights_url }}" class="absolute right-0 top-full mt-2 w-64 bg-white border border-neutral-200 rounded-xl shadow-lg p-2 z-50">
+          <input
+            type="text"
+            name="q"
+            x-ref="navSearchInput"
+            x-model="query"
+            placeholder="Search insights &amp; reports…"
+            autocomplete="off"
+            class="w-full border border-neutral-200 rounded-lg px-3 py-2 text-[13px] text-neutral-900 focus:outline-none focus:border-[#9F5434] transition-colors"
+          />
+        </form>
+      </div>
+
       <button type="button" class="flex items-center gap-1.5 text-[13px] text-neutral-600 hover:text-neutral-900">
         {% include 'cfc_media_hub:icon' with { name: 'globe', size: 'w-4 h-4' } only %}
         EN
       </button>
 
       {% if is_authenticated %}
-        <a href="{{ account_url }}" class="text-[13px] font-medium text-[#0F6E56] hover:text-[#085041] transition-colors">My Account</a>
+        <a href="{{ account_url }}" class="text-[13px] font-medium text-[#9F5434] hover:text-[#8A4A2E] transition-colors">My Account</a>
       {% else %}
         <a href="{{ sign_in_url }}" class="text-[13px] text-neutral-700 hover:text-neutral-900 transition-colors">Sign in</a>
       {% endif %}

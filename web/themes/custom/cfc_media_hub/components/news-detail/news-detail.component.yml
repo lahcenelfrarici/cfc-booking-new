@@ -1,0 +1,16 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: News detail
+status: stable
+description: Single News item page — full detail view of one "News item" content type node.
+props:
+  type: object
+  properties:
+    item:
+      type: object
+      description: A single News item node, mapped by Drupal\cfc_content\ContentRepository::getNewsItem().
+    news_url:
+      type: string
+      description: URL back to the News listing page.
+  required:
+    - item
+    - news_url

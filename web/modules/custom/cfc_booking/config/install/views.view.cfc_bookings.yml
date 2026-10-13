@@ -177,6 +177,19 @@ display:
           alter:
             alter_text: false
           type: user_name
+        field_account_type:
+          id: field_account_type
+          table: user__field_account_type
+          field: field_account_type
+          relationship: uid
+          entity_type: user
+          entity_field: field_account_type
+          plugin_id: field
+          label: 'Account type'
+          exclude: false
+          alter:
+            alter_text: false
+          type: list_default
         operations:
           id: operations
           table: node
@@ -302,6 +315,7 @@ display:
             field_currency: field_currency
             field_guest_names: field_guest_names
             name: name
+            field_account_type: field_account_type
             operations: operations
           default: field_booking_date
           info:
@@ -382,6 +396,13 @@ display:
               separator: ''
               empty_column: false
               responsive: priority-low
+            field_account_type:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
             operations:
               sortable: false
               default_sort_order: asc

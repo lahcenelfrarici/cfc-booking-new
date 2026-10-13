@@ -1,0 +1,82 @@
+{% set category_labels = { news: 'News', events: 'Events', updates: 'Updates', agenda: 'Agenda' } %}
+
+<div class="min-h-screen bg-[#FCFCFB]" x-data="{ activeCategory: 'all' }">
+
+  <section class="bg-white border-b border-neutral-100 pt-16 pb-10">
+    <div class="max-w-[1440px] mx-auto px-12">
+      <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-10">
+        <a href="{{ home_url }}" class="hover:text-neutral-900 transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-neutral-900">News</span>
+      </div>
+
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-5 h-[2px] bg-[#9F5434]"></div>
+        <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">News &middot; CFC Media Hub</div>
+      </div>
+      <h1 class="tracking-tight text-neutral-900" style="font-size: 56px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
+        Latest news &amp; updates.
+      </h1>
+    </div>
+  </section>
+
+  <section class="bg-white border-b border-neutral-100">
+    <div class="max-w-[1440px] mx-auto px-12 py-4 flex items-center gap-2 overflow-x-auto">
+      <button
+        type="button"
+        x-on:click="activeCategory = 'all'"
+        :class="activeCategory === 'all' ? 'bg-[#9F5434] text-white font-semibold' : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 font-normal'"
+        class="whitespace-nowrap px-4 py-2 rounded-full text-[13px] transition-all"
+      >All</button>
+      {% for id, label in category_labels %}
+        <button
+          type="button"
+          x-on:click="activeCategory = '{{ id }}'"
+          :class="activeCategory === '{{ id }}' ? 'bg-[#9F5434] text-white font-semibold' : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 font-normal'"
+          class="whitespace-nowrap px-4 py-2 rounded-full text-[13px] transition-all"
+        >{{ label }}</button>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="max-w-[1440px] mx-auto px-12 py-16">
+    {% if items %}
+      <div class="grid grid-cols-3 gap-6">
+        {% for item in items %}
+          <a
+            href="{{ item.url }}"
+            x-show="activeCategory === 'all' || activeCategory === '{{ item.category }}'"
+            class="group bg-white border border-neutral-200/80 rounded-2xl overflow-hidden hover:border-[#9F5434]/30 hover:shadow-[0_20px_50px_-20px_rgba(159,84,52,0.12)] transition-all block"
+          >
+            <div class="h-[200px] overflow-hidden relative bg-neutral-100">
+              {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+              {% else %}
+                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-200">
+                  {% include 'cfc_media_hub:icon' with { name: 'newspaper', size: 'w-8 h-8', class: 'text-neutral-300' } only %}
+                </div>
+              {% endif %}
+              <div class="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-neutral-950/85 backdrop-blur-sm text-white text-[11px] font-semibold">
+                {{ category_labels[item.category] ?? item.category }}
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="text-[11px] uppercase tracking-wide text-neutral-400 mb-3">{{ item.date }}</div>
+              <h3 class="tracking-tight mb-3 group-hover:text-[#9F5434] transition-colors" style="font-size: 17px; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em;">
+                {{ item.title }}
+              </h3>
+              <p class="text-neutral-500 text-[13px] leading-relaxed mb-4 line-clamp-3">{{ item.summary }}</p>
+              <div class="flex items-center gap-1.5 text-[12px] text-[#9F5434] font-semibold">
+                Read article
+                {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-3.5 h-3.5', class: 'group-hover:translate-x-0.5 transition-transform' } only %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="py-20 text-center text-neutral-400 text-[15px]">No news items yet.</div>
+    {% endif %}
+  </div>
+
+</div>

@@ -109,12 +109,38 @@ function _cfc_account_create_user_fields(): void {
       'cardinality' => 1,
       'description' => 'Journalist accounts only.',
     ],
+    'field_passport_number' => [
+      'type' => 'string',
+      'label' => 'Passport number',
+      'settings' => ['max_length' => 64],
+      'cardinality' => 1,
+      'description' => 'Journalist accounts only.',
+    ],
     'field_cfc_company' => [
       'type' => 'entity_reference',
       'label' => 'CFC member company',
       'settings' => ['target_type' => 'taxonomy_term'],
       'cardinality' => 1,
       'description' => 'CFC Member accounts only — left empty when the company was entered manually.',
+    ],
+    'field_newsletter_opt_in' => [
+      'type' => 'boolean',
+      'label' => 'Newsletter opt-in',
+      'cardinality' => 1,
+      'description' => 'Whether the member asked to receive the CFC Media Hub newsletter at registration.',
+    ],
+    'field_reset_code' => [
+      'type' => 'string',
+      'label' => 'Password reset code',
+      'settings' => ['max_length' => 6],
+      'cardinality' => 1,
+      'description' => 'Current 6-digit "forgot password" verification code, if one was requested. Cleared once used or replaced by a newer request.',
+    ],
+    'field_reset_code_expires' => [
+      'type' => 'timestamp',
+      'label' => 'Password reset code expiry',
+      'cardinality' => 1,
+      'description' => 'Unix timestamp after which field_reset_code is no longer valid.',
     ],
   ];
 
@@ -181,4 +207,26 @@ function _cfc_account_seed_companies(): void {
       'field_company_domain' => $domain,
     ])->save();
   }
+}
+
+/**
+ * Adds field_passport_number to the "user" entity (Journalist registration).
+ */
+function cfc_account_update_10001(): void {
+  _cfc_account_create_user_fields();
+}
+
+/**
+ * Adds field_newsletter_opt_in to the "user" entity.
+ */
+function cfc_account_update_10002(): void {
+  _cfc_account_create_user_fields();
+}
+
+/**
+ * Adds field_reset_code + field_reset_code_expires to the "user" entity
+ * ("Forgot password" 6-digit code flow).
+ */
+function cfc_account_update_10003(): void {
+  _cfc_account_create_user_fields();
 }

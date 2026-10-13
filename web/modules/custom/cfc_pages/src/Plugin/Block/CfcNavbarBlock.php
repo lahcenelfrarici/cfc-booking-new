@@ -86,6 +86,7 @@ class CfcNavbarBlock extends BlockBase implements ContainerFactoryPluginInterfac
         'account_url' => Url::fromRoute('cfc_pages.account')->toString(),
         'sign_in_url' => Url::fromRoute('cfc_pages.sign_in')->toString(),
         'booking_url' => Url::fromRoute('cfc_pages.booking')->toString(),
+        'insights_url' => Url::fromRoute('cfc_pages.insights')->toString(),
       ],
       '#cache' => [
         'tags' => $cache_tags,

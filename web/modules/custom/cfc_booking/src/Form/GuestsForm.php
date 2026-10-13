@@ -78,7 +78,7 @@ class GuestsForm extends FormBase {
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save guests'),
-      '#attributes' => ['class' => ['text-[13px]', 'text-[#0F6E56]', 'font-semibold', 'hover:text-[#085041]', 'transition-colors']],
+      '#attributes' => ['class' => ['text-[13px]', 'text-[#9F5434]', 'font-semibold', 'hover:text-[#8A4A2E]', 'transition-colors']],
     ];
 
     return $form;
@@ -174,7 +174,7 @@ class GuestsForm extends FormBase {
             type="button"
             x-show="guests.length < __MAX_GUESTS__"
             x-on:click="guests.push({ first_name: '', last_name: '' })"
-            class="text-[12px] text-[#0F6E56] hover:text-[#085041] flex items-center gap-1 transition-colors font-semibold"
+            class="text-[12px] text-[#9F5434] hover:text-[#8A4A2E] flex items-center gap-1 transition-colors font-semibold"
           >
             + Add guest
           </button>
@@ -193,8 +193,8 @@ class GuestsForm extends FormBase {
               </button>
             </div>
             <div class="grid grid-cols-2 gap-4">
-              <input type="text" x-model="guest.first_name" placeholder="First name" class="w-full border border-neutral-200 rounded-xl px-4 py-3 text-[14px] text-neutral-900 bg-white focus:outline-none focus:border-[#0F6E56] transition-colors" />
-              <input type="text" x-model="guest.last_name" placeholder="Last name" class="w-full border border-neutral-200 rounded-xl px-4 py-3 text-[14px] text-neutral-900 bg-white focus:outline-none focus:border-[#0F6E56] transition-colors" />
+              <input type="text" x-model="guest.first_name" placeholder="First name" class="w-full border border-neutral-200 rounded-xl px-4 py-3 text-[14px] text-neutral-900 bg-white focus:outline-none focus:border-[#9F5434] transition-colors" />
+              <input type="text" x-model="guest.last_name" placeholder="Last name" class="w-full border border-neutral-200 rounded-xl px-4 py-3 text-[14px] text-neutral-900 bg-white focus:outline-none focus:border-[#9F5434] transition-colors" />
             </div>
           </div>
         </template>

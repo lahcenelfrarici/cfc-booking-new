@@ -25,7 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class BookingForm extends FormBase {
 
-  protected const INPUT_CLASSES = ['w-full', 'border', 'border-neutral-200', 'rounded-xl', 'px-4', 'py-3', 'text-[14px]', 'text-neutral-900', 'bg-white', 'focus:outline-none', 'focus:border-[#0F6E56]'];
+  protected const INPUT_CLASSES = ['w-full', 'border', 'border-neutral-200', 'rounded-xl', 'px-4', 'py-3', 'text-[14px]', 'text-neutral-900', 'bg-white', 'focus:outline-none', 'focus:border-[#9F5434]'];
 
   public function __construct(
     protected ContentRepository $contentRepository,
@@ -63,6 +63,15 @@ class BookingForm extends FormBase {
   }
 
   /**
+   * Returns the current user's "journalist"/"cfc_member" account type, used
+   * to scope availability checks to that type's own booking pool (see
+   * AvailabilityChecker::isFree()).
+   */
+  protected function accountType(): ?string {
+    return $this->bookingCreator->accountTypeFromRoles($this->currentUser->getRoles());
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?string $initial_space = NULL): array {
@@ -79,17 +88,15 @@ class BookingForm extends FormBase {
     // Some spaces are restricted by account type (e.g. Desk/Meeting Room are
     // journalist-only). Rather than silently omitting their cards, tell the
     // user why — otherwise "only Studio shows up" reads as a bug rather than
-    // the intended access rule.
+    // the intended access rule. Today the only combination this triggers for
+    // is CFC Member accounts (Studio-only), hence the specific copy below —
+    // revisit if a second restricted combination is ever introduced.
     $all_titles = array_column($this->contentRepository->getSpaces(), 'title');
     $eligible_titles = array_column($spaces, 'title');
     $hidden_titles = array_diff($all_titles, $eligible_titles);
-    if ($hidden_titles) {
-      $form['restriction_note'] = [
-        '#markup' => '<p class="text-[13px] text-neutral-500 bg-neutral-50 border border-neutral-100 rounded-xl px-4 py-3">'
-          . $this->t('@hidden not shown: reserved for accredited journalists.', ['@hidden' => implode(', ', $hidden_titles)])
-          . '</p>',
-      ];
-    }
+    $form['space_section_header'] = [
+      '#markup' => Markup::create($this->spaceSectionHeaderMarkup((bool) $hidden_titles)),
+    ];
 
     $space_options = array_combine(array_column($spaces, 'id'), array_column($spaces, 'title'));
     $selected_space_id = $form_state->getValue('space') ?: (($initial_space && isset($space_options[$initial_space])) ? $initial_space : NULL);
@@ -132,6 +139,7 @@ class BookingForm extends FormBase {
       // above and (if anything else ever depends on it) #states pick up
       // normally, same pattern as account_type/cfc_company elsewhere.
       '#prefix' => Markup::create($this->spaceCardsMarkup($spaces, $selected_space_id)),
+      '#suffix' => Markup::create($this->studioDeliveryInfoMarkup()),
     ];
 
     $form['datetime_wrapper'] = $this->buildDatetimeWrapper($spaces[$selected_space_id] ?? NULL);
@@ -166,13 +174,13 @@ class BookingForm extends FormBase {
       $price = Html::escape($space['price_label']);
 
       if (!empty($space['highlight'])) {
-        $unselected_classes = 'bg-[#0F6E56] border-[#0F6E56] text-white';
-        $selected_classes = 'bg-[#0F6E56] border-white ring-4 ring-[#0F6E56] text-white -translate-y-1 shadow-[0_20px_50px_-20px_rgba(15,110,86,0.5)]';
+        $unselected_classes = 'bg-[#9F5434] border-[#9F5434] text-white';
+        $selected_classes = 'bg-[#9F5434] border-white ring-4 ring-[#9F5434] text-white -translate-y-1 shadow-[0_20px_50px_-20px_rgba(159,84,52,0.5)]';
         $eyebrow_class = 'text-white/60';
         $desc_class = 'text-white/80';
         $meta_class = 'text-white/70';
-        $price_class = 'text-[#CDEDE3]';
-        $badge_class = 'bg-white text-[#0F6E56]';
+        $price_class = 'text-white/80';
+        $badge_class = 'bg-white text-[#9F5434]';
       }
       else {
         $unselected_classes = 'bg-white border-neutral-200 hover:border-neutral-400';
@@ -180,7 +188,7 @@ class BookingForm extends FormBase {
         $eyebrow_class = 'text-neutral-400';
         $desc_class = 'text-neutral-500';
         $meta_class = 'text-neutral-400';
-        $price_class = 'text-[#0F6E56]';
+        $price_class = 'text-[#9F5434]';
         $badge_class = 'bg-[#9F5434] text-white';
       }
 
@@ -211,11 +219,67 @@ class BookingForm extends FormBase {
     }
 
     $selected_js = Html::escape((string) $selected);
+    $grid_classes = count($spaces) === 1 ? 'grid-cols-1 max-w-[420px]' : 'grid-cols-1 sm:grid-cols-3';
     return <<<HTML
-      <div class="mb-6">
-        <label class="text-[12px] text-neutral-600 uppercase tracking-wide block mb-3 font-semibold">Space *</label>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" x-data="{ selectedSpace: '{$selected_js}' }">
+      <div class="mb-8">
+        <div class="grid {$grid_classes} gap-5" x-data="{ selectedSpace: '{$selected_js}' }">
           {$cards}
+        </div>
+      </div>
+      HTML;
+  }
+
+  /**
+   * Markup for the "Step 2 · Select a space" eyebrow + heading shown above
+   * the space picker, plus the "CFC Members have access to the Podcast
+   * Studio only" notice nested inside it when $show_restriction_notice is
+   * TRUE (today: CFC Member accounts only — eligibleSpaces() hid at least
+   * one space for the current account type).
+   */
+  protected function spaceSectionHeaderMarkup(bool $show_restriction_notice): string {
+    $notice = $show_restriction_notice ? <<<'HTML'
+      <div class="mt-6 flex items-start gap-3 bg-[#9F5434]/[0.06] border border-[#9F5434]/25 rounded-xl px-5 py-4 max-w-[580px]">
+        <span class="icon shrink-0 w-4 h-4 text-[#9F5434] mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg></span>
+        <p class="text-[13px] text-[#9F5434] leading-relaxed">
+          <span style="font-weight: 700;">CFC Members have access to the Podcast Studio only.</span> Meeting Rooms and Desks are not available.
+        </p>
+      </div>
+      HTML
+      : '';
+
+    return <<<HTML
+      <div class="mb-8">
+        <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] mb-3" style="font-weight: 600;">Step 2 · Select a space</div>
+        <h1 class="tracking-tight" style="font-size: 48px; font-weight: 600; letter-spacing: -0.025em;">Which space do you need?</h1>
+        {$notice}
+      </div>
+      HTML;
+  }
+
+  /**
+   * Markup for the static "Studio delivery information" box shown below the
+   * space grid regardless of which space is selected.
+   */
+  protected function studioDeliveryInfoMarkup(): string {
+    return <<<'HTML'
+      <div class="mt-8 bg-[#9F5434]/5 border border-[#9F5434]/20 rounded-2xl p-6">
+        <div class="flex items-center gap-2 text-[12px] uppercase tracking-[0.16em] text-[#9F5434] mb-4" style="font-weight: 700;">
+          <span class="icon shrink-0 w-4 h-4"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg></span>
+          Studio delivery information
+        </div>
+        <div class="grid grid-cols-3 gap-6 text-[13px] text-neutral-600">
+          <div>
+            <div class="text-neutral-900 mb-1" style="font-weight: 600;">Raw footage</div>
+            <div>Raw footage is delivered without editing.</div>
+          </div>
+          <div>
+            <div class="text-neutral-900 mb-1" style="font-weight: 600;">Delivery timeline</div>
+            <div>Recordings of 1–2 hours: delivered the same day.<br>Half-day recordings: within a maximum of 24 hours.</div>
+          </div>
+          <div>
+            <div class="text-neutral-900 mb-1" style="font-weight: 600;">Delivery method</div>
+            <div>Via WeTransfer or directly onto the client's hard drive.</div>
+          </div>
         </div>
       </div>
       HTML;
@@ -256,7 +320,7 @@ class BookingForm extends FormBase {
     $matrix = [];
     if ($space_data) {
       $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-      $matrix = $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations);
+      $matrix = $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations, $this->accountType());
     }
 
     $wrapper['picker'] = [
@@ -334,8 +398,11 @@ class BookingForm extends FormBase {
     $time_slot = $form_state->getValue('time_slot');
 
     // Re-check availability under a short-lived lock so two near-simultaneous
-    // submissions for the same slot can't both pass.
-    $lock_name = 'cfc_booking:' . $space_id . ':' . $date;
+    // submissions for the same slot can't both pass. Scoped by account type
+    // too — a Journalist and a CFC Member booking the same space/date/slot
+    // concurrently are independent (separate pools), not a real conflict.
+    $account_type = $this->accountType();
+    $lock_name = 'cfc_booking:' . $space_id . ':' . $date . ':' . ($account_type ?? 'none');
     $lock = \Drupal::lock();
     if (!$lock->acquire($lock_name, 5)) {
       $form_state->setErrorByName('time_slot', $this->t('This slot is being booked by someone else right now — please try again in a moment.'));
@@ -344,7 +411,7 @@ class BookingForm extends FormBase {
     $form_state->set('cfc_lock_name', $lock_name);
 
     $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-    if (!$this->availabilityChecker->isFree($space_node, $date, $time_slot, $duration)) {
+    if (!$this->availabilityChecker->isFree($space_node, $date, $time_slot, $duration, NULL, $account_type)) {
       $lock->release($lock_name);
       $form_state->setErrorByName('time_slot', $this->t('This slot is no longer available for @space. Please choose another time.', ['@space' => $space_data['title']]));
     }
@@ -365,6 +432,7 @@ class BookingForm extends FormBase {
       $form_state->getValue('booking_date'),
       $form_state->getValue('time_slot'),
       $duration,
+      $this->accountType(),
     );
 
     if ($lock_name = $form_state->get('cfc_lock_name')) {

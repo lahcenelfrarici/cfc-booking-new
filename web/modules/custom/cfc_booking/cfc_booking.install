@@ -109,6 +109,49 @@ function cfc_booking_update_11003(): void {
 }
 
 /**
+ * Adds an "Account type" column to the Bookings admin view (/admin/content/
+ * bookings), showing the booker's field_account_type (Journalist / CFC
+ * Member Company) via the view's existing uid relationship — same approach
+ * as the "Reserved by" column, so it's visible without opening each user's
+ * profile.
+ */
+function cfc_booking_update_11004(): void {
+  $view = \Drupal::entityTypeManager()->getStorage('view')->load('cfc_bookings');
+  if (!$view) {
+    return;
+  }
+  $module_path = \Drupal::service('extension.list.module')->getPath('cfc_booking');
+  $data = \Drupal\Component\Serialization\Yaml::decode(
+    file_get_contents($module_path . '/config/install/views.view.cfc_bookings.yml')
+  );
+  $view->set('display', $data['display']);
+  $view->save();
+}
+
+/**
+ * Adds field_booker_account_type to the "booking" bundle, and backfills it
+ * on existing bookings from each booking's owner — so spaces shared by both
+ * account types (Studio) can keep per-type availability pools going
+ * forward without losing track of who already holds which slot.
+ */
+function cfc_booking_update_11005(): void {
+  _cfc_booking_create_fields([
+    'field_booker_account_type' => _cfc_booking_field_definitions()['field_booker_account_type'],
+  ]);
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $bookings = $storage->loadByProperties(['type' => 'booking']);
+  foreach ($bookings as $booking) {
+    $owner = $booking->getOwner();
+    $account_type = $owner?->hasField('field_account_type') ? $owner->get('field_account_type')->value : NULL;
+    if ($account_type) {
+      $booking->set('field_booker_account_type', $account_type);
+      $booking->save();
+    }
+  }
+}
+
+/**
  * Returns the full field definition set for the "booking" bundle.
  */
 function _cfc_booking_field_definitions(): array {
@@ -196,6 +239,18 @@ function _cfc_booking_field_definitions(): array {
       ],
       'cardinality' => 1,
       'required' => TRUE,
+    ],
+    'field_booker_account_type' => [
+      'type' => 'list_string',
+      'label' => 'Booker account type',
+      'settings' => [
+        'allowed_values' => [
+          'journalist' => 'Journalist',
+          'cfc_member' => 'CFC Member Company',
+        ],
+      ],
+      'cardinality' => 1,
+      'description' => 'Snapshot of the booker\'s account type at booking time — spaces shared by both account types (e.g. Studio) keep a separate availability pool per type, so a Journalist booking never blocks a CFC Member from the same slot and vice versa.',
     ],
   ];
 }

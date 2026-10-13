@@ -48,8 +48,16 @@ class AvailabilityChecker {
 
   /**
    * Returns TRUE if the space is free for the requested date/time/duration.
+   *
+   * $accountType ("journalist"/"cfc_member") scopes the conflict check to
+   * that account type's own bookings — spaces open to both types (e.g.
+   * Studio) keep a separate availability pool per type, so a Journalist
+   * booking never blocks a CFC Member from the same slot and vice versa.
+   * Pass NULL to check against every booking regardless of who made it
+   * (not used by any current caller, kept for spaces that are genuinely
+   * single-pool).
    */
-  public function isFree(NodeInterface $space, string $date, string $timeSlot, string $duration, ?int $excludeBookingId = NULL): bool {
+  public function isFree(NodeInterface $space, string $date, string $timeSlot, string $duration, ?int $excludeBookingId = NULL, ?string $accountType = NULL): bool {
     if (!$this->isDurationAllowedForSlot($timeSlot, $duration)) {
       return FALSE;
     }
@@ -59,11 +67,15 @@ class AvailabilityChecker {
       return FALSE;
     }
 
+    if ($this->isPastToday($date, $newStart)) {
+      return FALSE;
+    }
+
     if ((int) $space->get('field_concurrent_capacity')->value === 0) {
       return TRUE;
     }
 
-    foreach ($this->bookedRanges($space, $date, $excludeBookingId) as [$existingStart, $existingEnd]) {
+    foreach ($this->bookedRanges($space, $date, $excludeBookingId, $accountType) as [$existingStart, $existingEnd]) {
       if ($newStart < $existingEnd && $existingStart < $newEnd) {
         return FALSE;
       }
@@ -77,15 +89,18 @@ class AvailabilityChecker {
    * time slots and durations — used to populate a date/time picker without
    * a query per cell (one query per date instead).
    *
+   * $accountType scopes the conflict check to that account type's own
+   * bookings — see isFree() for why.
+   *
    * @return array
    *   [date => [timeSlot => [duration => bool free]]]
    */
-  public function buildMatrix(NodeInterface $space, array $dates, array $timeSlots, array $durations): array {
+  public function buildMatrix(NodeInterface $space, array $dates, array $timeSlots, array $durations, ?string $accountType = NULL): array {
     $unlimited = (int) $space->get('field_concurrent_capacity')->value === 0;
 
     $matrix = [];
     foreach ($dates as $date) {
-      $ranges = $unlimited ? [] : $this->bookedRanges($space, $date);
+      $ranges = $unlimited ? [] : $this->bookedRanges($space, $date, NULL, $accountType);
       $matrix[$date] = [];
       foreach ($timeSlots as $slot) {
         $matrix[$date][$slot] = [];
@@ -95,7 +110,7 @@ class AvailabilityChecker {
             continue;
           }
           [$start, $end] = $this->toRange($slot, $duration);
-          if ($end > self::CLOSING_MINUTES) {
+          if ($end > self::CLOSING_MINUTES || $this->isPastToday($date, $start)) {
             $matrix[$date][$slot][$duration] = FALSE;
             continue;
           }
@@ -119,9 +134,12 @@ class AvailabilityChecker {
    * first hit instead of building a full matrix (buildMatrix()'s job when
    * the caller needs the whole grid, e.g. the booking calendar).
    *
+   * $accountType scopes the conflict check to that account type's own
+   * bookings — see isFree() for why.
+   *
    * @return array{date: string, time: string}|null
    */
-  public function findNextAvailable(NodeInterface $space, string $duration, int $daysAhead = 14): ?array {
+  public function findNextAvailable(NodeInterface $space, string $duration, int $daysAhead = 14, ?string $accountType = NULL): ?array {
     $unlimited = (int) $space->get('field_concurrent_capacity')->value === 0;
     $now = new \DateTime('now');
     $today = (clone $now)->setTime(0, 0);
@@ -129,18 +147,14 @@ class AvailabilityChecker {
     for ($i = 0; $i < $daysAhead; $i++) {
       $date = (clone $today)->modify("+$i days");
       $iso = $date->format('Y-m-d');
-      $ranges = $unlimited ? [] : $this->bookedRanges($space, $iso);
+      $ranges = $unlimited ? [] : $this->bookedRanges($space, $iso, NULL, $accountType);
 
       foreach (self::TIME_SLOTS as $slot) {
         if (!$this->isDurationAllowedForSlot($slot, $duration)) {
           continue;
         }
         [$start, $end] = $this->toRange($slot, $duration);
-        if ($end > self::CLOSING_MINUTES) {
-          continue;
-        }
-        if ($i === 0 && $start <= ((int) $now->format('H') * 60 + (int) $now->format('i'))) {
-          // Don't offer a slot today that's already started.
+        if ($end > self::CLOSING_MINUTES || $this->isPastToday($iso, $start)) {
           continue;
         }
         $free = TRUE;
@@ -161,8 +175,12 @@ class AvailabilityChecker {
   /**
    * Returns the [startMinutes, endMinutes] ranges of existing non-cancelled
    * bookings for a space on a given date (one query).
+   *
+   * $accountType, when given, restricts this to bookings made by that same
+   * account type (field_booker_account_type) — the mechanism behind the
+   * per-type availability pool described on isFree().
    */
-  protected function bookedRanges(NodeInterface $space, string $date, ?int $excludeBookingId = NULL): array {
+  protected function bookedRanges(NodeInterface $space, string $date, ?int $excludeBookingId = NULL, ?string $accountType = NULL): array {
     $storage = $this->entityTypeManager->getStorage('node');
     $query = $storage->getQuery()
       ->condition('type', 'booking')
@@ -172,6 +190,9 @@ class AvailabilityChecker {
       ->accessCheck(FALSE);
     if ($excludeBookingId) {
       $query->condition('nid', $excludeBookingId, '<>');
+    }
+    if ($accountType) {
+      $query->condition('field_booker_account_type', $accountType);
     }
     $existing_ids = $query->execute();
 
@@ -183,6 +204,21 @@ class AvailabilityChecker {
       );
     }
     return $ranges;
+  }
+
+  /**
+   * TRUE if $date is today and $startMinutes has already passed — a slot
+   * that's technically unbooked but already started can't be reserved.
+   * Shared by isFree(), buildMatrix() and findNextAvailable() so the
+   * calendar grid, the submit-time check and the "next available slot"
+   * widget always agree on what counts as bookable today.
+   */
+  protected function isPastToday(string $date, int $startMinutes): bool {
+    $now = new \DateTime('now');
+    if ($date !== $now->format('Y-m-d')) {
+      return FALSE;
+    }
+    return $startMinutes <= ((int) $now->format('H') * 60 + (int) $now->format('i'));
   }
 
   /**
