@@ -2,6 +2,7 @@
 
 namespace Drupal\cfc_payment\Controller;
 
+use Drupal\cfc_booking\AvailabilityChecker;
 use Drupal\cfc_payment\Form\PaymentForm;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
@@ -60,7 +61,7 @@ class PaymentController extends ControllerBase {
         'home_url' => Url::fromRoute('<front>')->toString(),
         'space_label' => $space ? $space->label() : (string) $this->t('Unknown space'),
         'date' => (string) $node->get('field_booking_date')->value,
-        'time' => (string) $node->get('field_time_slot')->value,
+        'time' => AvailabilityChecker::formatTimeRange((string) $node->get('field_time_slot')->value, (string) $node->get('field_duration')->value),
         'duration' => (string) $node->get('field_duration')->value,
         'user_name' => $node->getOwner()->getDisplayName(),
         'guest_names' => $guest_names,

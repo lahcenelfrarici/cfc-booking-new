@@ -94,6 +94,30 @@ cfc_pages.forgot_password:
   requirements:
     _access: 'TRUE'
 
+cfc_pages.forgot_password_verify:
+  path: '/forgot-password/verify'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\ForgotPasswordController::verify'
+    _title: 'Check your email'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.forgot_password_reset:
+  path: '/forgot-password/reset'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\ForgotPasswordController::reset'
+    _title: 'New password'
+  requirements:
+    _access: 'TRUE'
+
+cfc_pages.forgot_password_done:
+  path: '/forgot-password/done'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\ForgotPasswordController::done'
+    _title: 'Password updated'
+  requirements:
+    _access: 'TRUE'
+
 cfc_pages.register:
   path: '/create-account'
   defaults:
@@ -101,6 +125,14 @@ cfc_pages.register:
     _title: 'Create account'
   requirements:
     _access: 'TRUE'
+
+cfc_pages.verify_email:
+  path: '/verify-email'
+  defaults:
+    _controller: '\Drupal\cfc_pages\Controller\VerifyEmailController::build'
+    _title: 'Verify your email'
+  requirements:
+    _user_is_logged_in: 'TRUE'
 
 cfc_pages.booking:
   path: '/booking'

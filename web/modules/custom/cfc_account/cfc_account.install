@@ -142,6 +142,25 @@ function _cfc_account_create_user_fields(): void {
       'cardinality' => 1,
       'description' => 'Unix timestamp after which field_reset_code is no longer valid.',
     ],
+    'field_verify_code' => [
+      'type' => 'string',
+      'label' => 'Email verification code',
+      'settings' => ['max_length' => 6],
+      'cardinality' => 1,
+      'description' => 'Current 6-digit "verify your email" code, sent at registration. Cleared once used or replaced by a newer request. Separate from field_reset_code so a pending password reset and a pending registration verification never collide.',
+    ],
+    'field_verify_code_expires' => [
+      'type' => 'timestamp',
+      'label' => 'Email verification code expiry',
+      'cardinality' => 1,
+      'description' => 'Unix timestamp after which field_verify_code is no longer valid.',
+    ],
+    'field_email_verified' => [
+      'type' => 'boolean',
+      'label' => 'Email verified',
+      'cardinality' => 1,
+      'description' => 'Whether this account has completed the post-registration email verification step at least once.',
+    ],
   ];
 
   foreach ($fields as $field_name => $spec) {
@@ -229,4 +248,23 @@ function cfc_account_update_10002(): void {
  */
 function cfc_account_update_10003(): void {
   _cfc_account_create_user_fields();
+}
+
+/**
+ * Adds field_verify_code + field_verify_code_expires + field_email_verified
+ * to the "user" entity (post-registration "Check your inbox" 6-digit email
+ * verification flow). Backfills field_email_verified = TRUE on every
+ * existing account so the new BookingController gate only applies to
+ * accounts created through the new flow going forward, not to accounts that
+ * already existed (and were already booking) before this feature shipped.
+ */
+function cfc_account_update_10004(): void {
+  _cfc_account_create_user_fields();
+
+  $storage = \Drupal::entityTypeManager()->getStorage('user');
+  $uids = $storage->getQuery()->condition('uid', 0, '>')->accessCheck(FALSE)->execute();
+  foreach ($storage->loadMultiple($uids) as $user) {
+    $user->set('field_email_verified', TRUE);
+    $user->save();
+  }
 }

@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-[#FCFCFB] flex flex-col" x-data="{ showPassword: false }">
+<div class="min-h-screen bg-[#FCFCFB] flex flex-col">
   <div class="w-full max-w-[1440px] mx-auto px-12 h-20 flex items-center justify-between border-b border-neutral-100 bg-white">
     <a href="{{ home_url }}" class="flex items-center gap-2 text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">
       {% include 'cfc_media_hub:icon' with { name: 'arrow-left', size: 'w-4 h-4' } only %}
@@ -19,42 +19,9 @@
         <h1 class="tracking-tight text-neutral-900 mb-1" style="font-size: 28px; font-weight: 600; letter-spacing: -0.02em;">Sign in</h1>
         <p class="text-neutral-500 mb-8 text-[14px]">Access your CFC Media Hub account.</p>
 
-        <form method="post" action="{{ login_action }}" class="space-y-4">
-          <input type="hidden" name="form_id" value="user_login_form" />
-          <input type="hidden" name="form_build_id" value="{{ login_form_build_id }}" />
-
-          <div>
-            <label for="signin-name" class="text-[12px] text-neutral-600 uppercase tracking-wide block mb-1.5 font-semibold">Username or email</label>
-            <input
-              id="signin-name" type="text" name="name" placeholder="you@media.org" autocomplete="username"
-              class="w-full border border-neutral-200 rounded-xl px-4 py-3 text-[14px] text-neutral-900 bg-white focus:outline-none focus:border-[#9F5434] transition-colors"
-            />
-          </div>
-
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label for="signin-pass" class="text-[12px] text-neutral-600 uppercase tracking-wide font-semibold">Password</label>
-              <a href="{{ forgot_password_url }}" class="text-[12px] text-[#9F5434] hover:underline underline-offset-2 transition-colors font-medium">
-                Forgot password?
-              </a>
-            </div>
-            <div class="relative">
-              <input
-                id="signin-pass" :type="showPassword ? 'text' : 'password'" name="pass" placeholder="••••••••" autocomplete="current-password"
-                class="w-full border border-neutral-200 rounded-xl px-4 py-3 pr-11 text-[14px] text-neutral-900 bg-white focus:outline-none focus:border-[#9F5434] transition-colors"
-              />
-              <button type="button" x-on:click="showPassword = !showPassword" tabindex="-1" class="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors">
-                <span x-show="!showPassword" class="inline-flex">{% include 'cfc_media_hub:icon' with { name: 'eye', size: 'w-4 h-4' } only %}</span>
-                <span x-show="showPassword" x-cloak class="inline-flex">{% include 'cfc_media_hub:icon' with { name: 'eye-off', size: 'w-4 h-4' } only %}</span>
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" name="op" value="Log in" class="w-full bg-[#9F5434] hover:bg-[#8A4A2E] text-white py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors mt-2 font-semibold text-[14px]">
-            Sign in
-            {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}
-          </button>
-        </form>
+        <div class="cfc-form-shell">
+          {{ form }}
+        </div>
 
         <div class="mt-6 pt-6 border-t border-neutral-100 text-center text-[13px] text-neutral-500">
           Don't have an account?

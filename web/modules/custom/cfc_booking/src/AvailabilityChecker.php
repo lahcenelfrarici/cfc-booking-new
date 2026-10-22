@@ -48,16 +48,8 @@ class AvailabilityChecker {
 
   /**
    * Returns TRUE if the space is free for the requested date/time/duration.
-   *
-   * $accountType ("journalist"/"cfc_member") scopes the conflict check to
-   * that account type's own bookings — spaces open to both types (e.g.
-   * Studio) keep a separate availability pool per type, so a Journalist
-   * booking never blocks a CFC Member from the same slot and vice versa.
-   * Pass NULL to check against every booking regardless of who made it
-   * (not used by any current caller, kept for spaces that are genuinely
-   * single-pool).
    */
-  public function isFree(NodeInterface $space, string $date, string $timeSlot, string $duration, ?int $excludeBookingId = NULL, ?string $accountType = NULL): bool {
+  public function isFree(NodeInterface $space, string $date, string $timeSlot, string $duration, ?int $excludeBookingId = NULL): bool {
     if (!$this->isDurationAllowedForSlot($timeSlot, $duration)) {
       return FALSE;
     }
@@ -75,7 +67,7 @@ class AvailabilityChecker {
       return TRUE;
     }
 
-    foreach ($this->bookedRanges($space, $date, $excludeBookingId, $accountType) as [$existingStart, $existingEnd]) {
+    foreach ($this->bookedRanges($space, $date, $excludeBookingId) as [$existingStart, $existingEnd]) {
       if ($newStart < $existingEnd && $existingStart < $newEnd) {
         return FALSE;
       }
@@ -89,18 +81,15 @@ class AvailabilityChecker {
    * time slots and durations — used to populate a date/time picker without
    * a query per cell (one query per date instead).
    *
-   * $accountType scopes the conflict check to that account type's own
-   * bookings — see isFree() for why.
-   *
    * @return array
    *   [date => [timeSlot => [duration => bool free]]]
    */
-  public function buildMatrix(NodeInterface $space, array $dates, array $timeSlots, array $durations, ?string $accountType = NULL): array {
+  public function buildMatrix(NodeInterface $space, array $dates, array $timeSlots, array $durations): array {
     $unlimited = (int) $space->get('field_concurrent_capacity')->value === 0;
 
     $matrix = [];
     foreach ($dates as $date) {
-      $ranges = $unlimited ? [] : $this->bookedRanges($space, $date, NULL, $accountType);
+      $ranges = $unlimited ? [] : $this->bookedRanges($space, $date);
       $matrix[$date] = [];
       foreach ($timeSlots as $slot) {
         $matrix[$date][$slot] = [];
@@ -134,12 +123,9 @@ class AvailabilityChecker {
    * first hit instead of building a full matrix (buildMatrix()'s job when
    * the caller needs the whole grid, e.g. the booking calendar).
    *
-   * $accountType scopes the conflict check to that account type's own
-   * bookings — see isFree() for why.
-   *
    * @return array{date: string, time: string}|null
    */
-  public function findNextAvailable(NodeInterface $space, string $duration, int $daysAhead = 14, ?string $accountType = NULL): ?array {
+  public function findNextAvailable(NodeInterface $space, string $duration, int $daysAhead = 14): ?array {
     $unlimited = (int) $space->get('field_concurrent_capacity')->value === 0;
     $now = new \DateTime('now');
     $today = (clone $now)->setTime(0, 0);
@@ -147,7 +133,7 @@ class AvailabilityChecker {
     for ($i = 0; $i < $daysAhead; $i++) {
       $date = (clone $today)->modify("+$i days");
       $iso = $date->format('Y-m-d');
-      $ranges = $unlimited ? [] : $this->bookedRanges($space, $iso, NULL, $accountType);
+      $ranges = $unlimited ? [] : $this->bookedRanges($space, $iso);
 
       foreach (self::TIME_SLOTS as $slot) {
         if (!$this->isDurationAllowedForSlot($slot, $duration)) {
@@ -175,12 +161,8 @@ class AvailabilityChecker {
   /**
    * Returns the [startMinutes, endMinutes] ranges of existing non-cancelled
    * bookings for a space on a given date (one query).
-   *
-   * $accountType, when given, restricts this to bookings made by that same
-   * account type (field_booker_account_type) — the mechanism behind the
-   * per-type availability pool described on isFree().
    */
-  protected function bookedRanges(NodeInterface $space, string $date, ?int $excludeBookingId = NULL, ?string $accountType = NULL): array {
+  protected function bookedRanges(NodeInterface $space, string $date, ?int $excludeBookingId = NULL): array {
     $storage = $this->entityTypeManager->getStorage('node');
     $query = $storage->getQuery()
       ->condition('type', 'booking')
@@ -190,9 +172,6 @@ class AvailabilityChecker {
       ->accessCheck(FALSE);
     if ($excludeBookingId) {
       $query->condition('nid', $excludeBookingId, '<>');
-    }
-    if ($accountType) {
-      $query->condition('field_booker_account_type', $accountType);
     }
     $existing_ids = $query->execute();
 
@@ -243,6 +222,19 @@ class AvailabilityChecker {
     $start = $hours * 60 + $minutes;
     $end = $start + (self::DURATION_HOURS[$duration] ?? 1) * 60;
     return [$start, $end];
+  }
+
+  /**
+   * Formats a "HH:MM" start time + duration label as a "HH:MM - HH:MM"
+   * clock-time range — used wherever a booking's time needs to show exactly
+   * when it ends, not just a start time + an abstract duration label (e.g.
+   * "15:00 - 17:00" instead of just "15:00").
+   */
+  public static function formatTimeRange(string $timeSlot, string $duration): string {
+    [$hours, $minutes] = array_map('intval', explode(':', $timeSlot) + [0, 0]);
+    $start = $hours * 60 + $minutes;
+    $end = $start + (self::DURATION_HOURS[$duration] ?? 1) * 60;
+    return sprintf('%02d:%02d - %02d:%02d', intdiv($start, 60), $start % 60, intdiv($end, 60), $end % 60);
   }
 
 }

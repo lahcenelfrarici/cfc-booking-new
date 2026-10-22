@@ -1,0 +1,24 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Verify email page
+status: stable
+description: >
+  Post-registration "Check your inbox" 6-digit email-verification page. The
+  form itself (code input, resend, change email, continue) is a slot —
+  rendered by Drupal Form API (VerifyEmailForm), not by this component.
+props:
+  type: object
+  properties:
+    home_url:
+      type: string
+    logo_url:
+      type: string
+    email:
+      type: string
+  required:
+    - home_url
+    - logo_url
+    - email
+slots:
+  form:
+    type: string
+    description: The rendered VerifyEmailForm.

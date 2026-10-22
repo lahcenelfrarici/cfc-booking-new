@@ -1,0 +1,5 @@
+services:
+  cfc_pages.route_subscriber:
+    class: Drupal\cfc_pages\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

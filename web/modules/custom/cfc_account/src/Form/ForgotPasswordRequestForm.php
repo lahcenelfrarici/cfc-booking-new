@@ -10,12 +10,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * "Forgot password" step 1: collects the account email and sends a 6-digit
- * verification code. Step 2 (entering that code + choosing a new password)
- * doesn't exist yet — redirects to /sign-in with a status message in the
- * meantime. Deliberately a custom code-based flow rather than Drupal core's
+ * verification code, then hands off to VerifyResetCodeForm (step 2).
+ * Deliberately a custom code-based flow rather than Drupal core's
  * UserPasswordForm (link-based) — matches the Figma design this was built
- * from, and the same code pattern already used for registration email
- * verification.
+ * from.
  */
 class ForgotPasswordRequestForm extends FormBase {
 
@@ -122,11 +120,7 @@ class ForgotPasswordRequestForm extends FormBase {
       '@minutes' => self::CODE_LIFETIME_MINUTES,
     ]);
 
-    // No code-entry screen yet — park on sign-in with a status message until
-    // that page exists, same destination core's UserPasswordForm redirects
-    // to after its own (link-based) reset email.
-    $this->messenger()->addStatus($this->t('A verification code has been sent to @email.', ['@email' => $email]));
-    $form_state->setRedirectUrl(Url::fromRoute('cfc_pages.sign_in'));
+    $form_state->setRedirectUrl(Url::fromRoute('cfc_pages.forgot_password_verify', [], ['query' => ['email' => $email]]));
   }
 
 }

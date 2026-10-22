@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-[#FCFCFB] flex flex-col" x-data="{ chosen: false, type: '' }">
+<div class="min-h-screen bg-[#FCFCFB] flex flex-col" x-data="{ chosen: {{ initial_type ? 'true' : 'false' }}, type: '{{ initial_type }}' }">
   <div class="sticky top-0 z-10 bg-white border-b border-neutral-100 px-12 h-20 flex items-center justify-between max-w-[1440px] mx-auto w-full">
     <div class="flex items-center gap-6">
       <button type="button" x-show="chosen" x-cloak x-on:click="chosen = false" class="flex items-center gap-1.5 text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">

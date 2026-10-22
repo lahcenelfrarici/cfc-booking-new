@@ -37,7 +37,13 @@ class SignInController extends ControllerBase {
   }
 
   /**
-   * Builds the sign-in page render array.
+   * Builds the sign-in page render array. Also the controller for the
+   * ALTERED core user.login route (see RouteSubscriber) — anything that
+   * sends an anonymous visitor there (e.g. an access-denied redirect with
+   * ?destination=...) renders this same themed page directly instead of
+   * core's unstyled form, rather than issuing a redirect to it (a
+   * RedirectResponse here would get its target silently rewritten by core
+   * whenever ?destination=... is present, bypassing this page entirely).
    */
   public function build(): array|RedirectResponse {
     if ($this->currentUser()->isAuthenticated()) {
@@ -47,19 +53,23 @@ class SignInController extends ControllerBase {
     $destination = $this->requestStack->getCurrentRequest()->query->get('destination');
     $query = $destination ? ['destination' => $destination] : [];
 
-    $login_form = $this->cfcFormBuilder->getForm(UserLoginForm::class);
     $theme_path = $this->themeExtensionList->getPath('cfc_media_hub');
 
     return [
       '#type' => 'component',
       '#component' => 'cfc_media_hub:sign-in-page',
       '#props' => [
-        'login_action' => Url::fromRoute('user.login', [], ['query' => $query])->toString(),
-        'login_form_build_id' => $login_form['form_build_id']['#value'],
         'create_account_url' => Url::fromRoute('cfc_pages.register', [], ['query' => $query])->toString(),
-        'forgot_password_url' => Url::fromRoute('cfc_pages.forgot_password')->toString(),
         'home_url' => Url::fromRoute('<front>')->toString(),
         'logo_url' => base_path() . $theme_path . '/images/logo.png',
+      ],
+      '#slots' => [
+        // Rendering the real form object (not a hand-copied markup
+        // reconstruction posting straight to /user/login) means a failed
+        // login re-displays correctly inside this themed page — see
+        // cfc_account_form_user_login_form_alter() for the styling/markup
+        // this relies on (Forgot-password link, show/hide toggle, classes).
+        'form' => $this->cfcFormBuilder->getForm(UserLoginForm::class),
       ],
     ];
   }

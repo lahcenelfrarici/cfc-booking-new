@@ -131,11 +131,6 @@ class HomeController extends ControllerBase {
     $eligible = $this->currentUser()->isAuthenticated()
       ? $this->bookingCreator->eligibleSpaces($this->currentUser()->getRoles())
       : [];
-    // Scopes the conflict check to the viewer's own account type on spaces
-    // shared by both (Studio) — see AvailabilityChecker::isFree() for why.
-    $account_type = $this->currentUser()->isAuthenticated()
-      ? $this->bookingCreator->accountTypeFromRoles($this->currentUser()->getRoles())
-      : NULL;
 
     $slots = [];
     foreach ($this->contentRepository->getSpaces() as $space_data) {
@@ -149,7 +144,7 @@ class HomeController extends ControllerBase {
 
       $duration = $space_data['slot_durations'][0] ?? '2 hours';
       $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-      $next = $space_node ? $this->availabilityChecker->findNextAvailable($space_node, $duration, 14, $account_type) : NULL;
+      $next = $space_node ? $this->availabilityChecker->findNextAvailable($space_node, $duration) : NULL;
 
       if (!$next) {
         // Nothing free in the lookout window — omit rather than show a dead slot.
@@ -210,15 +205,12 @@ class HomeController extends ControllerBase {
   protected function buildSpacePickers(): array {
     $days = $this->next14Days();
     $pickers = [];
-    $account_type = $this->currentUser()->isAuthenticated()
-      ? $this->bookingCreator->accountTypeFromRoles($this->currentUser()->getRoles())
-      : NULL;
 
     foreach ($this->contentRepository->getSpaces() as $space_data) {
       $durations = $space_data['slot_durations'] ?: array_keys(AvailabilityChecker::DURATION_HOURS);
       $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
       $matrix = $space_node
-        ? $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations, $account_type)
+        ? $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations)
         : [];
 
       $pickers[$space_data['id']] = [

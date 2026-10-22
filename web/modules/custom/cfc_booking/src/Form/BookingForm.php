@@ -62,14 +62,6 @@ class BookingForm extends FormBase {
     return $this->bookingCreator->eligibleSpaces($this->currentUser->getRoles());
   }
 
-  /**
-   * Returns the current user's "journalist"/"cfc_member" account type, used
-   * to scope availability checks to that type's own booking pool (see
-   * AvailabilityChecker::isFree()).
-   */
-  protected function accountType(): ?string {
-    return $this->bookingCreator->accountTypeFromRoles($this->currentUser->getRoles());
-  }
 
   /**
    * {@inheritdoc}
@@ -320,7 +312,7 @@ class BookingForm extends FormBase {
     $matrix = [];
     if ($space_data) {
       $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-      $matrix = $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations, $this->accountType());
+      $matrix = $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations);
     }
 
     $wrapper['picker'] = [
@@ -398,11 +390,8 @@ class BookingForm extends FormBase {
     $time_slot = $form_state->getValue('time_slot');
 
     // Re-check availability under a short-lived lock so two near-simultaneous
-    // submissions for the same slot can't both pass. Scoped by account type
-    // too — a Journalist and a CFC Member booking the same space/date/slot
-    // concurrently are independent (separate pools), not a real conflict.
-    $account_type = $this->accountType();
-    $lock_name = 'cfc_booking:' . $space_id . ':' . $date . ':' . ($account_type ?? 'none');
+    // submissions for the same slot can't both pass.
+    $lock_name = 'cfc_booking:' . $space_id . ':' . $date;
     $lock = \Drupal::lock();
     if (!$lock->acquire($lock_name, 5)) {
       $form_state->setErrorByName('time_slot', $this->t('This slot is being booked by someone else right now — please try again in a moment.'));
@@ -411,7 +400,7 @@ class BookingForm extends FormBase {
     $form_state->set('cfc_lock_name', $lock_name);
 
     $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-    if (!$this->availabilityChecker->isFree($space_node, $date, $time_slot, $duration, NULL, $account_type)) {
+    if (!$this->availabilityChecker->isFree($space_node, $date, $time_slot, $duration)) {
       $lock->release($lock_name);
       $form_state->setErrorByName('time_slot', $this->t('This slot is no longer available for @space. Please choose another time.', ['@space' => $space_data['title']]));
     }
@@ -432,7 +421,6 @@ class BookingForm extends FormBase {
       $form_state->getValue('booking_date'),
       $form_state->getValue('time_slot'),
       $duration,
-      $this->accountType(),
     );
 
     if ($lock_name = $form_state->get('cfc_lock_name')) {

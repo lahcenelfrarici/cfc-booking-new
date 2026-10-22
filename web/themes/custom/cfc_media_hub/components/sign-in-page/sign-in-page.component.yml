@@ -2,28 +2,26 @@ $schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schema
 name: Sign-in page
 status: stable
 description: >
-  Sign-in page. Posts to Drupal core's real user.login route (genuine
-  authentication), styled to match the design. "Forgot password?" links out
-  to the dedicated forgot-password-page component/route.
+  Sign-in page, wrapping Drupal core's real login form (genuine
+  authentication) in the custom design. The "Forgot password?" link and
+  show/hide toggle are added onto that real form by
+  cfc_account_form_user_login_form_alter() — not reconstructed here — so a
+  failed login re-displays correctly inside this page instead of falling
+  through to core's unstyled /user/login error page.
 props:
   type: object
   properties:
-    login_action:
-      type: string
-    login_form_build_id:
-      type: string
     create_account_url:
-      type: string
-    forgot_password_url:
       type: string
     home_url:
       type: string
     logo_url:
       type: string
   required:
-    - login_action
-    - login_form_build_id
     - create_account_url
-    - forgot_password_url
     - home_url
     - logo_url
+slots:
+  form:
+    type: string
+    description: The rendered Drupal core UserLoginForm.

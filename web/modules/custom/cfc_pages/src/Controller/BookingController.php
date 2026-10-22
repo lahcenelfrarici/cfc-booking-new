@@ -4,6 +4,7 @@ namespace Drupal\cfc_pages\Controller;
 
 use Drupal\cfc_booking\Form\BookingForm;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -22,6 +23,7 @@ class BookingController extends ControllerBase {
   public function __construct(
     protected RequestStack $requestStack,
     protected FormBuilderInterface $cfcFormBuilder,
+    protected EntityTypeManagerInterface $cfcEntityTypeManager,
   ) {}
 
   /**
@@ -31,6 +33,7 @@ class BookingController extends ControllerBase {
     return new static(
       $container->get('request_stack'),
       $container->get('form_builder'),
+      $container->get('entity_type.manager'),
     );
   }
 
@@ -48,6 +51,11 @@ class BookingController extends ControllerBase {
       return new RedirectResponse(
         Url::fromRoute('cfc_pages.sign_in', [], ['query' => ['destination' => $destination]])->toString()
       );
+    }
+
+    $user = $this->cfcEntityTypeManager->getStorage('user')->load($this->currentUser()->id());
+    if (!(bool) $user->get('field_email_verified')->value) {
+      return new RedirectResponse(Url::fromRoute('cfc_pages.verify_email')->toString());
     }
 
     $initial_space = $request->query->get('space');

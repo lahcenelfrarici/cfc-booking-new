@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Wraps the real AccountRegisterForm in the site's visual shell.
@@ -33,12 +34,13 @@ class RegisterController extends ControllerBase {
   /**
    * Builds the registration page render array.
    */
-  public function build(): array|RedirectResponse {
+  public function build(Request $request): array|RedirectResponse {
     if ($this->currentUser()->isAuthenticated()) {
       return new RedirectResponse(Url::fromRoute('cfc_pages.account')->toString());
     }
 
     $theme_path = $this->themeExtensionList->getPath('cfc_media_hub');
+    $initial_type = (string) $request->query->get('type', '');
 
     return [
       '#type' => 'component',
@@ -47,6 +49,7 @@ class RegisterController extends ControllerBase {
         'home_url' => Url::fromRoute('<front>')->toString(),
         'sign_in_url' => Url::fromRoute('cfc_pages.sign_in')->toString(),
         'logo_url' => base_path() . $theme_path . '/images/logo.png',
+        'initial_type' => in_array($initial_type, ['journalist', 'cfc_member'], TRUE) ? $initial_type : '',
       ],
       '#slots' => [
         'form' => $this->cfcFormBuilder->getForm(AccountRegisterForm::class),

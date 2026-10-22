@@ -2,6 +2,7 @@
 
 namespace Drupal\cfc_booking\Controller;
 
+use Drupal\cfc_booking\AvailabilityChecker;
 use Drupal\cfc_booking\Form\GuestsForm;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
@@ -53,7 +54,7 @@ class ReviewController extends ControllerBase {
         'home_url' => Url::fromRoute('<front>')->toString(),
         'space_label' => $space ? $space->label() : (string) $this->t('Unknown space'),
         'date' => (string) $node->get('field_booking_date')->value,
-        'time' => (string) $node->get('field_time_slot')->value,
+        'time' => AvailabilityChecker::formatTimeRange((string) $node->get('field_time_slot')->value, (string) $node->get('field_duration')->value),
         'duration' => (string) $node->get('field_duration')->value,
         'user_name' => $owner->getDisplayName(),
         'account_type_label' => $owner->hasRole('journalist') ? (string) $this->t('Journalist') : (string) $this->t('CFC Member'),

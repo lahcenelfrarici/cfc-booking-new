@@ -2,6 +2,7 @@
 
 namespace Drupal\cfc_booking\Controller;
 
+use Drupal\cfc_booking\AvailabilityChecker;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Url;
@@ -51,7 +52,7 @@ class ConfirmationController extends ControllerBase {
         'organization' => (string) ($owner->get('field_organization')->value ?: ''),
         'space_label' => $space ? $space->label() : (string) $this->t('Unknown space'),
         'date' => (string) $node->get('field_booking_date')->value,
-        'time' => (string) $node->get('field_time_slot')->value,
+        'time' => AvailabilityChecker::formatTimeRange((string) $node->get('field_time_slot')->value, (string) $node->get('field_duration')->value),
         'duration' => (string) $node->get('field_duration')->value,
       ],
       '#cache' => [

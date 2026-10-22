@@ -272,8 +272,35 @@ class AccountRegisterForm extends FormBase {
     $user->save();
 
     user_login_finalize($user);
+
+    $code = (string) random_int(100000, 999999);
+    $expires = \Drupal::time()->getRequestTime() + VerifyEmailForm::CODE_LIFETIME_MINUTES * 60;
+    $user->set('field_verify_code', $code);
+    $user->set('field_verify_code_expires', $expires);
+    $user->save();
+
+    \Drupal::service('plugin.manager.mail')->mail(
+      'cfc_account',
+      'verify_code',
+      $email,
+      \Drupal::languageManager()->getDefaultLanguage()->getId(),
+      ['code' => $code, 'minutes' => VerifyEmailForm::CODE_LIFETIME_MINUTES],
+    );
+
+    // Local dev has no SMTP/mail-catcher configured yet — logging the code
+    // here is the only way to actually test this flow until that's set up.
+    \Drupal::logger('cfc_account')->notice('Email verification code for @email: @code (expires in @minutes min)', [
+      '@email' => $email,
+      '@code' => $code,
+      '@minutes' => VerifyEmailForm::CODE_LIFETIME_MINUTES,
+    ]);
+
     $this->messenger()->addStatus($this->t('Welcome to CFC Media Hub, @name.', ['@name' => $form_state->getValue('first_name')]));
-    $form_state->setRedirectUrl(Url::fromRoute('cfc_pages.account'));
+    // Registration itself is step 1 "Account" on the journey-steps stepper —
+    // this lands on the email-verification gate for that same step rather
+    // than jumping straight to booking, since an unverified account must not
+    // be able to book a space yet (see BookingController::build()).
+    $form_state->setRedirectUrl(Url::fromRoute('cfc_pages.verify_email', [], ['query' => ['email' => $email, 'type' => $type]]));
   }
 
   /**
