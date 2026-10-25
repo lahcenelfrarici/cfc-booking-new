@@ -1,0 +1,7 @@
+admin_booking_picker:
+  version: VERSION
+  js:
+    js/alpine.min.js: { attributes: { defer: true } }
+  css:
+    component:
+      css/admin-booking-picker.css: {}

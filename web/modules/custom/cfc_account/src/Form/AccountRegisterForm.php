@@ -419,8 +419,79 @@ class AccountRegisterForm extends FormBase {
    */
   protected function termsNoticeMarkup(): string {
     return <<<'HTML'
-      <div class="text-center text-[12px] text-neutral-400 mt-4">
-        By creating an account you agree to our <a href="#" class="text-[#9F5434] underline underline-offset-2 font-semibold">Terms of Service</a> and <a href="#" class="text-[#9F5434] underline underline-offset-2 font-semibold">Privacy Policy</a>.
+      <div class="text-center text-[12px] text-neutral-400 mt-4" x-data="{ legalDoc: null }">
+        By creating an account you agree to our
+        <button type="button" x-on:click="legalDoc = 'terms'" class="text-[#9F5434] underline underline-offset-2 font-semibold">Terms of Service</button>
+        and
+        <button type="button" x-on:click="legalDoc = 'privacy'" class="text-[#9F5434] underline underline-offset-2 font-semibold">Privacy Policy</button>.
+
+        <template x-teleport="body">
+          <div class="fixed inset-0 z-[200] flex items-center justify-center p-6" x-show="legalDoc === 'terms'" x-cloak>
+            <div class="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm" x-on:click="legalDoc = null"></div>
+            <div class="relative bg-white rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] max-w-[720px] w-full max-h-[80vh] flex flex-col">
+              <div class="flex items-center justify-between px-8 py-6 border-b border-neutral-100">
+                <div>
+                  <div class="text-[11px] uppercase tracking-[0.16em] text-[#9F5434] mb-1" style="font-weight: 700;">Legal document</div>
+                  <h2 class="tracking-tight text-neutral-900" style="font-size: 22px; font-weight: 600; letter-spacing: -0.02em;">Terms of Service</h2>
+                </div>
+                <button type="button" x-on:click="legalDoc = null" class="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-neutral-600"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+              </div>
+              <div class="overflow-y-auto px-8 py-7 space-y-7 text-[14px] text-neutral-600 leading-relaxed">
+                <p class="text-[12px] text-neutral-400 italic">Last updated: July 2026 — This document is a working template for review by the CFC Media Hub legal team.</p>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">1. Acceptance of Terms</div><p>By creating an account and accessing CFC Media Hub services, you agree to be bound by these Terms of Service. If you do not agree, you may not use the platform.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">2. Eligibility</div><p>Access to CFC Media Hub is restricted to (a) internationally accredited journalists holding a valid press credential, and (b) employees of Casablanca Finance City member companies. CFC Media Hub reserves the right to verify credentials and revoke access at any time.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">3. Account Registration</div><p>You must provide accurate and complete information when creating your account. You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">4. Booking &amp; Reservations</div><p>Reservations are subject to availability. A confirmed reservation constitutes a binding commitment to occupy the reserved space at the stated time. CFC Media Hub reserves the right to cancel a reservation in cases of misuse, misrepresentation, or force majeure.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">5. Cancellation Policy</div><p>Cancellations must be submitted through the platform. Late cancellations or no-shows may result in penalties at the discretion of CFC Media Hub management.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">6. Studio Use &amp; Deliverables</div><p>Studio sessions are recorded for production purposes only. Raw footage is delivered without editing via WeTransfer or onto the client's hard drive. CFC Media Hub retains no distribution rights over client-produced content.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">7. Intellectual Property</div><p>All content produced within CFC Media Hub facilities remains the intellectual property of the journalist or media organisation, except where an express written agreement states otherwise.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">8. Acceptable Use</div><p>You agree not to use CFC Media Hub facilities for purposes that are unlawful, defamatory, or in violation of journalistic ethics as defined by recognised international press organisations.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">9. Limitation of Liability</div><p>CFC Media Hub shall not be liable for indirect, incidental or consequential damages arising from the use of its facilities or services.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">10. Governing Law</div><p>These Terms shall be governed by and construed in accordance with the laws of the Kingdom of Morocco.</p></div>
+              </div>
+              <div class="px-8 py-5 border-t border-neutral-100 flex items-center justify-between">
+                <p class="text-[12px] text-neutral-400">Questions? Contact <a href="mailto:mediahub@casablancafinancecity.com" class="text-[#9F5434] underline underline-offset-2">mediahub@casablancafinancecity.com</a></p>
+                <button type="button" x-on:click="legalDoc = null" class="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2.5 rounded-xl text-[13px] transition-colors" style="font-weight: 600;">Close</button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <template x-teleport="body">
+          <div class="fixed inset-0 z-[200] flex items-center justify-center p-6" x-show="legalDoc === 'privacy'" x-cloak>
+            <div class="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm" x-on:click="legalDoc = null"></div>
+            <div class="relative bg-white rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] max-w-[720px] w-full max-h-[80vh] flex flex-col">
+              <div class="flex items-center justify-between px-8 py-6 border-b border-neutral-100">
+                <div>
+                  <div class="text-[11px] uppercase tracking-[0.16em] text-[#9F5434] mb-1" style="font-weight: 700;">Legal document</div>
+                  <h2 class="tracking-tight text-neutral-900" style="font-size: 22px; font-weight: 600; letter-spacing: -0.02em;">Privacy Policy</h2>
+                </div>
+                <button type="button" x-on:click="legalDoc = null" class="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-neutral-600"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+              </div>
+              <div class="overflow-y-auto px-8 py-7 space-y-7 text-[14px] text-neutral-600 leading-relaxed">
+                <p class="text-[12px] text-neutral-400 italic">Last updated: July 2026 — This document is a working template for review by the CFC Media Hub legal team.</p>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">1. Data Controller</div><p>CFC Media Hub, operated by Casablanca Finance City Authority (CFCA), is the data controller responsible for your personal data collected through this platform.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">2. Data Collected</div><p>We collect the following data during registration and booking: full name, email address, phone number, press accreditation number or company affiliation, and booking details (space, date, time, duration).</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">3. Purpose of Processing</div><p>Your data is used exclusively to (a) verify your eligibility to access CFC Media Hub, (b) process and manage your reservations, (c) send confirmation and access cards, and (d) send newsletter updates if you have opted in.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">4. Legal Basis</div><p>Processing is based on contractual necessity (to fulfil your reservation) and, where applicable, your consent (for newsletter communications).</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">5. Data Retention</div><p>Personal data is retained for the duration of your active account and for a period of 5 years thereafter for audit and legal compliance purposes.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">6. Data Sharing</div><p>Your data is not sold or shared with third parties for commercial purposes. We may share data with trusted service providers who assist in operating the platform, under strict confidentiality agreements.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">7. Your Rights</div><p>You have the right to access, correct, delete, or restrict the processing of your personal data. To exercise these rights, contact us at: mediahub@casablancafinancecity.com.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">8. Cookies</div><p>This platform uses strictly necessary cookies for session management. No tracking or advertising cookies are used.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">9. Security</div><p>We implement appropriate technical and organisational measures to protect your personal data against unauthorised access, loss or disclosure.</p></div>
+                <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">10. Contact</div><p>For any questions regarding this Privacy Policy, please contact the Data Protection Officer at: mediahub@casablancafinancecity.com.</p></div>
+              </div>
+              <div class="px-8 py-5 border-t border-neutral-100 flex items-center justify-between">
+                <p class="text-[12px] text-neutral-400">Questions? Contact <a href="mailto:mediahub@casablancafinancecity.com" class="text-[#9F5434] underline underline-offset-2">mediahub@casablancafinancecity.com</a></p>
+                <button type="button" x-on:click="legalDoc = null" class="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2.5 rounded-xl text-[13px] transition-colors" style="font-weight: 600;">Close</button>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
       HTML;
   }

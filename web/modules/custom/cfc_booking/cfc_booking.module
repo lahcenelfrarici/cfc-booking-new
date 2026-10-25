@@ -1,0 +1,620 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for CFC Booking: makes the backoffice "Add/Edit
+ * booking" form's Space/Date/Time slot/Duration fields a self-contained
+ * availability picker — reusing the exact same AvailabilityChecker +
+ * booking-datetime-picker component as the public booking page — instead of
+ * raw free-text fields an admin could type a clashing value into.
+ */
+
+use Drupal\cfc_booking\AvailabilityChecker;
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_node_presave().
+ *
+ * Auto-generates field_reference for a booking if it was left empty —
+ * same "RES-YYYY-NNNN" format BookingCreator::create() uses for the public
+ * flow — so an admin typing a custom reference still can, but doesn't have
+ * to.
+ */
+function cfc_booking_node_presave(NodeInterface $node): void {
+  if ($node->bundle() !== 'booking' || !$node->hasField('field_reference')) {
+    return;
+  }
+  if ($node->get('field_reference')->value === NULL || $node->get('field_reference')->value === '') {
+    $node->set('field_reference', 'RES-' . date('Y') . '-' . random_int(1000, 9999));
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the "Add booking" form.
+ */
+function cfc_booking_form_node_booking_form_alter(array &$form, FormStateInterface $form_state): void {
+  _cfc_booking_admin_datetime_alter($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the "Edit booking" form.
+ */
+function cfc_booking_form_node_booking_edit_form_alter(array &$form, FormStateInterface $form_state): void {
+  _cfc_booking_admin_datetime_alter($form, $form_state);
+}
+
+/**
+ * Replaces the Space autocomplete + raw Date/Time slot/Duration textfields
+ * with the same card picker + availability calendar the public booking page
+ * uses, gated behind an explicit "Journalist / CFC Member" toggle the admin
+ * picks first. The real fields stay exactly where Drupal put them (same
+ * #parents, same field storage) — only their #type flips to 'hidden' and
+ * the picker component writes into them by DOM id, so saving/editing a
+ * booking still goes through the normal entity form pipeline.
+ */
+function _cfc_booking_admin_datetime_alter(array &$form, FormStateInterface $form_state): void {
+  if (!isset($form['field_space']['widget'][0]['target_id'])) {
+    return;
+  }
+
+  /** @var \Drupal\cfc_content\ContentRepository $content_repository */
+  $content_repository = \Drupal::service('cfc_content.repository');
+  $all_spaces = $content_repository->getSpaces();
+  if (!$all_spaces) {
+    return;
+  }
+
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object instanceof EntityFormInterface ? $form_object->getEntity() : NULL;
+  $is_edit = $entity instanceof NodeInterface && !$entity->isNew();
+
+  // Editing an existing booking shows the reservation slot (type/space/
+  // date/time/duration) as a locked, read-only summary instead of the
+  // interactive picker — changing WHAT was booked and WHEN isn't something
+  // a casual edit should do silently (could desync from what the guest
+  // actually agreed to, or collide with another booking without the normal
+  // availability re-check a fresh pick gets). Everything else on the form
+  // (Title, Guest names, Status, Payment status, Reference, Authoring
+  // info…) stays normally editable. Only the ADD form gets the full
+  // interactive toggle/cards/calendar below.
+  if ($is_edit) {
+    _cfc_booking_admin_readonly_slot($form, $entity);
+    return;
+  }
+
+  // The booker-type toggle is independent of "Authored by" — a deliberate
+  // choice (an admin creating a booking manually just declares which kind
+  // of booking this is, rather than that being derived from looking up a
+  // specific user's real account). Reused field: field_booker_account_type
+  // already existed in the schema from an earlier, since-reverted feature
+  // (same allowed values: journalist/cfc_member) but was hidden from the
+  // form display — not part of Drupal's normal field widget plumbing here,
+  // so its value is read/written manually (see
+  // _cfc_booking_admin_set_booker_type()) rather than through the usual
+  // entity-form field-copy mechanism. (Only the ADD form reaches this —
+  // editing an existing booking returns earlier, above, with a read-only
+  // summary instead.)
+  $booker_type = (string) $form_state->getValue('cfc_booker_type');
+
+  $form['cfc_booker_type'] = [
+    '#type' => 'hidden',
+    '#id' => 'cfc-booker-type-select',
+    '#attributes' => ['id' => 'cfc-booker-type-select'],
+    '#default_value' => $booker_type,
+    '#ajax' => [
+      'callback' => '_cfc_booking_admin_booker_type_ajax',
+      'event' => 'change',
+      'progress' => ['type' => 'throbber', 'message' => NULL],
+    ],
+    '#prefix' => Markup::create(_cfc_booking_admin_booker_type_markup($booker_type)),
+    '#weight' => -10,
+  ];
+
+  $spaces = $booker_type
+    ? array_values(\Drupal::service('cfc_booking.creator')->eligibleSpaces([$booker_type]))
+    : [];
+  $spaces_by_nid = array_column($spaces, NULL, 'nid');
+
+  $default_entity = $form['field_space']['widget'][0]['target_id']['#default_value'] ?? NULL;
+  $current_nid = (int) ($form_state->getValue(['field_space', 0, 'target_id'])
+    ?: ($default_entity ? $default_entity->id() : 0));
+  if (!isset($spaces_by_nid[$current_nid])) {
+    $current_nid = NULL;
+  }
+
+  $form['field_space']['#weight'] = -9;
+  // Wraps the cards + hidden select together so the booker-type toggle's
+  // own #ajax can replace this whole block in one go (see
+  // _cfc_booking_admin_booker_type_ajax()) — not just the select, since the
+  // visible cards are what actually needs to change when the type changes.
+  $form['field_space']['#prefix'] = '<div id="cfc-admin-space-section">';
+  $form['field_space']['#suffix'] = '</div>';
+
+  $form['field_space']['widget'][0]['target_id'] = [
+    '#type' => 'select',
+    '#title' => t('Space'),
+    // Screen-reader only — the cards in #prefix are the real visible label
+    // for this field; without this, Drupal's own "Space *" label from this
+    // #title renders as a second, visually confusing "Space" heading right
+    // below the cards (confirmed in a live screenshot).
+    '#title_display' => 'invisible',
+    '#options' => array_combine(array_column($spaces, 'nid'), array_column($spaces, 'title')),
+    '#empty_option' => $spaces ? t('— Select a space —') : t('— Choose Journalist or CFC Member above first —'),
+    '#default_value' => $current_nid,
+    '#required' => TRUE,
+    // Setting #id (not just #attributes['id']) matters: Drupal's #ajax
+    // processing keys drupalSettings.ajax by the element's FAPI #id, which
+    // defaults to an auto-generated value ("edit-field-space-0-target-id")
+    // independent of whatever #attributes['id'] renders in the HTML. With
+    // only #attributes['id'] overridden (as in an earlier version of this),
+    // the AJAX binding ends up listening on a selector that matches nothing
+    // in the DOM — the click silently does nothing, no JS error, no
+    // network request (confirmed via a live browser devtools check).
+    // Setting #id too keeps both in sync.
+    '#id' => 'cfc-admin-space-select',
+    // Inline style, not a CSS class — guaranteed to hide regardless of
+    // which stylesheet (if any) is loaded or how it's scoped, since this
+    // element isn't itself inside .cfc-admin-picker-scope.
+    '#attributes' => ['id' => 'cfc-admin-space-select', 'style' => 'display:none;'],
+    '#ajax' => [
+      'callback' => '_cfc_booking_admin_datetime_ajax',
+      'wrapper' => 'cfc-admin-datetime-wrapper',
+      'event' => 'change',
+      // A small inline throbber instead of Drupal's default "Processing…"
+      // text block — the calendar swap is quick, a heavy loading message
+      // reads as slower than it actually is.
+      'progress' => ['type' => 'throbber', 'message' => NULL],
+    ],
+    '#prefix' => Markup::create(_cfc_booking_admin_space_cards_markup($spaces, $current_nid)),
+  ];
+
+  // The ADD form always starts with these blank (nothing saved yet) — edit
+  // mode never reaches this function body (see the early read-only return
+  // above), so there's no "existing value" case to read off the entity
+  // here any more.
+  $hidden_fields = [
+    'field_booking_date' => ['cfc-admin-booking-date', ''],
+    'field_time_slot' => ['cfc-admin-booking-time', ''],
+    'field_duration' => ['cfc-admin-booking-duration', ''],
+  ];
+  foreach ($hidden_fields as $field_name => [$id, $value]) {
+    $form[$field_name]['widget'][0]['value']['#type'] = 'hidden';
+    $form[$field_name]['widget'][0]['value']['#attributes']['id'] = $id;
+    // #default_value, NOT #value: setting #value directly marks an element
+    // as programmed/fixed in Form API, so Drupal ignores whatever the user
+    // (or the picker's JS) actually submits and always falls back to this
+    // value instead — on a fresh Add form that's always '', so the field
+    // was permanently stuck empty no matter what got clicked in the
+    // calendar (confirmed: even a fully-completed pick failed submission
+    // with "This value should not be null" because of this). #default_value
+    // is the correct mechanism — it only seeds the initial render; actual
+    // submitted input still takes priority on every subsequent rebuild.
+    $form[$field_name]['widget'][0]['value']['#default_value'] = $value;
+  }
+
+  $form['cfc_admin_datetime_wrapper'] = _cfc_booking_admin_datetime_wrapper($spaces_by_nid[$current_nid] ?? NULL);
+  $form['cfc_admin_datetime_wrapper']['#weight'] = $form['field_duration']['#weight'] ?? 0;
+
+  $form['#validate'][] = '_cfc_booking_admin_validate_booker_type';
+  $form['#validate'][] = '_cfc_booking_admin_validate_datetime_complete';
+  $form['#validate'][] = '_cfc_booking_admin_validate_availability';
+
+  // Runs between '::submitForm' (which rebuilds $this->entity from the
+  // form) and '::save' (which persists it) — see
+  // _cfc_booking_admin_set_booker_type() for why this field is set here
+  // instead of through the normal field-widget-to-entity copy. Spliced into
+  // the SAVE BUTTON's own #submit array, not $form['#submit']: Drupal's
+  // FormBuilder prioritises a triggering element's own #submit over the
+  // form-level one whenever the element has one set (confirmed — the node
+  // save button always does: ['::submitForm', '::save', menu_ui's hook]),
+  // so additions to $form['#submit'] alone are silently never run.
+  foreach (['submit', 'publish', 'save_continue'] as $action_key) {
+    if (isset($form['actions'][$action_key]['#submit'])) {
+      array_splice($form['actions'][$action_key]['#submit'], 1, 0, ['_cfc_booking_admin_set_booker_type']);
+    }
+  }
+
+  // The Claro admin theme doesn't load Alpine.js by default. Deliberately
+  // NOT attaching cfc_media_hub/global here — its compiled CSS includes
+  // Tailwind's preflight reset, which would bleed into the rest of this
+  // Claro admin page. admin_booking_picker instead vendors just Alpine.js
+  // + a small hand-written, scoped stylesheet (css/admin-booking-picker.css)
+  // covering only the utility classes this picker actually uses.
+  $form['#attached']['library'][] = 'cfc_booking/admin_booking_picker';
+}
+
+/**
+ * Edit mode: shows the reservation slot (account type / space / date / time
+ * / duration) as a locked, read-only summary instead of the interactive
+ * picker — see the comment at the call site in
+ * _cfc_booking_admin_datetime_alter() for why. The real fields still get
+ * their #default_value set to the entity's current values (just as plain
+ * hidden inputs, no cards/calendar/toggle attached), so saving the form
+ * leaves the slot exactly as it was.
+ */
+function _cfc_booking_admin_readonly_slot(array &$form, NodeInterface $entity): void {
+  $space = $entity->hasField('field_space') && !$entity->get('field_space')->isEmpty()
+    ? $entity->get('field_space')->entity
+    : NULL;
+  $date = $entity->hasField('field_booking_date') ? (string) $entity->get('field_booking_date')->value : '';
+  $time = $entity->hasField('field_time_slot') ? (string) $entity->get('field_time_slot')->value : '';
+  $duration = $entity->hasField('field_duration') ? (string) $entity->get('field_duration')->value : '';
+
+  // Best-effort display label only (not written back to the entity) — for
+  // a booking saved before this toggle existed, or created directly
+  // bypassing it, field_booker_account_type may be empty. Same inference
+  // the ADD form's toggle used to resolve on edit, before this read-only
+  // summary replaced that: the owner's own real account type first
+  // (reliable even for Studio, which both types can book), falling back to
+  // "must be journalist" when the saved space is Desk/Meeting Room
+  // (CFC Members can't book those), or left unknown otherwise.
+  $booker_type = $entity->hasField('field_booker_account_type') ? (string) $entity->get('field_booker_account_type')->value : '';
+  if (!$booker_type) {
+    $owner = $entity->getOwner();
+    $owner_type = $owner && $owner->hasField('field_account_type') ? (string) $owner->get('field_account_type')->value : '';
+    if (in_array($owner_type, ['journalist', 'cfc_member'], TRUE)) {
+      $booker_type = $owner_type;
+    }
+    elseif ($space) {
+      $cfc_eligible_nids = array_column(\Drupal::service('cfc_booking.creator')->eligibleSpaces(['cfc_member']), 'nid');
+      if (!in_array((int) $space->id(), $cfc_eligible_nids, TRUE)) {
+        $booker_type = 'journalist';
+      }
+    }
+  }
+  $type_label = match ($booker_type) {
+    'journalist' => t('Journalist'),
+    'cfc_member' => t('CFC Member'),
+    default => t('Unknown'),
+  };
+
+  if (isset($form['field_space']['widget'][0]['target_id'])) {
+    $form['field_space']['widget'][0]['target_id'] = [
+      '#type' => 'hidden',
+      '#default_value' => $space ? $space->id() : NULL,
+    ];
+  }
+  foreach (['field_booking_date' => $date, 'field_time_slot' => $time, 'field_duration' => $duration] as $field_name => $value) {
+    if (isset($form[$field_name]['widget'][0]['value'])) {
+      $form[$field_name]['widget'][0]['value'] = [
+        '#type' => 'hidden',
+        '#default_value' => $value,
+      ];
+    }
+  }
+
+  // Display only — the underlying hidden field above keeps just the plain
+  // start time ("09:00"), exactly as stored; this is purely the "X - Y"
+  // range shown to the admin, same helper the public review/payment/
+  // confirmation pages already use for the same reason.
+  $time_range = $time ? AvailabilityChecker::formatTimeRange($time, $duration) : $time;
+
+  $form['cfc_readonly_slot'] = [
+    '#type' => 'container',
+    '#weight' => -10,
+    '#attributes' => ['class' => ['cfc-admin-picker-scope']],
+    'summary' => [
+      '#markup' => Markup::create(_cfc_booking_admin_readonly_slot_markup(
+        (string) $type_label,
+        $space ? $space->label() : (string) t('Unknown'),
+        $date,
+        $time_range,
+        $duration
+      )),
+    ],
+  ];
+  $form['#attached']['library'][] = 'cfc_booking/admin_booking_picker';
+}
+
+/**
+ * Markup for the locked reservation-slot summary shown on Edit.
+ */
+function _cfc_booking_admin_readonly_slot_markup(string $type_label, string $space_label, string $date, string $time, string $duration): string {
+  $type_label = Html::escape($type_label);
+  $space_label = Html::escape($space_label);
+  $date = Html::escape($date);
+  $time = Html::escape($time);
+  $duration = Html::escape($duration);
+  return <<<HTML
+    <div class="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 mb-5">
+      <div class="text-[12px] uppercase tracking-wide text-neutral-400 mb-3" style="font-weight: 600;">Reservation slot (locked)</div>
+      <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-[14px]">
+        <div class="text-neutral-400">Account type</div><div class="text-neutral-900 font-medium">{$type_label}</div>
+        <div class="text-neutral-400">Space</div><div class="text-neutral-900 font-medium">{$space_label}</div>
+        <div class="text-neutral-400">Date</div><div class="text-neutral-900 font-medium">{$date}</div>
+        <div class="text-neutral-400">Time</div><div class="text-neutral-900 font-medium">{$time}</div>
+        <div class="text-neutral-400">Duration</div><div class="text-neutral-900 font-medium">{$duration}</div>
+      </div>
+      <p class="text-[12px] text-neutral-400 mt-3">To change the space, date, time or duration, cancel this booking and create a new one.</p>
+    </div>
+    HTML;
+}
+
+/**
+ * #ajax callback for the booker-type toggle: rebuilds both the space cards
+ * (field_space, since eligibility changed) and the datetime wrapper (since
+ * whatever space was previously picked may no longer be valid for the new
+ * type) — two separate DOM targets, hence an AjaxResponse with two replace
+ * commands instead of a single returned render array.
+ */
+function _cfc_booking_admin_booker_type_ajax(array &$form, FormStateInterface $form_state): AjaxResponse {
+  $response = new AjaxResponse();
+  $response->addCommand(new ReplaceCommand('#cfc-admin-space-section', \Drupal::service('renderer')->renderInIsolation($form['field_space'])));
+  $response->addCommand(new ReplaceCommand('#cfc-admin-datetime-wrapper', \Drupal::service('renderer')->renderInIsolation($form['cfc_admin_datetime_wrapper'])));
+  return $response;
+}
+
+/**
+ * #ajax callback for the Space select: rebuilds the datetime wrapper for
+ * the newly selected space.
+ */
+function _cfc_booking_admin_datetime_ajax(array &$form, FormStateInterface $form_state): array {
+  return $form['cfc_admin_datetime_wrapper'];
+}
+
+/**
+ * #submit callback that writes the chosen booker type onto the entity.
+ * field_booker_account_type is deliberately not part of this form's normal
+ * displayed-field set (see _cfc_booking_admin_datetime_alter()), so
+ * ContentEntityForm's usual copyFormValuesToEntity() never touches it —
+ * this sets it directly on the same $this->entity instance that '::save'
+ * (the next handler in the chain) persists.
+ */
+function _cfc_booking_admin_set_booker_type(array &$form, FormStateInterface $form_state): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof EntityFormInterface) {
+    return;
+  }
+  $entity = $form_object->getEntity();
+  if ($entity instanceof NodeInterface && $entity->hasField('field_booker_account_type')) {
+    $entity->set('field_booker_account_type', $form_state->getValue('cfc_booker_type'));
+  }
+}
+
+/**
+ * Requires the booker-type toggle to be picked before a space — without
+ * this, "— Choose Journalist or CFC Member above first —" would otherwise
+ * just silently fail entity validation on field_space being empty.
+ */
+function _cfc_booking_admin_validate_booker_type(array &$form, FormStateInterface $form_state): void {
+  if (!$form_state->getValue('cfc_booker_type')) {
+    $form_state->setErrorByName('cfc_booker_type', t('Please choose Journalist or CFC Member above before picking a space.'));
+  }
+}
+
+/**
+ * Catches an incomplete pick (space chosen but date/time/duration never
+ * clicked in the calendar) with a clear message. Those three fields are now
+ * plain hidden inputs, so when empty they no longer get Drupal's normal
+ * friendly "X field is required" treatment — instead, the entity-level
+ * constraint check that already ran as part of $form_object->validateForm()
+ * (earlier in this same #validate chain) has already set a generic,
+ * confusing "This value should not be null." error for each. Replacing the
+ * whole error list here (only when this specific condition is the actual
+ * cause) swaps those out for something an admin can act on; any other,
+ * unrelated error would mean this function doesn't touch field_booking_date
+ * /_time_slot/_duration's values at all, so it never reaches the clear().
+ */
+function _cfc_booking_admin_validate_datetime_complete(array &$form, FormStateInterface $form_state): void {
+  $nid = (int) $form_state->getValue(['field_space', 0, 'target_id']);
+  if (!$nid) {
+    return;
+  }
+  $missing = [];
+  if (!$form_state->getValue(['field_booking_date', 0, 'value'])) {
+    $missing['field_booking_date'] = t('Please choose a date from the calendar above.');
+  }
+  if (!$form_state->getValue(['field_time_slot', 0, 'value'])) {
+    $missing['field_time_slot'] = t('Please choose a time slot above.');
+  }
+  if (!$form_state->getValue(['field_duration', 0, 'value'])) {
+    $missing['field_duration'] = t('Please choose a duration above.');
+  }
+  if (!$missing) {
+    return;
+  }
+  // The entity-level NotNull constraint check (part of
+  // ContentEntityForm::validateForm(), which ran before this in the
+  // #validate chain) already flagged these exact same fields with its own
+  // generic message — clear it so only the friendly version below shows.
+  $form_state->clearErrors();
+  foreach ($missing as $field_name => $message) {
+    $form_state->setErrorByName($field_name, $message);
+  }
+}
+
+/**
+ * Re-checks real-time availability at submit time — the picker already
+ * only lets an admin click a free slot, but this is the same
+ * defense-in-depth re-check BookingForm::validateForm() does, in case of a
+ * stale page or a submitted value that didn't go through the picker.
+ */
+function _cfc_booking_admin_validate_availability(array &$form, FormStateInterface $form_state): void {
+  $nid = (int) $form_state->getValue(['field_space', 0, 'target_id']);
+  $date = (string) $form_state->getValue(['field_booking_date', 0, 'value']);
+  $time = (string) $form_state->getValue(['field_time_slot', 0, 'value']);
+  $duration = (string) $form_state->getValue(['field_duration', 0, 'value']);
+  if (!$nid || !$date || !$time || !$duration) {
+    return;
+  }
+
+  $space_node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+  if (!$space_node instanceof NodeInterface) {
+    return;
+  }
+
+  // Defense-in-depth: the card list already only shows spaces eligible for
+  // the chosen booker type, but re-check here too in case of a stale page.
+  $booker_type = (string) $form_state->getValue('cfc_booker_type');
+  if ($booker_type) {
+    $eligible_nids = array_column(\Drupal::service('cfc_booking.creator')->eligibleSpaces([$booker_type]), 'nid');
+    if (!in_array($nid, $eligible_nids, TRUE)) {
+      $form_state->setErrorByName('field_space', t('@space is not available for this booking\'s account type.', ['@space' => $space_node->label()]));
+      return;
+    }
+  }
+
+  $form_object = $form_state->getFormObject();
+  $exclude_id = $form_object instanceof EntityFormInterface && !$form_object->getEntity()->isNew()
+    ? (int) $form_object->getEntity()->id()
+    : NULL;
+
+  /** @var \Drupal\cfc_booking\AvailabilityChecker $availability_checker */
+  $availability_checker = \Drupal::service('cfc_booking.availability_checker');
+  if (!$availability_checker->isFree($space_node, $date, $time, $duration, $exclude_id)) {
+    $form_state->setErrorByName('field_time_slot', t('This slot is no longer available for @space. Please choose another time.', ['@space' => $space_node->label()]));
+  }
+}
+
+/**
+ * Builds the wrapper holding the availability calendar/time-grid/duration
+ * component (cfc_media_hub:booking-datetime-picker — the same SDC the
+ * public booking page uses), scoped to the given space, or empty if none
+ * picked yet.
+ */
+function _cfc_booking_admin_datetime_wrapper(?array $space_data, string $initial_date = '', string $initial_time = '', string $initial_duration = ''): array {
+  $durations = $space_data['slot_durations'] ?? array_keys(AvailabilityChecker::DURATION_HOURS);
+  $default_duration = $durations[0] ?? '1 hour';
+
+  $today = new \DateTime('today');
+  // The grid always shows exactly 14 days starting at $window_start — for a
+  // fresh pick that's "today" (unchanged default). When editing a booking
+  // whose actual date falls outside that today..today+13 window, though,
+  // it would never appear as a cell at all, so it could never show
+  // highlighted as the current selection (confirmed in a live screenshot:
+  // a booking dated 3 weeks out, with a 14-day-from-today grid only
+  // reaching 2 weeks). Re-anchoring the window to start at the booking's
+  // own date instead keeps it a real, visible, correctly-highlighted cell.
+  $window_start = $today;
+  if ($initial_date) {
+    $initial_dt = \DateTime::createFromFormat('Y-m-d', $initial_date) ?: NULL;
+    $initial_dt?->setTime(0, 0);
+    if ($initial_dt && ($initial_dt < $today || $initial_dt > (clone $today)->modify('+13 days'))) {
+      $window_start = $initial_dt;
+    }
+  }
+
+  $days = [];
+  for ($i = 0; $i < 14; $i++) {
+    $date = (clone $window_start)->modify("+$i days");
+    $days[] = ['iso' => $date->format('Y-m-d'), 'weekday' => $date->format('D'), 'day' => $date->format('j'), 'month' => $date->format('M')];
+  }
+
+  $matrix = [];
+  $space_node = $space_data ? \Drupal::entityTypeManager()->getStorage('node')->load($space_data['nid']) : NULL;
+  if ($space_node instanceof NodeInterface) {
+    /** @var \Drupal\cfc_booking\AvailabilityChecker $availability_checker */
+    $availability_checker = \Drupal::service('cfc_booking.availability_checker');
+    $matrix = $availability_checker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations);
+  }
+
+  return [
+    '#type' => 'container',
+    '#attributes' => ['id' => 'cfc-admin-datetime-wrapper', 'class' => ['cfc-admin-picker-scope']],
+    'picker' => [
+      '#type' => 'component',
+      '#component' => 'cfc_media_hub:booking-datetime-picker',
+      '#props' => [
+        'has_space' => (bool) $space_data,
+        'days' => $days,
+        'time_slots' => AvailabilityChecker::TIME_SLOTS,
+        'durations' => $durations,
+        'durations_json' => Json::encode($durations),
+        'matrix' => Json::encode($matrix),
+        'duration_hours_json' => Json::encode(AvailabilityChecker::DURATION_HOURS),
+        'phantom_slots' => AvailabilityChecker::PHANTOM_TIME_SLOTS,
+        'default_duration' => $default_duration,
+        'date_field_id' => 'cfc-admin-booking-date',
+        'time_field_id' => 'cfc-admin-booking-time',
+        'duration_field_id' => 'cfc-admin-booking-duration',
+        'initial_date' => $initial_date,
+        'initial_time' => $initial_time,
+        'initial_duration' => $initial_duration ?: $default_duration,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Markup for the "Journalist / CFC Member" toggle — shown above the Space
+ * cards, gating which of those are even eligible. Same visual pattern as
+ * the space cards (a button driving a hidden real element via JS), just 2
+ * options instead of N.
+ */
+function _cfc_booking_admin_booker_type_markup(string $selected): string {
+  $options = ['journalist' => t('Journalist'), 'cfc_member' => t('CFC Member')];
+  $buttons = '';
+  foreach ($options as $value => $label) {
+    $buttons .= <<<HTML
+      <button
+        type="button"
+        x-on:click="
+          selectedType = '{$value}';
+          const sel = document.getElementById('cfc-booker-type-select');
+          sel.value = '{$value}';
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        "
+        x-bind:class="selectedType === '{$value}' ? 'bg-[#9F5434] border-[#9F5434] text-white' : 'bg-white border-neutral-200 hover:border-neutral-400 text-neutral-700'"
+        class="rounded-xl px-5 py-3 border text-[14px] font-medium transition-colors"
+      >{$label}</button>
+      HTML;
+  }
+  $selected_js = Html::escape($selected);
+  return <<<HTML
+    <div class="cfc-admin-picker-scope mb-5">
+      <label class="text-[13px] font-semibold text-neutral-700 block mb-2">Journalist or CFC Member?</label>
+      <div class="flex flex-wrap gap-3" x-data="{ selectedType: '{$selected_js}' }">
+        {$buttons}
+      </div>
+    </div>
+    HTML;
+}
+
+/**
+ * Markup for the admin space-picker cards — a lightweight version of
+ * BookingForm::spaceCardsMarkup() (name only, no pricing/description — this
+ * is a manual backoffice override, not the public journey). Clicking a card
+ * writes the real nid into the (CSS-hidden) Space select + dispatches
+ * change, same pattern used throughout this project for a visible "card"
+ * driving a hidden real form element.
+ */
+function _cfc_booking_admin_space_cards_markup(array $spaces, ?int $selected): string {
+  if (!$spaces) {
+    return '<div class="cfc-admin-picker-scope mb-5"><p class="text-[14px] text-neutral-500 bg-neutral-50 border border-neutral-100 rounded-2xl px-5 py-4">' . t('Choose Journalist or CFC Member above to see available spaces.') . '</p></div>';
+  }
+
+  $cards = '';
+  foreach ($spaces as $space) {
+    $nid = (int) $space['nid'];
+    $title = Html::escape($space['title']);
+    $cards .= <<<HTML
+      <button
+        type="button"
+        x-on:click="
+          selectedSpace = {$nid};
+          const sel = document.getElementById('cfc-admin-space-select');
+          sel.value = '{$nid}';
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        "
+        x-bind:class="selectedSpace === {$nid} ? 'bg-[#9F5434] border-[#9F5434] text-white' : 'bg-white border-neutral-200 hover:border-neutral-400 text-neutral-700'"
+        class="rounded-xl px-5 py-3 border text-[14px] font-medium transition-colors"
+      >{$title}</button>
+      HTML;
+  }
+  $selected_js = $selected ?: 'null';
+  return <<<HTML
+    <div class="cfc-admin-picker-scope mb-5">
+      <label class="text-[13px] font-semibold text-neutral-700 block mb-2">Space</label>
+      <div class="flex flex-wrap gap-3" x-data="{ selectedSpace: {$selected_js} }">
+        {$cards}
+      </div>
+    </div>
+    HTML;
+}

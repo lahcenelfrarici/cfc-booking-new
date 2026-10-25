@@ -229,11 +229,19 @@ class AvailabilityChecker {
    * clock-time range — used wherever a booking's time needs to show exactly
    * when it ends, not just a start time + an abstract duration label (e.g.
    * "15:00 - 17:00" instead of just "15:00").
+   *
+   * "Full day" is always shown ending at closing time (18:00) rather than
+   * the literal start+8h arithmetic (which would read e.g. "09:00 - 17:00")
+   * — it's meant to read as the whole business day, same rule the public
+   * booking-datetime-picker component's own endTime() already applies;
+   * this was the one place still doing the literal math instead (confirmed
+   * in a live screenshot — the backoffice "locked" summary showed
+   * "09:00 - 17:00" for a Full day booking that starts at 09:00).
    */
   public static function formatTimeRange(string $timeSlot, string $duration): string {
     [$hours, $minutes] = array_map('intval', explode(':', $timeSlot) + [0, 0]);
     $start = $hours * 60 + $minutes;
-    $end = $start + (self::DURATION_HOURS[$duration] ?? 1) * 60;
+    $end = $duration === 'Full day (8h)' ? self::CLOSING_MINUTES : $start + (self::DURATION_HOURS[$duration] ?? 1) * 60;
     return sprintf('%02d:%02d - %02d:%02d', intdiv($start, 60), $start % 60, intdiv($end, 60), $end % 60);
   }
 

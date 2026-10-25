@@ -58,6 +58,13 @@ props:
       type: string
     duration_field_id:
       type: string
+    initial_date:
+      type: string
+      description: 'Pre-selects this date (and, if set, time/duration) on load — used by the admin booking form when editing an existing booking, so its current slot shows as already chosen instead of a blank picker. Omit/empty for a fresh pick (the public booking form does not pass this).'
+    initial_time:
+      type: string
+    initial_duration:
+      type: string
   required:
     - has_space
     - days

@@ -6,9 +6,9 @@
     matrix: {},
     durations: [],
     durationHours: {},
-    selectedDuration: '{{ default_duration }}',
-    selectedDate: '',
-    selectedTime: '',
+    selectedDuration: '{{ initial_duration|default(default_duration) }}',
+    selectedDate: '{{ initial_date|default('') }}',
+    selectedTime: '{{ initial_time|default('') }}',
     dayAvailable(iso) {
       const day = this.matrix[iso];
       if (!day) return false;
