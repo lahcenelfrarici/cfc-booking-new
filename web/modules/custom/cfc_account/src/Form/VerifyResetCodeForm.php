@@ -220,8 +220,7 @@ class VerifyResetCodeForm extends FormBase {
                 text.split('').forEach((ch, j) => { if (i + j < 6) digits[i + j] = ch; });
                 $nextTick(() => $el.parentElement.children[Math.min(i + text.length, 5)].focus());
               "
-              class="flex-1 min-w-0 h-14 border border-neutral-200 rounded-xl text-center text-neutral-900 bg-white focus:outline-none focus:border-[#9F5434] focus:ring-2 focus:ring-[#9F5434]/15 transition-colors"
-              style="font-size: 22px; font-weight: 600;"
+              class="flex-1 min-w-0 h-12 md:h-14 border border-neutral-200 rounded-xl text-center text-neutral-900 bg-white focus:outline-none focus:border-[#9F5434] focus:ring-2 focus:ring-[#9F5434]/15 transition-colors text-[18px] md:text-[22px] font-semibold"
             />
           </template>
         </div>

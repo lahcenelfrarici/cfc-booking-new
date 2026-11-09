@@ -426,19 +426,19 @@ class AccountRegisterForm extends FormBase {
         <button type="button" x-on:click="legalDoc = 'privacy'" class="text-[#9F5434] underline underline-offset-2 font-semibold">Privacy Policy</button>.
 
         <template x-teleport="body">
-          <div class="fixed inset-0 z-[200] flex items-center justify-center p-6" x-show="legalDoc === 'terms'" x-cloak>
+          <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6" x-show="legalDoc === 'terms'" x-cloak>
             <div class="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm" x-on:click="legalDoc = null"></div>
-            <div class="relative bg-white rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] max-w-[720px] w-full max-h-[80vh] flex flex-col">
-              <div class="flex items-center justify-between px-8 py-6 border-b border-neutral-100">
+            <div class="relative bg-white rounded-2xl sm:rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] max-w-[720px] w-full max-h-[85vh] sm:max-h-[80vh] flex flex-col">
+              <div class="flex items-center justify-between px-5 sm:px-8 py-5 sm:py-6 border-b border-neutral-100">
                 <div>
                   <div class="text-[11px] uppercase tracking-[0.16em] text-[#9F5434] mb-1" style="font-weight: 700;">Legal document</div>
-                  <h2 class="tracking-tight text-neutral-900" style="font-size: 22px; font-weight: 600; letter-spacing: -0.02em;">Terms of Service</h2>
+                  <h2 class="tracking-tight text-neutral-900 text-[20px] sm:text-[22px] font-semibold tracking-[-0.02em]">Terms of Service</h2>
                 </div>
-                <button type="button" x-on:click="legalDoc = null" class="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors">
+                <button type="button" x-on:click="legalDoc = null" class="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-neutral-600"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                 </button>
               </div>
-              <div class="overflow-y-auto px-8 py-7 space-y-7 text-[14px] text-neutral-600 leading-relaxed">
+              <div class="overflow-y-auto px-5 sm:px-8 py-6 sm:py-7 space-y-7 text-[14px] text-neutral-600 leading-relaxed">
                 <p class="text-[12px] text-neutral-400 italic">Last updated: July 2026 — This document is a working template for review by the CFC Media Hub legal team.</p>
                 <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">1. Acceptance of Terms</div><p>By creating an account and accessing CFC Media Hub services, you agree to be bound by these Terms of Service. If you do not agree, you may not use the platform.</p></div>
                 <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">2. Eligibility</div><p>Access to CFC Media Hub is restricted to (a) internationally accredited journalists holding a valid press credential, and (b) employees of Casablanca Finance City member companies. CFC Media Hub reserves the right to verify credentials and revoke access at any time.</p></div>
@@ -451,28 +451,28 @@ class AccountRegisterForm extends FormBase {
                 <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">9. Limitation of Liability</div><p>CFC Media Hub shall not be liable for indirect, incidental or consequential damages arising from the use of its facilities or services.</p></div>
                 <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">10. Governing Law</div><p>These Terms shall be governed by and construed in accordance with the laws of the Kingdom of Morocco.</p></div>
               </div>
-              <div class="px-8 py-5 border-t border-neutral-100 flex items-center justify-between">
+              <div class="px-5 sm:px-8 py-4 sm:py-5 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p class="text-[12px] text-neutral-400">Questions? Contact <a href="mailto:mediahub@casablancafinancecity.com" class="text-[#9F5434] underline underline-offset-2">mediahub@casablancafinancecity.com</a></p>
-                <button type="button" x-on:click="legalDoc = null" class="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2.5 rounded-xl text-[13px] transition-colors" style="font-weight: 600;">Close</button>
+                <button type="button" x-on:click="legalDoc = null" class="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2.5 rounded-xl text-[13px] transition-colors self-start sm:self-auto" style="font-weight: 600;">Close</button>
               </div>
             </div>
           </div>
         </template>
 
         <template x-teleport="body">
-          <div class="fixed inset-0 z-[200] flex items-center justify-center p-6" x-show="legalDoc === 'privacy'" x-cloak>
+          <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6" x-show="legalDoc === 'privacy'" x-cloak>
             <div class="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm" x-on:click="legalDoc = null"></div>
-            <div class="relative bg-white rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] max-w-[720px] w-full max-h-[80vh] flex flex-col">
-              <div class="flex items-center justify-between px-8 py-6 border-b border-neutral-100">
+            <div class="relative bg-white rounded-2xl sm:rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] max-w-[720px] w-full max-h-[85vh] sm:max-h-[80vh] flex flex-col">
+              <div class="flex items-center justify-between px-5 sm:px-8 py-5 sm:py-6 border-b border-neutral-100">
                 <div>
                   <div class="text-[11px] uppercase tracking-[0.16em] text-[#9F5434] mb-1" style="font-weight: 700;">Legal document</div>
-                  <h2 class="tracking-tight text-neutral-900" style="font-size: 22px; font-weight: 600; letter-spacing: -0.02em;">Privacy Policy</h2>
+                  <h2 class="tracking-tight text-neutral-900 text-[20px] sm:text-[22px] font-semibold tracking-[-0.02em]">Privacy Policy</h2>
                 </div>
-                <button type="button" x-on:click="legalDoc = null" class="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors">
+                <button type="button" x-on:click="legalDoc = null" class="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-neutral-600"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                 </button>
               </div>
-              <div class="overflow-y-auto px-8 py-7 space-y-7 text-[14px] text-neutral-600 leading-relaxed">
+              <div class="overflow-y-auto px-5 sm:px-8 py-6 sm:py-7 space-y-7 text-[14px] text-neutral-600 leading-relaxed">
                 <p class="text-[12px] text-neutral-400 italic">Last updated: July 2026 — This document is a working template for review by the CFC Media Hub legal team.</p>
                 <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">1. Data Controller</div><p>CFC Media Hub, operated by Casablanca Finance City Authority (CFCA), is the data controller responsible for your personal data collected through this platform.</p></div>
                 <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">2. Data Collected</div><p>We collect the following data during registration and booking: full name, email address, phone number, press accreditation number or company affiliation, and booking details (space, date, time, duration).</p></div>
@@ -485,9 +485,9 @@ class AccountRegisterForm extends FormBase {
                 <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">9. Security</div><p>We implement appropriate technical and organisational measures to protect your personal data against unauthorised access, loss or disclosure.</p></div>
                 <div><div class="text-neutral-900 mb-2" style="font-size: 13px; font-weight: 600;">10. Contact</div><p>For any questions regarding this Privacy Policy, please contact the Data Protection Officer at: mediahub@casablancafinancecity.com.</p></div>
               </div>
-              <div class="px-8 py-5 border-t border-neutral-100 flex items-center justify-between">
+              <div class="px-5 sm:px-8 py-4 sm:py-5 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p class="text-[12px] text-neutral-400">Questions? Contact <a href="mailto:mediahub@casablancafinancecity.com" class="text-[#9F5434] underline underline-offset-2">mediahub@casablancafinancecity.com</a></p>
-                <button type="button" x-on:click="legalDoc = null" class="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2.5 rounded-xl text-[13px] transition-colors" style="font-weight: 600;">Close</button>
+                <button type="button" x-on:click="legalDoc = null" class="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2.5 rounded-xl text-[13px] transition-colors self-start sm:self-auto" style="font-weight: 600;">Close</button>
               </div>
             </div>
           </div>

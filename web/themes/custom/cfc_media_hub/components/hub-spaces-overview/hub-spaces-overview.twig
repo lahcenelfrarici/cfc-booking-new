@@ -5,28 +5,28 @@
   both: 'International Accredited Journalists & CFC Members',
 } %}
 
-<section class="bg-[#FCFCFB] py-20 border-t border-b border-[#9F5434]/10">
-  <div class="max-w-[1440px] mx-auto px-12">
-    <div class="flex items-end justify-between mb-12">
+<section class="bg-[#FCFCFB] py-12 md:py-20 border-t border-b border-[#9F5434]/10">
+  <div class="max-w-[1440px] mx-auto px-5 md:px-12">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 md:mb-12">
       <div class="max-w-[680px]">
         <div class="flex items-center gap-3 mb-4">
           <div class="w-5 h-[2px] bg-[#9F5434]"></div>
           <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">The Spaces</div>
         </div>
-        <h2 class="tracking-tight text-neutral-900 mb-5" style="font-size: 48px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
+        <h2 class="tracking-tight text-neutral-900 mb-5 leading-[1.1] md:leading-[1.05] text-[30px] md:text-[48px] font-semibold tracking-[-0.025em]">
           Three complementary spaces, one workflow.
         </h2>
-        <p class="text-neutral-600 leading-relaxed text-[16px]">
+        <p class="text-neutral-600 leading-relaxed text-[15px] md:text-[16px]">
           The hub offers three complementary spaces designed for different needs — from quiet writing to podcast production.
         </p>
       </div>
-      <a href="{{ spaces_url }}" class="flex items-center gap-2 border border-neutral-300 hover:border-[#9F5434] hover:text-[#9F5434] hover:bg-white transition-colors px-6 py-3 rounded-xl text-[13px] font-medium">
+      <a href="{{ spaces_url }}" class="inline-flex items-center justify-center gap-2 border border-neutral-300 hover:border-[#9F5434] hover:text-[#9F5434] hover:bg-white transition-colors px-6 py-3 rounded-xl text-[13px] font-medium self-start">
         Choose your space
         {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}
       </a>
     </div>
 
-    <div class="grid grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
       {% for s in spaces %}
         <div class="flex flex-col bg-white border border-neutral-200/70 rounded-2xl p-8 hover:border-[#9F5434]/40 hover:-translate-y-0.5 transition-all">
           <div class="flex items-center justify-between mb-8">

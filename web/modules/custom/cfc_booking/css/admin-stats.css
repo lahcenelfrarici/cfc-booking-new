@@ -1,0 +1,72 @@
+/**
+ * Booking statistics admin page (BookingStatsController) — plain scoped
+ * styling, same approach as admin-booking-picker.css: no dependency on the
+ * front-end theme's compiled Tailwind CSS.
+ */
+
+.cfc-stats-scope {
+  max-width: 960px;
+}
+
+.cfc-stats-intro {
+  color: #525252;
+  font-size: 13px;
+  margin: 0 0 1.25rem;
+}
+
+.cfc-stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.cfc-stats-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem;
+}
+
+.cfc-stats-card-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #171717;
+  line-height: 1.2;
+}
+
+.cfc-stats-card-label {
+  font-size: 12px;
+  color: #737373;
+  margin-top: 0.25rem;
+}
+
+.cfc-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.cfc-stats-table th,
+.cfc-stats-table td {
+  text-align: left;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.cfc-stats-table th {
+  background: #fafafa;
+  font-weight: 600;
+  color: #404040;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 11px;
+}
+
+.cfc-stats-table tbody tr:last-child td {
+  border-bottom: none;
+}

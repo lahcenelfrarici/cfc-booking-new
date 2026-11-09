@@ -1,8 +1,8 @@
 {% set icon_by_type = { Interview: 'mic', Report: 'file-text', Documentary: 'video', Podcast: 'headphones', Production: 'video' } %}
 
 {% macro card(p, horizontal, icon_by_type) %}
-  <div class="group cursor-pointer rounded-2xl overflow-hidden bg-white/[0.04] border border-white/10 hover:border-white/25 transition-colors {{ horizontal ? 'flex' : '' }}">
-    <div class="relative overflow-hidden bg-white/5 {{ horizontal ? 'w-56 shrink-0' : 'h-44' }}">
+  <div class="group cursor-pointer rounded-2xl overflow-hidden bg-white/[0.04] border border-white/10 hover:border-white/25 transition-colors {{ horizontal ? 'flex flex-col sm:flex-row' : '' }}">
+    <div class="relative overflow-hidden bg-white/5 {{ horizontal ? 'h-44 sm:h-auto sm:w-56 sm:shrink-0' : 'h-44' }}">
       {% if p.image_url %}
         <img src="{{ p.image_url }}" alt="{{ p.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
       {% else %}
@@ -30,33 +30,33 @@
 {% set feat = productions[0] ?? null %}
 {% set rest = productions|slice(1) %}
 
-<section class="bg-neutral-950 text-white py-36 relative overflow-hidden">
+<section class="bg-neutral-950 text-white py-14 md:py-36 relative overflow-hidden">
   <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(15,110,86,0.25),_transparent_60%)]"></div>
 
-  <div class="relative max-w-[1440px] mx-auto px-12">
-    <div class="flex items-end justify-between mb-14">
+  <div class="relative max-w-[1440px] mx-auto px-5 md:px-12">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 md:mb-14">
       <div>
         <div class="flex items-center gap-3 mb-3">
           <div class="w-5 h-[2px] bg-[#9F5434]"></div>
           <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Productions</div>
         </div>
-        <h2 class="tracking-tight" style="font-size: 56px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
+        <h2 class="tracking-tight leading-[1.1] md:leading-[1.05] text-[32px] md:text-[56px] font-semibold tracking-[-0.025em]">
           Produced at <span class="text-[#9F5434]">the Hub.</span>
         </h2>
-        <p class="text-white/60 max-w-[520px] mt-5 leading-relaxed text-[15px]">
+        <p class="text-white/60 max-w-[520px] mt-4 md:mt-5 leading-relaxed text-[14px] md:text-[15px]">
           Discover interviews, reports and media content created inside CFC Media Hub.
         </p>
       </div>
-      <a href="{{ production_url }}" class="flex items-center gap-2 border border-white/20 hover:bg-white hover:text-neutral-950 transition-colors px-6 py-3 rounded-xl text-[13px] font-medium">
+      <a href="{{ production_url }}" class="inline-flex items-center justify-center gap-2 border border-white/20 hover:bg-white hover:text-neutral-950 transition-colors px-6 py-3 rounded-xl text-[13px] font-medium self-start">
         Watch all productions
         {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}
       </a>
     </div>
 
     {% if feat %}
-      <div class="grid grid-cols-12 gap-6">
-        <a href="{{ feat.url }}" class="col-span-7 group cursor-pointer block">
-          <div class="relative rounded-2xl overflow-hidden h-[460px] bg-white/5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <a href="{{ feat.url }}" class="lg:col-span-7 group cursor-pointer block">
+          <div class="relative rounded-2xl overflow-hidden h-[260px] sm:h-[360px] lg:h-[460px] bg-white/5">
             {% if feat.image_url %}
               <img src="{{ feat.image_url }}" alt="{{ feat.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             {% else %}
@@ -65,11 +65,11 @@
               </div>
             {% endif %}
             <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
-            <div class="absolute top-6 left-6 flex items-center gap-2">
+            <div class="absolute top-4 left-4 md:top-6 md:left-6 flex items-center gap-2">
               <span class="bg-[#9F5434] text-white px-3 py-1 rounded-full text-[11px] font-semibold">Featured</span>
               <span class="bg-[#9F5434]/80 backdrop-blur text-white px-3 py-1 rounded-full text-[11px] font-semibold">{{ feat.type }}</span>
             </div>
-            <div class="absolute bottom-6 left-6 right-6">
+            <div class="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
               <div class="flex items-center gap-3 text-[12px] text-white/80 mb-3">
                 <span class="font-semibold">{{ feat.publisher }}</span>
                 <span class="w-1 h-1 rounded-full bg-white/40"></span>
@@ -78,21 +78,21 @@
                   {{ feat.duration }}
                 </span>
               </div>
-              <h3 class="tracking-tight max-w-[520px]" style="font-size: 32px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em;">{{ feat.title }}</h3>
+              <h3 class="tracking-tight max-w-[520px] leading-[1.2] md:leading-[1.15] text-[22px] md:text-[32px] font-semibold md:tracking-[-0.02em]">{{ feat.title }}</h3>
             </div>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/95 text-[#9F5434] flex items-center justify-center group-hover:scale-110 transition-transform">
-              {% include 'cfc_media_hub:icon' with { name: 'play', size: 'w-7 h-7 ml-1' } only %}
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-20 md:h-20 rounded-full bg-white/95 text-[#9F5434] flex items-center justify-center group-hover:scale-110 transition-transform">
+              {% include 'cfc_media_hub:icon' with { name: 'play', size: 'w-5 h-5 md:w-7 md:h-7 ml-1' } only %}
             </div>
           </div>
         </a>
 
-        <div class="col-span-5 grid grid-cols-1 gap-6">
+        <div class="lg:col-span-5 grid grid-cols-1 gap-6">
           {% for p in rest|slice(0, 2) %}
             <a href="{{ p.url }}">{{ _self.card(p, false, icon_by_type) }}</a>
           {% endfor %}
         </div>
 
-        <div class="col-span-12 grid grid-cols-2 gap-6 mt-2">
+        <div class="lg:col-span-12 grid grid-cols-1 sm:grid-cols-2 gap-6 mt-2">
           {% for p in rest|slice(2) %}
             <a href="{{ p.url }}">{{ _self.card(p, true, icon_by_type) }}</a>
           {% endfor %}

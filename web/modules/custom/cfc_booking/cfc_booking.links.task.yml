@@ -1,0 +1,5 @@
+cfc_booking.admin_stats_tab:
+  route_name: cfc_booking.admin_stats
+  title: 'Statistics'
+  base_route: system.admin_content
+  weight: 1

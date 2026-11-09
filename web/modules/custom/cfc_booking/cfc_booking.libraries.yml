@@ -5,3 +5,9 @@ admin_booking_picker:
   css:
     component:
       css/admin-booking-picker.css: {}
+
+admin_stats:
+  version: VERSION
+  css:
+    component:
+      css/admin-stats.css: {}

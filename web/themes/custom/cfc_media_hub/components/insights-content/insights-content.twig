@@ -8,26 +8,26 @@
 
 <div class="min-h-screen bg-[#FCFCFB]" x-data="{{ alpine_state|json_encode|e('html_attr') }}">
 
-  <section class="bg-white border-b border-neutral-100 pt-16 pb-14">
-    <div class="max-w-[1440px] mx-auto px-12">
-      <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-10">
+  <section class="bg-white border-b border-neutral-100 pt-10 md:pt-16 pb-8 md:pb-14">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-12">
+      <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-6 md:mb-10">
         <a href="{{ home_url }}" class="hover:text-neutral-900 transition-colors">Home</a>
         <span>/</span>
         <span class="text-neutral-900">Insights</span>
       </div>
 
-      <div class="grid grid-cols-12 gap-12 items-end mb-6">
-        <div class="col-span-7">
-          <div class="flex items-center gap-3 mb-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 lg:items-end mb-6">
+        <div class="lg:col-span-7">
+          <div class="flex items-center gap-3 mb-4 md:mb-5">
             <div class="w-5 h-[2px] bg-[#9F5434]"></div>
             <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Insights &middot; Knowledge Center</div>
           </div>
-          <h1 class="tracking-tight text-neutral-900" style="font-size: 72px; font-weight: 600; line-height: 1.04; letter-spacing: -0.03em;">
+          <h1 class="tracking-tight text-neutral-900 leading-[1.08] lg:leading-[1.04] text-[34px] md:text-[50px] lg:text-[72px] font-semibold lg:tracking-[-0.03em]">
             Africa's media intelligence.
           </h1>
         </div>
-        <div class="col-span-5 pb-1">
-          <p class="text-neutral-600 leading-relaxed text-[17px]">
+        <div class="lg:col-span-5 lg:pb-1">
+          <p class="text-neutral-600 leading-relaxed text-[15px] md:text-[17px]">
             Stay informed with the latest market data and insights from Africa. Discover business opportunities through country fact sheets, news updates, sector reports and articles.
           </p>
         </div>
@@ -48,7 +48,7 @@
   </section>
 
   <section class="bg-white border-b border-neutral-100">
-    <div class="max-w-[1440px] mx-auto px-12 py-4 flex items-center gap-2 overflow-x-auto">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-12 py-4 flex items-center gap-2 overflow-x-auto">
       <button
         type="button"
         x-on:click="activeCategory = null"
@@ -67,19 +67,19 @@
     </div>
   </section>
 
-  <div class="max-w-[1440px] mx-auto px-12 py-16 space-y-16">
+  <div class="max-w-[1440px] mx-auto px-5 md:px-12 py-10 md:py-16 space-y-10 md:space-y-16">
     <template x-for="cat in categories.map(c => ({...c, documents: c.documents.filter(d => !query || d.title.toLowerCase().includes(query.toLowerCase()) || c.label.toLowerCase().includes(query.toLowerCase()))})).filter(c => (!activeCategory || c.id === activeCategory) && (c.documents.length > 0 || !query))" :key="cat.id">
       <div>
-        <div class="flex items-center gap-4 mb-8">
+        <div class="flex items-center gap-4 mb-6 md:mb-8">
           <div class="w-11 h-11 rounded-xl bg-[#9F5434]/10 text-[#9F5434] flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5" x-html="cat.icon_svg"></div>
-          <h2 class="tracking-tight text-neutral-900" style="font-size: 24px; font-weight: 600; letter-spacing: -0.015em;" x-text="cat.label"></h2>
+          <h2 class="tracking-tight text-neutral-900 text-[21px] md:text-[24px] font-semibold tracking-[-0.015em]" x-text="cat.label"></h2>
         </div>
 
-        <div class="grid grid-cols-12 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <template x-for="doc in cat.documents" :key="doc.title">
             <div
               x-on:click="selectedDoc = { title: doc.title, date: doc.date, category: cat.label, pages: doc.pages, pdfUrl: doc.pdf_url }"
-              class="col-span-6 group bg-white border border-neutral-200/80 rounded-2xl p-6 hover:border-[#9F5434]/30 hover:shadow-[0_12px_40px_-16px_rgba(159,84,52,0.12)] transition-all cursor-pointer flex items-start justify-between gap-4"
+              class="group bg-white border border-neutral-200/80 rounded-2xl p-6 hover:border-[#9F5434]/30 hover:shadow-[0_12px_40px_-16px_rgba(159,84,52,0.12)] transition-all cursor-pointer flex items-start justify-between gap-4"
             >
               <div class="flex-1">
                 <div class="flex items-center gap-2 mb-3">
@@ -111,16 +111,16 @@
     </template>
   </div>
 
-  <div x-show="selectedDoc" x-cloak x-on:click="selectedDoc = null" class="fixed inset-0 z-50 flex items-center justify-center p-8">
+  <div x-show="selectedDoc" x-cloak x-on:click="selectedDoc = null" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
     <div class="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm"></div>
-    <div x-on:click.stop class="relative bg-white rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)] max-w-[640px] w-full p-10">
-      <button type="button" x-on:click="selectedDoc = null" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors">
+    <div x-on:click.stop class="relative bg-white rounded-2xl sm:rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)] max-w-[640px] w-full max-h-[90vh] overflow-y-auto p-6 sm:p-10">
+      <button type="button" x-on:click="selectedDoc = null" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors">
         {% include 'cfc_media_hub:icon' with { name: 'x', size: 'w-4 h-4 text-neutral-600' } only %}
       </button>
 
       <template x-if="selectedDoc">
         <div>
-          <div class="flex items-center gap-2 mb-6">
+          <div class="flex items-center gap-2 mb-6 flex-wrap">
             <span class="text-[11px] px-2.5 py-1 rounded-full bg-[#9F5434]/10 text-[#9F5434] font-semibold" x-text="selectedDoc.category"></span>
             <template x-if="selectedDoc.pages">
               <span class="text-[11px] text-neutral-400" x-text="selectedDoc.pages"></span>
@@ -131,9 +131,9 @@
             </span>
           </div>
 
-          <h2 class="tracking-tight text-neutral-900 mb-5" style="font-size: 26px; font-weight: 600; line-height: 1.25; letter-spacing: -0.015em;" x-text="selectedDoc.title"></h2>
+          <h2 class="tracking-tight text-neutral-900 mb-5 leading-[1.3] md:leading-[1.25] text-[22px] md:text-[26px] font-semibold tracking-[-0.015em]" x-text="selectedDoc.title"></h2>
 
-          <div class="bg-[#FCFCFB] border border-neutral-100 rounded-2xl p-6 mb-7">
+          <div class="bg-[#FCFCFB] border border-neutral-100 rounded-2xl p-5 sm:p-6 mb-7">
             <div class="flex items-center gap-2 text-[13px] text-[#085041] mb-2">
               {% include 'cfc_media_hub:icon' with { name: 'lock', size: 'w-4 h-4' } only %}
               <span class="font-semibold">Accessible to registered journalists</span>
@@ -143,7 +143,7 @@
             </p>
           </div>
 
-          <div class="flex items-center gap-3">
+          <div class="flex flex-col sm:flex-row items-stretch gap-3">
             <template x-if="selectedDoc.pdfUrl">
               <a :href="selectedDoc.pdfUrl" target="_blank" rel="noopener" class="flex-1 bg-[#9F5434] hover:bg-[#8A4A2E] text-white py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors font-semibold text-[14px]">
                 {% include 'cfc_media_hub:icon' with { name: 'download', size: 'w-4 h-4' } only %}
@@ -165,27 +165,27 @@
     </div>
   </div>
 
-  <section class="bg-[#FCFCFB] py-20 border-t border-neutral-100" x-data="{ open: false }">
-    <div class="max-w-[1440px] mx-auto px-12 grid grid-cols-12 gap-12 items-center">
-      <div class="col-span-7">
+  <section class="bg-[#FCFCFB] py-12 md:py-20 border-t border-neutral-100" x-data="{ open: false }">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      <div class="lg:col-span-7">
         <div class="flex items-center gap-3 mb-5">
           <div class="w-5 h-[2px] bg-[#9F5434]"></div>
           <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">Connect &middot; CFC Community</div>
         </div>
-        <h2 class="tracking-tight text-neutral-900 mb-6" style="font-size: 40px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em;">
+        <h2 class="tracking-tight text-neutral-900 mb-5 md:mb-6 leading-[1.15] md:leading-[1.1] text-[28px] md:text-[40px] font-semibold tracking-[-0.02em]">
           Looking to connect with CFC members.
         </h2>
         <p class="text-neutral-600 leading-relaxed max-w-[560px] mb-8 text-[15px]">
           As a journalist covering Morocco and Africa, you have privileged access to the CFC community. Submit a connection request and our team will coordinate introductions with relevant CFC member companies, institutions and experts on your behalf.
         </p>
-        <button type="button" x-on:click="open = true" class="inline-flex items-center gap-2 bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-7 py-3.5 rounded-full transition-colors shadow-[0_8px_20px_-8px_rgba(159,84,52,0.4)]">
+        <button type="button" x-on:click="open = true" class="inline-flex items-center justify-center gap-2 bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-7 py-3.5 rounded-full transition-colors shadow-[0_8px_20px_-8px_rgba(159,84,52,0.4)]">
           <span class="font-semibold text-[14px]">Submit a Connection Request</span>
           {% include 'cfc_media_hub:icon' with { name: 'arrow-right', size: 'w-4 h-4' } only %}
         </button>
       </div>
 
-      <div class="col-span-5">
-        <div class="bg-white border border-neutral-200 rounded-2xl p-7">
+      <div class="lg:col-span-5">
+        <div class="bg-white border border-neutral-200 rounded-2xl p-6 md:p-7">
           <div class="text-[11px] uppercase tracking-wide text-neutral-400 font-semibold mb-5">What you can request</div>
           <ul class="space-y-3.5">
             {% for item in [

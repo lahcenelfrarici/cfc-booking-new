@@ -6,6 +6,17 @@
 @source '../../../../../modules/custom/**/*.twig';
 @source '../../../../../modules/custom/**/*.php';
 
+@theme {
+  /* The `lg:` breakpoint is raised from Tailwind's default 1024px to
+     1280px so that phones AND every iPad size/orientation (including
+     iPad Pro 12.9" portrait, exactly 1024px wide) keep the stacked
+     mobile/tablet layout added for responsive support — only genuine
+     desktop/laptop viewports (which are virtually always >=1280px)
+     fall back to the original, unmodified desktop layout gated behind
+     `lg:` across the theme's components. */
+  --breakpoint-lg: 80rem;
+}
+
 @import './fonts.css';
 @import './theme.css';
 @import './components.css';

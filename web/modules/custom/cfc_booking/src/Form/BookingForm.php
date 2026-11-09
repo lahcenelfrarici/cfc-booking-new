@@ -242,7 +242,7 @@ class BookingForm extends FormBase {
     return <<<HTML
       <div class="mb-8">
         <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] mb-3" style="font-weight: 600;">Step 2 · Select a space</div>
-        <h1 class="tracking-tight" style="font-size: 48px; font-weight: 600; letter-spacing: -0.025em;">Which space do you need?</h1>
+        <h1 class="tracking-tight text-[30px] md:text-[48px] font-semibold tracking-[-0.025em]">Which space do you need?</h1>
         {$notice}
       </div>
       HTML;
@@ -259,7 +259,7 @@ class BookingForm extends FormBase {
           <span class="icon shrink-0 w-4 h-4"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg></span>
           Studio delivery information
         </div>
-        <div class="grid grid-cols-3 gap-6 text-[13px] text-neutral-600">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6 text-[13px] text-neutral-600">
           <div>
             <div class="text-neutral-900 mb-1" style="font-weight: 600;">Raw footage</div>
             <div>Raw footage is delivered without editing.</div>

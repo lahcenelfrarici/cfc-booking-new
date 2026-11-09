@@ -2,9 +2,9 @@
 
 <div class="min-h-screen bg-[#FCFCFB]" x-data="{ activeCategory: 'all' }">
 
-  <section class="bg-white border-b border-neutral-100 pt-16 pb-10">
-    <div class="max-w-[1440px] mx-auto px-12">
-      <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-10">
+  <section class="bg-white border-b border-neutral-100 pt-10 md:pt-16 pb-8 md:pb-10">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-12">
+      <div class="flex items-center gap-2 text-[12px] text-neutral-500 mb-6 md:mb-10">
         <a href="{{ home_url }}" class="hover:text-neutral-900 transition-colors">Home</a>
         <span>/</span>
         <span class="text-neutral-900">News</span>
@@ -14,14 +14,14 @@
         <div class="w-5 h-[2px] bg-[#9F5434]"></div>
         <div class="text-[12px] uppercase tracking-[0.18em] text-[#9F5434] font-semibold">News &middot; CFC Media Hub</div>
       </div>
-      <h1 class="tracking-tight text-neutral-900" style="font-size: 56px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;">
+      <h1 class="tracking-tight text-neutral-900 leading-[1.1] md:leading-[1.05] text-[32px] md:text-[56px] font-semibold tracking-[-0.025em]">
         Latest news &amp; updates.
       </h1>
     </div>
   </section>
 
   <section class="bg-white border-b border-neutral-100">
-    <div class="max-w-[1440px] mx-auto px-12 py-4 flex items-center gap-2 overflow-x-auto">
+    <div class="max-w-[1440px] mx-auto px-5 md:px-12 py-4 flex items-center gap-2 overflow-x-auto">
       <button
         type="button"
         x-on:click="activeCategory = 'all'"
@@ -39,9 +39,9 @@
     </div>
   </section>
 
-  <div class="max-w-[1440px] mx-auto px-12 py-16">
+  <div class="max-w-[1440px] mx-auto px-5 md:px-12 py-10 md:py-16">
     {% if items %}
-      <div class="grid grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
         {% for item in items %}
           <a
             href="{{ item.url }}"

@@ -247,7 +247,7 @@ class ConnectionRequestForm extends FormBase {
     $markup = <<<'HTML'
       <div class="mb-6">
         <label class="text-[12px] text-neutral-600 uppercase tracking-wide block mb-2.5 font-semibold">Who would you like to connect with? *</label>
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div
             class="border rounded-xl px-4 py-3.5 cursor-pointer transition-colors"
             x-bind:class="selected === 'cfca' ? 'border-[#9F5434] bg-[#9F5434]/5' : 'border-neutral-200 hover:border-neutral-300'"

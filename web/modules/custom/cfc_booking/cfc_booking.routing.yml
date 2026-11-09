@@ -10,6 +10,14 @@ cfc_booking.cancel:
       node:
         type: entity:node
 
+cfc_booking.admin_stats:
+  path: '/admin/content/bookings/stats'
+  defaults:
+    _controller: '\Drupal\cfc_booking\Controller\BookingStatsController::build'
+    _title: 'Statistics'
+  requirements:
+    _permission: 'access content overview'
+
 cfc_booking.quick_book:
   path: '/booking/quick/{space}/{date}/{time}/{duration}'
   defaults:

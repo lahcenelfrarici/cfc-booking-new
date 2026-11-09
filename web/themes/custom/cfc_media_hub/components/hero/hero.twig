@@ -2,9 +2,9 @@
   <div class="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-bl from-[#9F5434]/5 via-white to-transparent pointer-events-none"></div>
   <div class="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-[#9F5434]/8 blur-3xl pointer-events-none"></div>
 
-  <div class="relative max-w-[1440px] mx-auto px-12 pt-24 pb-32 grid grid-cols-12 gap-16 items-center">
-    <div class="col-span-7 pr-8">
-      <h1 class="tracking-tight text-neutral-900 leading-none" style="font-size: 92px; font-weight: 600; letter-spacing: -0.04em;">
+  <div class="relative max-w-[1440px] mx-auto px-5 md:px-12 pt-16 pb-16 md:pt-24 md:pb-32 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+    <div class="lg:col-span-7 lg:pr-8">
+      <h1 class="tracking-tight text-neutral-900 leading-[1.05] lg:leading-none text-[42px] sm:text-[56px] lg:text-[92px] font-semibold lg:tracking-[-0.04em]">
         The media hub<br />
         <span class="font-serif-accent text-[#9F5434]" style="font-weight: 400;">of Africa.</span>
       </h1>
@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div class="col-span-5 relative">
+    <div class="lg:col-span-5 relative">
       {% include 'cfc_media_hub:booking-widget' with { booking_base_url: booking_base_url, next_slots_json: next_slots_json, space_pickers_json: space_pickers_json, duration_hours_json: duration_hours_json, time_slots_json: time_slots_json, eligible_json: eligible_json, quick_book_template: quick_book_template } only %}
 
       <div class="absolute -bottom-8 -left-10 hidden xl:flex items-center gap-3 bg-white rounded-xl shadow-lg border border-neutral-200/70 p-3 pr-5">

@@ -231,7 +231,7 @@ class VerifyEmailForm extends FormBase {
     return <<<'HTML'
       <div class="mb-8">
         <label class="text-[12px] text-neutral-600 uppercase tracking-wide block mb-3 text-center" style="font-weight: 600;">Verification code</label>
-        <div class="flex gap-2.5 justify-center" x-data="{ digits: ['', '', '', '', '', ''] }" x-init="$watch('digits', (v) => { code = v.join(''); })">
+        <div class="flex gap-1.5 sm:gap-2.5 justify-center" x-data="{ digits: ['', '', '', '', '', ''] }" x-init="$watch('digits', (v) => { code = v.join(''); })">
           <template x-for="(d, i) in [0, 1, 2, 3, 4, 5]" :key="i">
             <input
               type="text" inputmode="numeric" maxlength="1"
@@ -245,8 +245,7 @@ class VerifyEmailForm extends FormBase {
                 text.split('').forEach((ch, j) => { if (i + j < 6) digits[i + j] = ch; });
                 $nextTick(() => $el.parentElement.children[Math.min(i + text.length, 5)].focus());
               "
-              class="w-14 h-14 border border-neutral-200 rounded-xl text-center text-neutral-900 bg-white focus:outline-none focus:border-[#9F5434] focus:ring-2 focus:ring-[#9F5434]/15 transition-colors"
-              style="font-size: 22px; font-weight: 600;"
+              class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 border border-neutral-200 rounded-xl text-center text-neutral-900 bg-white focus:outline-none focus:border-[#9F5434] focus:ring-2 focus:ring-[#9F5434]/15 transition-colors text-[17px] md:text-[22px] font-semibold"
             />
           </template>
         </div>

@@ -248,10 +248,24 @@ class ContentRepository {
       'duration' => (string) $node->get('field_duration')->value,
       'date' => $formatted_date,
       'featured' => (bool) $node->get('field_featured')->value,
-      'description' => (string) $node->get('field_description')->value,
+      'description' => $this->fieldFormattedText($node, 'field_description'),
       'image_url' => $this->fieldImageUrl($node, 'field_image'),
       'url' => Url::fromRoute('cfc_pages.production_detail', ['node' => $node->id()])->toString(),
     ];
+  }
+
+  /**
+   * Returns a formatted text field's value rendered through its text format
+   * filters (e.g. basic_html), safe to output with the `|raw` Twig filter.
+   */
+  protected function fieldFormattedText(NodeInterface $node, string $field_name): string {
+    if ($node->get($field_name)->isEmpty()) {
+      return '';
+    }
+    $item = $node->get($field_name)->first();
+    $value = (string) $item->value;
+    $format = $item->format ?? 'basic_html';
+    return (string) check_markup($value, $format);
   }
 
   /**
