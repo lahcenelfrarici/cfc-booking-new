@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for CFC Newsletter.
+ */
+
+/**
+ * Implements hook_mail().
+ *
+ * One key: the short confirmation NewsletterController::subscribe() sends
+ * right after a "Stay informed" signup is saved.
+ */
+function cfc_newsletter_mail(string $key, array &$message, array $params): void {
+  if ($key !== 'subscribed') {
+    return;
+  }
+  $message['subject'] = t('Thanks for subscribing to CFC Media Hub');
+  $message['body'][] = t('Thanks for subscribing to CFC Media Hub — you\'ll receive our news, reports and editorial updates directly in your inbox.');
+}

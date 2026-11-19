@@ -14,16 +14,11 @@ use Symfony\Component\HttpFoundation\Request;
 class NewsletterController extends ControllerBase {
 
   /**
-   * TEMP DEBUG diagnostic route.
-   */
-  public function ping(): JsonResponse {
-    return new JsonResponse(['pong' => TRUE]);
-  }
-
-  /**
-   * Validates the posted email server-side and stores it as a webform
-   * submission — resubscribing an already-stored address is a silent
-   * no-op (still reports success) rather than a duplicate row.
+   * Validates the posted email server-side, stores it as a webform
+   * submission, and emails the subscriber a short confirmation —
+   * resubscribing an already-stored address is a silent no-op (still
+   * reports success, no duplicate row, no duplicate email) rather than an
+   * error.
    */
   public function subscribe(Request $request): JsonResponse {
     $data = Json::decode($request->getContent()) ?: [];
@@ -44,6 +39,13 @@ class NewsletterController extends ControllerBase {
       'webform_id' => 'newsletter',
       'data' => ['email' => $email],
     ])->save();
+
+    \Drupal::service('plugin.manager.mail')->mail(
+      'cfc_newsletter',
+      'subscribed',
+      $email,
+      \Drupal::languageManager()->getDefaultLanguage()->getId(),
+    );
 
     return new JsonResponse(['success' => TRUE]);
   }
