@@ -79,6 +79,7 @@ class AccountController extends ControllerBase {
         'status' => (string) $booking->get('field_status')->value,
         'price' => (string) $booking->get('field_price')->value,
         'cancel_url' => Url::fromRoute('cfc_booking.cancel', ['node' => $booking->id()])->toString(),
+        'modify_url' => Url::fromRoute('cfc_booking.modify', ['node' => $booking->id()])->toString(),
       ];
     }
     return $reservations;

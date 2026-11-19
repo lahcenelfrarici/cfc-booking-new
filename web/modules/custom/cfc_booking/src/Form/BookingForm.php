@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -66,9 +67,33 @@ class BookingForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ?string $initial_space = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state, ?string $initial_space = NULL, ?NodeInterface $edit_booking = NULL): array {
     $form['#attributes']['class'][] = 'space-y-5';
     $spaces = $this->eligibleSpaces();
+
+    // Modify mode (ModifyBookingController): pre-fill everything from the
+    // existing booking instead of starting blank. $edit_booking's ownership
+    // and "still upcoming" status are already checked by that controller
+    // before this form is even built.
+    $editing_space_id = NULL;
+    $initial_date = $initial_time = $initial_duration = '';
+    if ($edit_booking) {
+      $form['edit_booking_id'] = ['#type' => 'value', '#value' => (int) $edit_booking->id()];
+      $editing_space_nid = (int) $edit_booking->get('field_space')->target_id;
+      foreach ($spaces as $id => $space) {
+        if ((int) $space['nid'] === $editing_space_nid) {
+          $editing_space_id = $id;
+          break;
+        }
+      }
+      // Form state's current value wins once the user has clicked anything
+      // in the calendar (an AJAX rebuild after picking a new date/time for
+      // the same space) — only a genuinely fresh load falls back to the
+      // booking's original slot.
+      $initial_date = (string) ($form_state->getValue('booking_date') ?: $edit_booking->get('field_booking_date')->value);
+      $initial_time = (string) ($form_state->getValue('time_slot') ?: $edit_booking->get('field_time_slot')->value);
+      $initial_duration = (string) ($form_state->getValue('duration') ?: $edit_booking->get('field_duration')->value);
+    }
 
     if (!$spaces) {
       $form['empty'] = [
@@ -91,7 +116,9 @@ class BookingForm extends FormBase {
     ];
 
     $space_options = array_combine(array_column($spaces, 'id'), array_column($spaces, 'title'));
-    $selected_space_id = $form_state->getValue('space') ?: (($initial_space && isset($space_options[$initial_space])) ? $initial_space : NULL);
+    $selected_space_id = $form_state->getValue('space')
+      ?: (($initial_space && isset($space_options[$initial_space])) ? $initial_space : NULL)
+      ?: $editing_space_id;
 
     // The date/time/duration hidden fields still hold whatever was POSTed
     // alongside the space card's AJAX request — normally their stale values
@@ -134,12 +161,12 @@ class BookingForm extends FormBase {
       '#suffix' => Markup::create($this->studioDeliveryInfoMarkup()),
     ];
 
-    $form['datetime_wrapper'] = $this->buildDatetimeWrapper($spaces[$selected_space_id] ?? NULL);
+    $form['datetime_wrapper'] = $this->buildDatetimeWrapper($spaces[$selected_space_id] ?? NULL, $initial_date, $initial_time, $initial_duration, $edit_booking?->id());
 
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Make a reservation'),
+      '#value' => $edit_booking ? $this->t('Update reservation') : $this->t('Make a reservation'),
       '#attributes' => ['class' => ['w-full', 'bg-[#9F5434]', 'hover:bg-[#8A4A2E]', 'text-white', 'py-3.5', 'rounded-2xl', 'font-semibold', 'text-[14px]', 'transition-colors']],
     ];
 
@@ -282,7 +309,7 @@ class BookingForm extends FormBase {
    * the visual calendar/time-slot/duration picker component. Rebuilt
    * whenever the selected space changes (via #ajax on the 'space' select).
    */
-  protected function buildDatetimeWrapper(?array $space_data): array {
+  protected function buildDatetimeWrapper(?array $space_data, string $initial_date = '', string $initial_time = '', string $initial_duration = '', ?int $exclude_booking_id = NULL): array {
     $wrapper = [
       '#type' => 'container',
       '#attributes' => ['id' => 'cfc-datetime-wrapper'],
@@ -294,25 +321,27 @@ class BookingForm extends FormBase {
     $wrapper['booking_date'] = [
       '#type' => 'hidden',
       '#required' => TRUE,
+      '#default_value' => $initial_date,
       '#attributes' => ['id' => 'cfc-booking-date'],
     ];
     $wrapper['time_slot'] = [
       '#type' => 'hidden',
       '#required' => TRUE,
+      '#default_value' => $initial_time,
       '#attributes' => ['id' => 'cfc-booking-time'],
     ];
     $wrapper['duration'] = [
       '#type' => 'hidden',
       '#required' => TRUE,
-      '#default_value' => $default_duration,
+      '#default_value' => $initial_duration ?: $default_duration,
       '#attributes' => ['id' => 'cfc-booking-duration'],
     ];
 
-    $days = $this->next14Days();
+    $days = $this->next14Days($initial_date);
     $matrix = [];
     if ($space_data) {
       $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-      $matrix = $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations);
+      $matrix = $this->availabilityChecker->buildMatrix($space_node, array_column($days, 'iso'), AvailabilityChecker::TIME_SLOTS, $durations, $exclude_booking_id);
     }
 
     $wrapper['picker'] = [
@@ -331,6 +360,9 @@ class BookingForm extends FormBase {
         'date_field_id' => 'cfc-booking-date',
         'time_field_id' => 'cfc-booking-time',
         'duration_field_id' => 'cfc-booking-duration',
+        'initial_date' => $initial_date,
+        'initial_time' => $initial_time,
+        'initial_duration' => $initial_duration ?: $default_duration,
       ],
     ];
 
@@ -338,13 +370,27 @@ class BookingForm extends FormBase {
   }
 
   /**
-   * Returns the next 14 days as [iso, weekday, day, month] for the calendar.
+   * Returns 14 days as [iso, weekday, day, month] for the calendar, starting
+   * today — unless $anchor_date falls outside that window (editing a
+   * booking made further out than 2 weeks from now), in which case the
+   * window starts at $anchor_date instead so its own cell is actually
+   * visible and selectable. Same reasoning as the admin booking picker's
+   * identical re-anchoring logic.
    */
-  protected function next14Days(): array {
-    $days = [];
+  protected function next14Days(string $anchor_date = ''): array {
     $today = new \DateTime('today');
+    $window_start = $today;
+    if ($anchor_date) {
+      $anchor_dt = \DateTime::createFromFormat('Y-m-d', $anchor_date) ?: NULL;
+      $anchor_dt?->setTime(0, 0);
+      if ($anchor_dt && ($anchor_dt < $today || $anchor_dt > (clone $today)->modify('+13 days'))) {
+        $window_start = $anchor_dt;
+      }
+    }
+
+    $days = [];
     for ($i = 0; $i < 14; $i++) {
-      $date = (clone $today)->modify("+$i days");
+      $date = (clone $window_start)->modify("+$i days");
       $days[] = [
         'iso' => $date->format('Y-m-d'),
         'weekday' => $date->format('D'),
@@ -400,7 +446,8 @@ class BookingForm extends FormBase {
     $form_state->set('cfc_lock_name', $lock_name);
 
     $space_node = $this->cfcEntityTypeManager->getStorage('node')->load($space_data['nid']);
-    if (!$this->availabilityChecker->isFree($space_node, $date, $time_slot, $duration)) {
+    $exclude_booking_id = $form_state->getValue('edit_booking_id');
+    if (!$this->availabilityChecker->isFree($space_node, $date, $time_slot, $duration, $exclude_booking_id ? (int) $exclude_booking_id : NULL)) {
       $lock->release($lock_name);
       $form_state->setErrorByName('time_slot', $this->t('This slot is no longer available for @space. Please choose another time.', ['@space' => $space_data['title']]));
     }
@@ -414,12 +461,28 @@ class BookingForm extends FormBase {
     $space_id = $form_state->getValue('space');
     $space_data = $spaces[$space_id];
     $duration = $form_state->getValue('duration');
+    $date = $form_state->getValue('booking_date');
+    $time = $form_state->getValue('time_slot');
+
+    $edit_booking_id = $form_state->getValue('edit_booking_id');
+    if ($edit_booking_id) {
+      $booking = $this->cfcEntityTypeManager->getStorage('node')->load((int) $edit_booking_id);
+      $this->bookingCreator->update($booking, $space_data, $date, $time, $duration);
+
+      if ($lock_name = $form_state->get('cfc_lock_name')) {
+        \Drupal::lock()->release($lock_name);
+      }
+
+      $this->messenger()->addStatus($this->t('Reservation @ref has been updated.', ['@ref' => (string) $booking->get('field_reference')->value]));
+      $form_state->setRedirectUrl(Url::fromRoute('cfc_pages.account'));
+      return;
+    }
 
     $booking = $this->bookingCreator->create(
       $space_data,
       (int) $this->currentUser->id(),
-      $form_state->getValue('booking_date'),
-      $form_state->getValue('time_slot'),
+      $date,
+      $time,
       $duration,
     );
 

@@ -37,6 +37,29 @@ function cfc_booking_node_presave(NodeInterface $node): void {
 }
 
 /**
+ * Implements hook_mail().
+ *
+ * One key: the booking confirmation sent by
+ * BookingCreator::sendConfirmationEmail() right after a public reservation
+ * (BookingForm / QuickBookController) is created.
+ */
+function cfc_booking_mail(string $key, array &$message, array $params): void {
+  if (!in_array($key, ['booking_confirmation', 'booking_updated'], TRUE)) {
+    return;
+  }
+  $is_update = $key === 'booking_updated';
+  $message['subject'] = $is_update
+    ? t('Your CFC Media Hub reservation has been updated — @reference', ['@reference' => $params['reference']])
+    : t('Your CFC Media Hub reservation is confirmed — @reference', ['@reference' => $params['reference']]);
+  $message['body'][] = $is_update ? t('Your reservation has been updated:') : t('Your reservation has been confirmed:');
+  $message['body'][] = t('Space: @space', ['@space' => $params['space']]);
+  $message['body'][] = t('Date: @date', ['@date' => $params['date']]);
+  $message['body'][] = t('Time: @time', ['@time' => $params['time']]);
+  $message['body'][] = t('Reference: @reference', ['@reference' => $params['reference']]);
+  $message['body'][] = t('CFC Media Hub — Main Street, CFC Cube, 2nd Floor, Casablanca Finance City.');
+}
+
+/**
  * Implements hook_form_FORM_ID_alter() for the "Add booking" form.
  */
 function cfc_booking_form_node_booking_form_alter(array &$form, FormStateInterface $form_state): void {

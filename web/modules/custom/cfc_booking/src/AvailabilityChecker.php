@@ -87,15 +87,19 @@ class AvailabilityChecker {
    * time slots and durations — used to populate a date/time picker without
    * a query per cell (one query per date instead).
    *
+   * $excludeBookingId lets a booking being modified (BookingForm's edit
+   * mode) see its own current slot as available rather than blocked by
+   * itself — same reasoning as isFree()'s own $excludeBookingId.
+   *
    * @return array
    *   [date => [timeSlot => [duration => bool free]]]
    */
-  public function buildMatrix(NodeInterface $space, array $dates, array $timeSlots, array $durations): array {
+  public function buildMatrix(NodeInterface $space, array $dates, array $timeSlots, array $durations, ?int $excludeBookingId = NULL): array {
     $unlimited = (int) $space->get('field_concurrent_capacity')->value === 0;
 
     $matrix = [];
     foreach ($dates as $date) {
-      $ranges = array_merge($this->closedRanges($space, $date), $unlimited ? [] : $this->bookedRanges($space, $date));
+      $ranges = array_merge($this->closedRanges($space, $date), $unlimited ? [] : $this->bookedRanges($space, $date, $excludeBookingId));
       $matrix[$date] = [];
       foreach ($timeSlots as $slot) {
         $matrix[$date][$slot] = [];

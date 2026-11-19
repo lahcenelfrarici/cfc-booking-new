@@ -70,7 +70,64 @@ class BookingCreator {
     ]);
     $booking->save();
 
+    $this->sendBookingEmail('booking_confirmation', $booking, $spaceData, $date, $time, $duration);
+
     return $booking;
+  }
+
+  /**
+   * Updates an existing booking's space/date/time/duration (BookingForm's
+   * edit mode, reached from "My Account") — re-snapshots price/amount the
+   * same way create() does, since any of those four can change the total.
+   * The caller is responsible for the availability lock/re-check
+   * beforehand, same as create().
+   */
+  public function update(NodeInterface $booking, array $spaceData, string $date, string $time, string $duration): void {
+    $is_paid = $spaceData['hourly_rate'] > 0;
+    $amount = $is_paid ? $spaceData['hourly_rate'] * AvailabilityChecker::DURATION_HOURS[$duration] : NULL;
+
+    $booking->set('title', $spaceData['title'] . ' — ' . $date . ' ' . $time);
+    $booking->set('field_space', ['target_id' => $spaceData['nid']]);
+    $booking->set('field_booking_date', $date);
+    $booking->set('field_time_slot', $time);
+    $booking->set('field_duration', $duration);
+    $booking->set('field_price', $spaceData['price_label']);
+    $booking->set('field_amount', $amount);
+    $booking->set('field_currency', $is_paid ? $spaceData['currency'] : NULL);
+    $booking->save();
+
+    $this->sendBookingEmail('booking_updated', $booking, $spaceData, $date, $time, $duration);
+  }
+
+  /**
+   * Emails the booker with the space, date, time and the Hub's address —
+   * $key picks the wording (hook_mail's 'booking_confirmation' for a new
+   * reservation, 'booking_updated' after a change) — silently skipped if
+   * the account has no email (shouldn't happen in practice, but a
+   * missing/placeholder admin-created account is not worth a hard failure
+   * here).
+   */
+  protected function sendBookingEmail(string $key, NodeInterface $booking, array $spaceData, string $date, string $time, string $duration): void {
+    $owner = $booking->getOwner();
+    $email = $owner?->getEmail();
+    if (!$email) {
+      return;
+    }
+
+    $formatted_date = (new \DateTime($date))->format('l, j F Y');
+
+    \Drupal::service('plugin.manager.mail')->mail(
+      'cfc_booking',
+      $key,
+      $email,
+      \Drupal::languageManager()->getDefaultLanguage()->getId(),
+      [
+        'space' => $spaceData['title'],
+        'date' => $formatted_date,
+        'time' => AvailabilityChecker::formatTimeRange($time, $duration),
+        'reference' => (string) $booking->get('field_reference')->value,
+      ],
+    );
   }
 
 }

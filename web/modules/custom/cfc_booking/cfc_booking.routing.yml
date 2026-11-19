@@ -10,6 +10,18 @@ cfc_booking.cancel:
       node:
         type: entity:node
 
+cfc_booking.modify:
+  path: '/booking/{node}/edit'
+  defaults:
+    _controller: '\Drupal\cfc_booking\Controller\ModifyBookingController::build'
+    _title: 'Modify your reservation'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
 cfc_booking.admin_stats:
   path: '/admin/content/bookings/stats'
   defaults:
