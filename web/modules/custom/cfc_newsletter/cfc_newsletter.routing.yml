@@ -1,0 +1,14 @@
+cfc_newsletter.subscribe:
+  path: '/newsletter/subscribe'
+  defaults:
+    _controller: '\Drupal\cfc_newsletter\Controller\NewsletterController::subscribe'
+  methods: [POST]
+  requirements:
+    _access: 'TRUE'
+
+cfc_newsletter.ping:
+  path: '/newsletter/ping'
+  defaults:
+    _controller: '\Drupal\cfc_newsletter\Controller\NewsletterController::ping'
+  requirements:
+    _access: 'TRUE'

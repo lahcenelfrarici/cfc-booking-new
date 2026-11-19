@@ -63,6 +63,12 @@ class AvailabilityChecker {
       return FALSE;
     }
 
+    foreach ($this->closedRanges($space, $date) as [$existingStart, $existingEnd]) {
+      if ($newStart < $existingEnd && $existingStart < $newEnd) {
+        return FALSE;
+      }
+    }
+
     if ((int) $space->get('field_concurrent_capacity')->value === 0) {
       return TRUE;
     }
@@ -89,7 +95,7 @@ class AvailabilityChecker {
 
     $matrix = [];
     foreach ($dates as $date) {
-      $ranges = $unlimited ? [] : $this->bookedRanges($space, $date);
+      $ranges = array_merge($this->closedRanges($space, $date), $unlimited ? [] : $this->bookedRanges($space, $date));
       $matrix[$date] = [];
       foreach ($timeSlots as $slot) {
         $matrix[$date][$slot] = [];
@@ -133,7 +139,7 @@ class AvailabilityChecker {
     for ($i = 0; $i < $daysAhead; $i++) {
       $date = (clone $today)->modify("+$i days");
       $iso = $date->format('Y-m-d');
-      $ranges = $unlimited ? [] : $this->bookedRanges($space, $iso);
+      $ranges = array_merge($this->closedRanges($space, $iso), $unlimited ? [] : $this->bookedRanges($space, $iso));
 
       foreach (self::TIME_SLOTS as $slot) {
         if (!$this->isDurationAllowedForSlot($slot, $duration)) {
@@ -181,6 +187,42 @@ class AvailabilityChecker {
         $existing->get('field_time_slot')->value,
         $existing->get('field_duration')->value
       );
+    }
+    return $ranges;
+  }
+
+  /**
+   * Returns the [startMinutes, endMinutes] ranges blocked by published
+   * "Closure" nodes for a space on a given date — a Closure with no Space
+   * set applies to every space, and one with "full day" checked blocks the
+   * entire 00:00-24:00 range regardless of this Space's own capacity model
+   * (so it blocks Desk too, which otherwise never consults booked ranges).
+   */
+  protected function closedRanges(NodeInterface $space, string $date): array {
+    $storage = $this->entityTypeManager->getStorage('node');
+    $ids = $storage->getQuery()
+      ->condition('type', 'closure')
+      ->condition('status', 1)
+      ->condition('field_closure_date', $date)
+      ->accessCheck(FALSE)
+      ->execute();
+
+    $ranges = [];
+    foreach ($storage->loadMultiple($ids) as $closure) {
+      $space_ref = $closure->get('field_closure_space');
+      if (!$space_ref->isEmpty() && (int) $space_ref->target_id !== (int) $space->id()) {
+        continue;
+      }
+      if ((bool) $closure->get('field_full_day')->value) {
+        $ranges[] = [0, 24 * 60];
+        continue;
+      }
+      $timeSlot = (string) $closure->get('field_closure_time_slot')->value;
+      $duration = (string) $closure->get('field_closure_duration')->value;
+      if ($timeSlot === '' || $duration === '') {
+        continue;
+      }
+      $ranges[] = $this->toRange($timeSlot, $duration);
     }
     return $ranges;
   }

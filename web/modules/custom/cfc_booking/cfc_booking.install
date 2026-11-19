@@ -152,6 +152,128 @@ function cfc_booking_update_11005(): void {
 }
 
 /**
+ * Adds the "Closure" content type: lets an admin manually block a whole day
+ * or a single time slot (optionally scoped to one Space — left empty, it
+ * blocks every Space) from being booked, e.g. for a public holiday or
+ * maintenance window. AvailabilityChecker::closedRanges() reads these and
+ * folds them into isFree()/buildMatrix()/findNextAvailable() so the public
+ * calendar, the admin booking picker and server-side validation all honour
+ * closures the same way they already honour existing bookings.
+ */
+function cfc_booking_update_11006(): void {
+  if (!\Drupal::entityTypeManager()->getStorage('node_type')->load('closure')) {
+    \Drupal\node\Entity\NodeType::create([
+      'type' => 'closure',
+      'name' => 'Closure',
+      'description' => 'Blocks a day or time slot from being booked — a public holiday, maintenance window, etc. Leave Space empty to close every space.',
+    ])->save();
+  }
+
+  $fields = [
+    'field_closure_date' => [
+      'type' => 'datetime',
+      'label' => 'Date',
+      'settings' => ['datetime_type' => 'date'],
+      'cardinality' => 1,
+      'required' => TRUE,
+    ],
+    'field_closure_space' => [
+      'type' => 'entity_reference',
+      'label' => 'Space (leave empty to close every space)',
+      'settings' => ['target_type' => 'node'],
+      'cardinality' => 1,
+      'required' => FALSE,
+    ],
+    'field_full_day' => [
+      'type' => 'boolean',
+      'label' => 'Close the full day',
+      'cardinality' => 1,
+      'required' => TRUE,
+      'description' => 'If unchecked, fill in Time slot + Duration below to close only part of the day.',
+    ],
+    'field_closure_time_slot' => [
+      'type' => 'string',
+      'label' => 'Time slot',
+      'settings' => ['max_length' => 16],
+      'cardinality' => 1,
+      'required' => FALSE,
+      'description' => 'e.g. "14:00". Only used when "Close the full day" is unchecked.',
+    ],
+    'field_closure_duration' => [
+      'type' => 'list_string',
+      'label' => 'Duration',
+      'settings' => [
+        'allowed_values' => [
+          '1 hour' => '1 hour',
+          '2 hours' => '2 hours',
+          'Half day (4h)' => 'Half day (4h)',
+          'Full day (8h)' => 'Full day (8h)',
+        ],
+      ],
+      'cardinality' => 1,
+      'required' => FALSE,
+    ],
+    'field_closure_reason' => [
+      'type' => 'string',
+      'label' => 'Reason',
+      'settings' => ['max_length' => 256],
+      'cardinality' => 1,
+      'required' => FALSE,
+      'description' => 'Internal note only, e.g. "Public holiday" or "HVAC maintenance".',
+    ],
+  ];
+
+  foreach ($fields as $field_name => $spec) {
+    if (!FieldStorageConfig::loadByName('node', $field_name)) {
+      FieldStorageConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'type' => $spec['type'],
+        'settings' => $spec['settings'] ?? [],
+        'cardinality' => $spec['cardinality'] ?? 1,
+      ])->save();
+    }
+    if (!FieldConfig::loadByName('node', 'closure', $field_name)) {
+      FieldConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => 'node',
+        'bundle' => 'closure',
+        'label' => $spec['label'],
+        'required' => $spec['required'] ?? FALSE,
+        'description' => $spec['description'] ?? '',
+      ])->save();
+    }
+  }
+
+  $display_map = [
+    'datetime' => ['widget' => 'datetime_default', 'formatter' => 'datetime_default'],
+    'entity_reference' => ['widget' => 'entity_reference_autocomplete', 'formatter' => 'entity_reference_label'],
+    'boolean' => ['widget' => 'boolean_checkbox', 'formatter' => 'boolean'],
+    'string' => ['widget' => 'string_textfield', 'formatter' => 'string'],
+    'list_string' => ['widget' => 'options_select', 'formatter' => 'list_default'],
+  ];
+  $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'closure');
+  $form_display = \Drupal::service('entity_display.repository')->getFormDisplay('node', 'closure', 'default');
+  $view_display = \Drupal::service('entity_display.repository')->getViewDisplay('node', 'closure', 'default');
+
+  $weight = 0;
+  foreach (array_keys($fields) as $field_name) {
+    if (!isset($field_definitions[$field_name])) {
+      continue;
+    }
+    $map = $display_map[$field_definitions[$field_name]->getType()] ?? NULL;
+    if (!$map) {
+      continue;
+    }
+    $form_display->setComponent($field_name, ['type' => $map['widget'], 'weight' => $weight]);
+    $view_display->setComponent($field_name, ['type' => $map['formatter'], 'weight' => $weight]);
+    $weight++;
+  }
+  $form_display->save();
+  $view_display->save();
+}
+
+/**
  * Returns the full field definition set for the "booking" bundle.
  */
 function _cfc_booking_field_definitions(): array {
@@ -280,4 +402,37 @@ function _cfc_booking_create_fields(array $fields): void {
       ])->save();
     }
   }
+}
+
+/**
+ * Switches field_closure_space's widget from "entity_reference_autocomplete"
+ * to "options_select" — the autocomplete widget's massageFormValues() only
+ * understands a "Label (id)" string or a bare numeric id; it has no concept
+ * of a clean "no entity referenced" submission, so the admin picker's "All
+ * spaces" card (which needs to submit exactly that) kept failing entity
+ * validation ("primitive type" / "referenced entity does not exist")
+ * depending on what sentinel was tried. OptionsSelectWidget — already used
+ * for field_closure_duration's "- None -" option on this same bundle —
+ * handles an empty/"_none" selection correctly out of the box for entity
+ * reference fields too (it is a generic "field with a finite list of
+ * values" widget, not specific to list_* field types).
+ */
+function cfc_booking_update_11007(): void {
+  $form_display = \Drupal::service('entity_display.repository')->getFormDisplay('node', 'closure', 'default');
+  $form_display->setComponent('field_closure_space', ['type' => 'options_select', 'weight' => -10]);
+  $form_display->save();
+}
+
+/**
+ * Restricts field_closure_space's selection handler to the "space" bundle
+ * — it had no target_bundles restriction at all, so OptionsSelectWidget's
+ * getReferenceableEntities() (now in play since cfc_booking_update_11007())
+ * built its #options from every node on the site, and a real Space's nid
+ * wasn't guaranteed to land in whatever that list produced, causing
+ * "the submitted value is not allowed" on save.
+ */
+function cfc_booking_update_11008(): void {
+  $field_config = \Drupal\field\Entity\FieldConfig::loadByName('node', 'closure', 'field_closure_space');
+  $field_config->setSetting('handler_settings', ['target_bundles' => ['space' => 'space']]);
+  $field_config->save();
 }

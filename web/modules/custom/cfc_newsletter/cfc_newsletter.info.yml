@@ -1,0 +1,7 @@
+name: CFC Newsletter
+type: module
+description: 'Real backend for the "Stay informed" newsletter signup form in the site footer.'
+core_version_requirement: ^10 || ^11
+package: Custom
+dependencies:
+  - webform:webform

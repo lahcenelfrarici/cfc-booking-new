@@ -108,6 +108,7 @@
       <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-neutral-200 inline-block"></span> Unavailable</span>
     </div>
 
+    {% if not hide_time_duration %}
     <div x-show="selectedDate" x-cloak class="mt-8">
       <div class="text-[12px] uppercase tracking-wide text-neutral-500 mb-4 font-semibold">Available slots</div>
       <div class="grid grid-cols-5 gap-3">
@@ -160,5 +161,6 @@
         </span>
       </div>
     </div>
+    {% endif %}
   {% endif %}
 </div>

@@ -2,7 +2,25 @@
   <div class="max-w-[1440px] mx-auto px-5 md:px-12">
 
     {# Newsletter banner #}
-    <div class="mb-10 pb-10 md:mb-14 md:pb-14 border-b border-white/10" x-data="{ subscribed: false, email: '' }">
+    <div
+      class="mb-10 pb-10 md:mb-14 md:pb-14 border-b border-white/10"
+      x-data="{ subscribed: false, email: '', error: '', loading: false }"
+      x-on:submit.prevent="
+        loading = true; error = '';
+        fetch('/newsletter/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        })
+          .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+          .then(({ ok, data }) => {
+            loading = false;
+            if (ok && data.success) { subscribed = true; }
+            else { error = data.message || 'Something went wrong. Please try again.'; }
+          })
+          .catch(() => { loading = false; error = 'Something went wrong. Please try again.'; });
+      "
+    >
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center">
         <div class="lg:col-span-5">
           <div class="text-[11px] uppercase tracking-[0.18em] text-[#9F5434] font-bold mb-3">Newsletter</div>
@@ -17,21 +35,24 @@
               <div class="text-white/50 text-[12px]">Expect updates and reports in your inbox.</div>
             </div>
           </div>
-          <form x-show="!subscribed" x-on:submit.prevent="subscribed = true" class="flex flex-col sm:flex-row gap-3 w-full max-w-[500px]">
-            <label for="footer-newsletter-email" class="sr-only">Email address</label>
-            <input
-              id="footer-newsletter-email"
-              type="email"
-              name="email"
-              x-model="email"
-              required
-              placeholder="Enter your email address"
-              class="flex-1 bg-white/[0.06] border border-white/15 rounded-xl px-5 py-3.5 text-[14px] text-white placeholder:text-white/35 focus:outline-none focus:border-white/30 transition-colors"
-            />
-            <button type="submit" class="bg-[#9F5434] hover:bg-[#8A4A2E] text-white px-6 py-3.5 rounded-xl text-[13px] font-semibold transition-colors shrink-0">
-              Subscribe
-            </button>
-          </form>
+          <div x-show="!subscribed" class="w-full max-w-[500px]">
+            <form x-on:submit.prevent class="flex flex-col sm:flex-row gap-3">
+              <label for="footer-newsletter-email" class="sr-only">Email address</label>
+              <input
+                id="footer-newsletter-email"
+                type="email"
+                name="email"
+                x-model="email"
+                required
+                placeholder="Enter your email address"
+                class="flex-1 bg-white/[0.06] border border-white/15 rounded-xl px-5 py-3.5 text-[14px] text-white placeholder:text-white/35 focus:outline-none focus:border-white/30 transition-colors"
+              />
+              <button type="submit" x-bind:disabled="loading" class="bg-[#9F5434] hover:bg-[#8A4A2E] disabled:opacity-60 text-white px-6 py-3.5 rounded-xl text-[13px] font-semibold transition-colors shrink-0">
+                <span x-text="loading ? 'Subscribing…' : 'Subscribe'"></span>
+              </button>
+            </form>
+            <p x-show="error" x-cloak x-text="error" class="text-[#F0A28A] text-[12px] mt-2"></p>
+          </div>
         </div>
       </div>
     </div>

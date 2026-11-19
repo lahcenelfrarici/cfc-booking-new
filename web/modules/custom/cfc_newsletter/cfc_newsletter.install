@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Install hooks for CFC Newsletter: the "newsletter" webform used as the
+ * storage + admin-review backend for the "Stay informed" signup form in the
+ * site footer. Same pattern as cfc_connections' "connection_request"
+ * webform — never rendered to visitors, just a sink for submissions.
+ */
+
+use Drupal\webform\Entity\Webform;
+
+/**
+ * Implements hook_install().
+ */
+function cfc_newsletter_install(): void {
+  _cfc_newsletter_create_webform();
+}
+
+/**
+ * Creates the "newsletter" webform (a single required email element) if it
+ * doesn't already exist.
+ */
+function _cfc_newsletter_create_webform(): void {
+  if (Webform::load('newsletter')) {
+    return;
+  }
+
+  $elements = <<<'YAML'
+email:
+  '#type': email
+  '#title': Email
+  '#required': true
+YAML;
+
+  $webform = Webform::create([
+    'id' => 'newsletter',
+    'title' => 'Newsletter',
+    'description' => 'Submissions from the "Stay informed" signup form in the site footer.',
+    'category' => 'CFC Media Hub',
+    'elements' => $elements,
+    'status' => 'open',
+  ]);
+  $webform->save();
+}

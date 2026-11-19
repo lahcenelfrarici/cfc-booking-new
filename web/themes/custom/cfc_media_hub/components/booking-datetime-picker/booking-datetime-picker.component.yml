@@ -65,6 +65,9 @@ props:
       type: string
     initial_duration:
       type: string
+    hide_time_duration:
+      type: boolean
+      description: 'When true, only the date grid renders — no time-slot/duration sections. Used by the Closure admin form for a "close the full day" pick, where only a date is needed.'
   required:
     - has_space
     - days

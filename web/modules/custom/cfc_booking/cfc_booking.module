@@ -51,6 +51,20 @@ function cfc_booking_form_node_booking_edit_form_alter(array &$form, FormStateIn
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter() for the "Add Closure" form.
+ */
+function cfc_booking_form_node_closure_form_alter(array &$form, FormStateInterface $form_state): void {
+  _cfc_booking_closure_form_alter($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the "Edit Closure" form.
+ */
+function cfc_booking_form_node_closure_edit_form_alter(array &$form, FormStateInterface $form_state): void {
+  _cfc_booking_closure_form_alter($form, $form_state);
+}
+
+/**
  * Replaces the Space autocomplete + raw Date/Time slot/Duration textfields
  * with the same card picker + availability calendar the public booking page
  * uses, gated behind an explicit "Journalist / CFC Member" toggle the admin
@@ -614,6 +628,365 @@ function _cfc_booking_admin_space_cards_markup(array $spaces, ?int $selected): s
       <label class="text-[13px] font-semibold text-neutral-700 block mb-2">Space</label>
       <div class="flex flex-wrap gap-3" x-data="{ selectedSpace: {$selected_js} }">
         {$cards}
+      </div>
+    </div>
+    HTML;
+}
+
+/**
+ * Replaces the "Add/Edit Closure" form's raw Space/Full day/Date/Time slot/
+ * Duration fields with the same card picker + availability calendar the
+ * booking admin picker uses (see _cfc_booking_admin_datetime_alter() above)
+ * — so an admin blocks a day/slot by clicking, not by typing a date string
+ * and a bare "14:00" into a textfield. Unlike the booking picker, both the
+ * add AND edit forms get the full interactive version: a Closure has no
+ * guest to desync from, so there is no reason to lock it down on edit the
+ * way an existing booking is.
+ */
+function _cfc_booking_closure_form_alter(array &$form, FormStateInterface $form_state): void {
+  if (!isset($form['field_full_day']['widget']['value'])) {
+    return;
+  }
+
+  /** @var \Drupal\cfc_content\ContentRepository $content_repository */
+  $content_repository = \Drupal::service('cfc_content.repository');
+  $spaces = $content_repository->getSpaces();
+
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object instanceof EntityFormInterface ? $form_object->getEntity() : NULL;
+
+  // OptionsSelectWidget (same widget field_closure_duration uses, and for
+  // the same reason — see cfc_booking_update_11007()) renders flat, so this
+  // reads the same way $current_duration below does. NULL means "no
+  // submission yet" (fresh page load) — fall back to the entity's existing
+  // value when editing. '_none'/'' (submitted, but empty) means "All
+  // spaces" was explicitly picked.
+  $space_raw = $form_state->getValue(['field_closure_space']);
+  if (is_array($space_raw)) {
+    $space_raw = $space_raw[0]['value'] ?? reset($space_raw) ?? '';
+  }
+  if ($space_raw === NULL) {
+    $current_space_nid = $entity && !$entity->get('field_closure_space')->isEmpty() ? (int) $entity->get('field_closure_space')->target_id : 0;
+  }
+  elseif ($space_raw === '_none' || $space_raw === '') {
+    $current_space_nid = 0;
+  }
+  else {
+    $current_space_nid = (int) $space_raw;
+  }
+
+  // BooleanCheckboxWidget renders flat at ['widget']['value'] — no [0] delta
+  // wrapper the way string/datetime widgets get (confirmed empirically: the
+  // real rendered <input> is name="field_full_day[value]", not
+  // "field_full_day[0][value]").
+  $default_full_day = $form['field_full_day']['widget']['value']['#default_value'] ?? FALSE;
+  $raw_full_day = $form_state->getValue(['field_full_day', 'value']);
+  $current_full_day = $raw_full_day !== NULL ? (bool) $raw_full_day : (bool) $default_full_day;
+
+  $current_date = (string) ($form_state->getValue(['field_closure_date', 0, 'value'])
+    ?: ($entity && !$entity->get('field_closure_date')->isEmpty() ? $entity->get('field_closure_date')->value : ''));
+  $current_time = (string) ($form_state->getValue(['field_closure_time_slot', 0, 'value'])
+    ?: ($entity ? $entity->get('field_closure_time_slot')->value : ''));
+  // OptionsSelectWidget for a single-value field renders flatter — the
+  // <select> sits directly at ['widget'], but once converted to a hidden
+  // input Drupal's own #parents computation still wraps the submitted
+  // value as [0]['value'] like any other delta-based field, so both
+  // shapes are handled here.
+  $duration_raw = $form_state->getValue(['field_closure_duration']);
+  if (is_array($duration_raw)) {
+    $duration_raw = $duration_raw[0]['value'] ?? reset($duration_raw) ?? '';
+  }
+  $current_duration = (string) ($duration_raw ?: ($entity ? $entity->get('field_closure_duration')->value : ''));
+
+  // Space: hidden input driven by cards — "All spaces" submits '_none',
+  // which OptionsSelectWidget (see cfc_booking_update_11007()) correctly
+  // treats as "no entity referenced" on its own, the same way it already
+  // does for Duration's own "- None -" option. Converted in place rather
+  // than built fresh, same reasoning as Duration below.
+  $form['field_closure_space']['#weight'] = -10;
+  $form['field_closure_space']['widget']['#type'] = 'hidden';
+  // Setting #id (not just #attributes['id']) matters for Drupal's #ajax
+  // binding — see the identical comment on the booking admin picker's own
+  // Space select for why.
+  $form['field_closure_space']['widget']['#id'] = 'cfc-closure-space-select';
+  $form['field_closure_space']['widget']['#attributes']['id'] = 'cfc-closure-space-select';
+  $form['field_closure_space']['widget']['#default_value'] = $current_space_nid ?: '_none';
+  $form['field_closure_space']['widget']['#ajax'] = [
+    'callback' => '_cfc_booking_closure_datetime_ajax',
+    'wrapper' => 'cfc-closure-datetime-wrapper',
+    'event' => 'change',
+    'progress' => ['type' => 'throbber', 'message' => NULL],
+  ];
+  $form['field_closure_space']['#prefix'] = Markup::create(_cfc_booking_closure_space_cards_markup($spaces, $current_space_nid ?: NULL));
+
+  // Full day: hidden checkbox driven by a Yes/No toggle, same pattern.
+  // #required is explicitly cleared — the field widget's own "required"
+  // means "must be checked" for a checkbox, which would wrongly block the
+  // "No — specific time" choice.
+  $form['field_full_day']['#weight'] = -9;
+  $form['field_full_day']['widget']['value']['#id'] = 'cfc-closure-full-day';
+  $form['field_full_day']['widget']['value']['#attributes']['id'] = 'cfc-closure-full-day';
+  $form['field_full_day']['widget']['value']['#attributes']['style'] = 'display:none;';
+  $form['field_full_day']['widget']['value']['#title_display'] = 'invisible';
+  $form['field_full_day']['widget']['value']['#required'] = FALSE;
+  $form['field_full_day']['widget']['value']['#ajax'] = [
+    'callback' => '_cfc_booking_closure_datetime_ajax',
+    'wrapper' => 'cfc-closure-datetime-wrapper',
+    'event' => 'change',
+    'progress' => ['type' => 'throbber', 'message' => NULL],
+  ];
+  $form['field_full_day']['#prefix'] = Markup::create(_cfc_booking_closure_full_day_markup($current_full_day));
+
+  // Duration: OptionsSelectWidget for this single-value list field renders
+  // flat at ['widget'] itself (see the comment above on $current_duration)
+  // — converted in place rather than through the generic loop below, which
+  // assumes the ['widget'][0]['value'] shape the other two hidden fields
+  // actually have.
+  $form['field_closure_duration']['widget']['#type'] = 'hidden';
+  $form['field_closure_duration']['widget']['#attributes']['id'] = 'cfc-closure-duration';
+  // Always a real allowed value, never blank — the original select
+  // element's own "value not allowed" validation is attached via
+  // #element_validate at build time and stays attached (removing it also
+  // strips the reshaping step that normalizes the submitted value, which
+  // then breaks extraction instead). A full-day closure ignores this value
+  // entirely in AvailabilityChecker::closedRanges(), so defaulting it is
+  // harmless either way.
+  $form['field_closure_duration']['widget']['#default_value'] = $current_duration ?: '2 hours';
+
+  // Date/time slot: hidden, written into by the picker component by DOM id
+  // — #default_value (not #value), same reasoning documented on the
+  // booking admin picker's own hidden fields.
+  $hidden_fields = [
+    'field_closure_date' => ['cfc-closure-date', $current_date],
+    'field_closure_time_slot' => ['cfc-closure-time', $current_time],
+  ];
+  foreach ($hidden_fields as $field_name => [$id, $value]) {
+    $form[$field_name]['widget'][0]['value']['#type'] = 'hidden';
+    $form[$field_name]['widget'][0]['value']['#attributes']['id'] = $id;
+    $form[$field_name]['widget'][0]['value']['#default_value'] = $value;
+  }
+
+  $form['cfc_closure_datetime_wrapper'] = _cfc_booking_closure_datetime_wrapper(
+    $current_space_nid ?: NULL,
+    $current_full_day,
+    $current_date,
+    $current_time,
+    $current_duration
+  );
+  $form['cfc_closure_datetime_wrapper']['#weight'] = $form['field_closure_duration']['#weight'] ?? -8;
+
+  $form['#validate'][] = '_cfc_booking_closure_validate_datetime_complete';
+
+  // Reuses the exact same vendored Alpine.js + scoped stylesheet the
+  // booking admin picker already attaches — see the comment at that call
+  // site for why cfc_media_hub/global is deliberately not used instead.
+  $form['#attached']['library'][] = 'cfc_booking/admin_booking_picker';
+}
+
+/**
+ * #ajax callback for the Closure form's Space select and Full-day toggle:
+ * both just need the datetime wrapper rebuilt (new matrix for the newly
+ * picked space, or the time/duration sections shown/hidden for the new
+ * full-day state).
+ */
+function _cfc_booking_closure_datetime_ajax(array &$form, FormStateInterface $form_state): array {
+  return $form['cfc_closure_datetime_wrapper'];
+}
+
+/**
+ * Catches an incomplete pick (no date clicked, or — for a partial-day
+ * closure — no time/duration clicked) with a clear message, same
+ * clearErrors()-then-replace approach as
+ * _cfc_booking_admin_validate_datetime_complete() and for the same reason:
+ * the entity-level NotNull check on field_closure_date already ran earlier
+ * in this #validate chain and would otherwise leave its own generic
+ * "This value should not be null." error standing alongside this one.
+ */
+function _cfc_booking_closure_validate_datetime_complete(array &$form, FormStateInterface $form_state): void {
+  $date = (string) $form_state->getValue(['field_closure_date', 0, 'value']);
+  $full_day = (bool) $form_state->getValue(['field_full_day', 'value']);
+
+  $missing = [];
+  if (!$date) {
+    $missing['field_closure_date'] = t('Please choose a date from the calendar above.');
+  }
+  if (!$full_day) {
+    if (!$form_state->getValue(['field_closure_time_slot', 0, 'value'])) {
+      $missing['field_closure_time_slot'] = t('Please choose a time slot above, or mark this as a full-day closure.');
+    }
+    if (!$form_state->getValue(['field_closure_duration'])) {
+      $missing['field_closure_duration'] = t('Please choose a duration above, or mark this as a full-day closure.');
+    }
+  }
+  if (!$missing) {
+    return;
+  }
+  $form_state->clearErrors();
+  foreach ($missing as $field_name => $message) {
+    $form_state->setErrorByName($field_name, $message);
+  }
+}
+
+/**
+ * Builds the Closure form's availability calendar wrapper. When a real
+ * Space is picked, it reuses that Space's real matrix (so the admin sees
+ * its existing bookings/closures highlighted, same visual language as
+ * everywhere else) — when "All spaces" is picked instead, there is no
+ * single Space to check against, so every cell is shown as pickable: a
+ * Closure does not need its target slot to currently be free, it needs a
+ * date (and, unless it is a full-day closure, a time + duration).
+ */
+function _cfc_booking_closure_datetime_wrapper(?int $space_nid, bool $full_day, string $initial_date = '', string $initial_time = '', string $initial_duration = ''): array {
+  // "1 hour" is dropped here — a one-hour administrative closure is rare
+  // enough not to be worth a button, and this is specific to the Closure
+  // picker only: AvailabilityChecker::DURATION_HOURS itself stays
+  // untouched since real bookings still need every duration.
+  $durations = array_values(array_diff(array_keys(AvailabilityChecker::DURATION_HOURS), ['1 hour']));
+  $default_duration = $durations[0] ?? '2 hours';
+
+  $today = new \DateTime('today');
+  $window_start = $today;
+  if ($initial_date) {
+    $initial_dt = \DateTime::createFromFormat('Y-m-d', $initial_date) ?: NULL;
+    $initial_dt?->setTime(0, 0);
+    if ($initial_dt && ($initial_dt < $today || $initial_dt > (clone $today)->modify('+13 days'))) {
+      $window_start = $initial_dt;
+    }
+  }
+
+  $days = [];
+  for ($i = 0; $i < 14; $i++) {
+    $date = (clone $window_start)->modify("+$i days");
+    $days[] = ['iso' => $date->format('Y-m-d'), 'weekday' => $date->format('D'), 'day' => $date->format('j'), 'month' => $date->format('M')];
+  }
+  $isos = array_column($days, 'iso');
+
+  $space_node = $space_nid ? \Drupal::entityTypeManager()->getStorage('node')->load($space_nid) : NULL;
+  if ($space_node instanceof NodeInterface) {
+    /** @var \Drupal\cfc_booking\AvailabilityChecker $availability_checker */
+    $availability_checker = \Drupal::service('cfc_booking.availability_checker');
+    $matrix = $availability_checker->buildMatrix($space_node, $isos, AvailabilityChecker::TIME_SLOTS, $durations);
+  }
+  else {
+    $matrix = [];
+    foreach ($isos as $iso) {
+      $matrix[$iso] = [];
+      foreach (AvailabilityChecker::TIME_SLOTS as $slot) {
+        $matrix[$iso][$slot] = array_fill_keys($durations, TRUE);
+      }
+    }
+  }
+
+  return [
+    '#type' => 'container',
+    '#attributes' => ['id' => 'cfc-closure-datetime-wrapper', 'class' => ['cfc-admin-picker-scope']],
+    'picker' => [
+      '#type' => 'component',
+      '#component' => 'cfc_media_hub:booking-datetime-picker',
+      '#props' => [
+        'has_space' => TRUE,
+        'days' => $days,
+        'time_slots' => AvailabilityChecker::TIME_SLOTS,
+        'durations' => $durations,
+        'durations_json' => Json::encode($durations),
+        'matrix' => Json::encode($matrix),
+        'duration_hours_json' => Json::encode(AvailabilityChecker::DURATION_HOURS),
+        'phantom_slots' => AvailabilityChecker::PHANTOM_TIME_SLOTS,
+        'default_duration' => $default_duration,
+        'date_field_id' => 'cfc-closure-date',
+        'time_field_id' => 'cfc-closure-time',
+        'duration_field_id' => 'cfc-closure-duration',
+        'initial_date' => $initial_date,
+        'initial_time' => $initial_time,
+        'initial_duration' => $initial_duration ?: $default_duration,
+        'hide_time_duration' => $full_day,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Markup for the Closure form's Space cards — identical visual pattern to
+ * _cfc_booking_admin_space_cards_markup(), plus a leading "All spaces"
+ * card (sentinel value 0) that clears the real select to its empty option.
+ */
+function _cfc_booking_closure_space_cards_markup(array $spaces, ?int $selected): string {
+  $selected_js = $selected ?: 0;
+  $cards = <<<HTML
+    <button
+      type="button"
+      x-on:click="
+        selectedSpace = 0;
+        const sel = document.getElementById('cfc-closure-space-select');
+        sel.value = '_none';
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      "
+      x-bind:class="selectedSpace === 0 ? 'bg-[#9F5434] border-[#9F5434] text-white' : 'bg-white border-neutral-200 hover:border-neutral-400 text-neutral-700'"
+      class="rounded-xl px-5 py-3 border text-[14px] font-medium transition-colors"
+    >All spaces</button>
+    HTML;
+
+  foreach ($spaces as $space) {
+    $nid = (int) $space['nid'];
+    $title = Html::escape($space['title']);
+    $cards .= <<<HTML
+      <button
+        type="button"
+        x-on:click="
+          selectedSpace = {$nid};
+          const sel = document.getElementById('cfc-closure-space-select');
+          sel.value = '{$nid}';
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        "
+        x-bind:class="selectedSpace === {$nid} ? 'bg-[#9F5434] border-[#9F5434] text-white' : 'bg-white border-neutral-200 hover:border-neutral-400 text-neutral-700'"
+        class="rounded-xl px-5 py-3 border text-[14px] font-medium transition-colors"
+      >{$title}</button>
+      HTML;
+  }
+
+  return <<<HTML
+    <div class="cfc-admin-picker-scope mb-5">
+      <label class="text-[13px] font-semibold text-neutral-700 block mb-2">Space</label>
+      <div class="flex flex-wrap gap-3" x-data="{ selectedSpace: {$selected_js} }">
+        {$cards}
+      </div>
+    </div>
+    HTML;
+}
+
+/**
+ * Markup for the Closure form's "Close the full day?" toggle — same
+ * visual pattern as _cfc_booking_admin_booker_type_markup(), 2 fixed
+ * options instead of N.
+ */
+function _cfc_booking_closure_full_day_markup(bool $selected): string {
+  $selected_js = $selected ? 'true' : 'false';
+  return <<<HTML
+    <div class="cfc-admin-picker-scope mb-5">
+      <label class="text-[13px] font-semibold text-neutral-700 block mb-2">Close the full day?</label>
+      <div class="flex flex-wrap gap-3" x-data="{ fullDay: {$selected_js} }">
+        <button
+          type="button"
+          x-on:click="
+            fullDay = true;
+            const cb = document.getElementById('cfc-closure-full-day');
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
+          "
+          x-bind:class="fullDay ? 'bg-[#9F5434] border-[#9F5434] text-white' : 'bg-white border-neutral-200 hover:border-neutral-400 text-neutral-700'"
+          class="rounded-xl px-5 py-3 border text-[14px] font-medium transition-colors"
+        >Yes — full day</button>
+        <button
+          type="button"
+          x-on:click="
+            fullDay = false;
+            const cb = document.getElementById('cfc-closure-full-day');
+            cb.checked = false;
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
+          "
+          x-bind:class="!fullDay ? 'bg-[#9F5434] border-[#9F5434] text-white' : 'bg-white border-neutral-200 hover:border-neutral-400 text-neutral-700'"
+          class="rounded-xl px-5 py-3 border text-[14px] font-medium transition-colors"
+        >No — specific time</button>
       </div>
     </div>
     HTML;
