@@ -436,3 +436,28 @@ function cfc_booking_update_11008(): void {
   $field_config->setSetting('handler_settings', ['target_bundles' => ['space' => 'space']]);
   $field_config->save();
 }
+
+/**
+ * Adds "Booker type" (select: Journalist / CFC Member Company) and "Space"
+ * (select: Desk / Meeting Room / Studio, grouped filter) to the Bookings
+ * admin view (/admin/content/bookings). This was originally applied
+ * directly to the active config on this site only, during development —
+ * never captured in config/install, so a fresh install or another
+ * environment never got it. Re-saving the whole view from the updated
+ * config/install/views.view.cfc_bookings.yml (same approach as
+ * cfc_booking_update_11002() and cfc_booking_update_11004()) fixes both at
+ * once: new installs get it automatically, and this update hook brings an
+ * existing site's view in line.
+ */
+function cfc_booking_update_11009(): void {
+  $view = \Drupal::entityTypeManager()->getStorage('view')->load('cfc_bookings');
+  if (!$view) {
+    return;
+  }
+  $module_path = \Drupal::service('extension.list.module')->getPath('cfc_booking');
+  $data = \Drupal\Component\Serialization\Yaml::decode(
+    file_get_contents($module_path . '/config/install/views.view.cfc_bookings.yml')
+  );
+  $view->set('display', $data['display']);
+  $view->save();
+}

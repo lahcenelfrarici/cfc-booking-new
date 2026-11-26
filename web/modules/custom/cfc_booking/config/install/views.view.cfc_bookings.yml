@@ -296,6 +296,81 @@ display:
             required: false
             remember: false
             multiple: false
+        field_booker_account_type_value:
+          id: field_booker_account_type_value
+          table: node__field_booker_account_type
+          field: field_booker_account_type_value
+          relationship: none
+          entity_type: node
+          entity_field: field_booker_account_type
+          plugin_id: list_field
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: ''
+            label: 'Booker type'
+            description: ''
+            use_operator: false
+            operator: field_booker_account_type_value_op
+            identifier: booker_type
+            required: false
+            remember: false
+            multiple: false
+            reduce: false
+        field_space_target_id:
+          id: field_space_target_id
+          table: node__field_space
+          field: field_space_target_id
+          relationship: none
+          entity_type: node
+          entity_field: field_space
+          plugin_id: numeric
+          operator: '='
+          value:
+            min: ''
+            max: ''
+            value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: ''
+            label: Space
+            identifier: space
+          is_grouped: true
+          group_info:
+            label: Space
+            description: ''
+            identifier: space
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items:
+              1:
+                title: Desk
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: '1'
+              2:
+                title: 'Meeting Room'
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: '2'
+              3:
+                title: Studio
+                operator: '='
+                value:
+                  min: ''
+                  max: ''
+                  value: '3'
       filter_groups:
         operator: AND
         groups:
